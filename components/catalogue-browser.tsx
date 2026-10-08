@@ -192,34 +192,22 @@ export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
               <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="flex items-center justify-center gap-2 border-b border-border bg-muted px-4 py-3 text-center text-sm font-semibold text-primary transition-colors hover:bg-accent/50">
                 <span aria-hidden="true">›</span><span>Check catalogue posts here</span><span aria-hidden="true">‹</span>
               </Link>
-              <div className="flex flex-col gap-3 p-4">
+              <div className="flex flex-1 flex-col gap-3 p-4">
                 <h3 className="min-h-7 text-lg font-bold leading-tight">
                   <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="hover:text-primary">{entry.artistName}</Link>
                 </h3>
                 {entry.artistInstagrams.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5" aria-label="Artist Instagram accounts">
-                    {entry.artistInstagrams.slice(0, 2).map((handle) => (
-                      <a key={handle} href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground hover:text-primary">
-                        <InstagramIcon className="size-4" />@{handle.replace(/^@/, '')}
-                      </a>
+                  <ul aria-label="Artist Instagram accounts" className="flex flex-wrap gap-1.5">
+                    {entry.artistInstagrams.map((handle) => (
+                      <li key={handle}>
+                        <a href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground hover:text-primary">
+                          <InstagramIcon className="size-4" />@{handle.replace(/^@/, '')}
+                        </a>
+                      </li>
                     ))}
-                    {entry.artistInstagrams.length > 2 && (
-                      <details className="group">
-                        <summary className="inline-flex cursor-pointer list-none rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&::-webkit-details-marker]:hidden">
-                          +{entry.artistInstagrams.length - 2} more account{entry.artistInstagrams.length === 3 ? '' : 's'}
-                        </summary>
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {entry.artistInstagrams.slice(2).map((handle) => (
-                            <a key={handle} href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground hover:text-primary">
-                              <InstagramIcon className="size-4" />@{handle.replace(/^@/, '')}
-                            </a>
-                          ))}
-                        </div>
-                      </details>
-                    )}
-                  </div>
+                  </ul>
                 )}
-                <div>
+                <div className="min-h-20">
                   <p className="text-xs font-bold">Fandom:</p>
                   <ul aria-label="Fandoms" className="mt-1.5 flex flex-wrap gap-1.5">
                     {entry.fandoms.slice(0, 3).map((tag) => (
@@ -237,7 +225,7 @@ export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
                     )}
                   </ul>
                 </div>
-                <div>
+                <div className="min-h-20">
                   <p className="text-xs font-bold">Merch:</p>
                   <ul aria-label="Merch types" className="mt-1.5 flex flex-wrap gap-1.5">
                     {entry.merchTypes.slice(0, 3).map((tag) => (
@@ -255,7 +243,7 @@ export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
                     )}
                   </ul>
                 </div>
-                <p className={cn('inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold', entry.stampRally ? 'border-emerald-800 bg-emerald-700 text-white' : 'border-border bg-muted text-foreground')}>
+                <p className={cn('mt-auto inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold', entry.stampRally ? 'border-emerald-800 bg-emerald-700 text-white' : 'border-border bg-muted text-foreground')}>
                   <span aria-hidden="true">{entry.stampRally ? '✦' : '♡'}</span>Stamp Rally · {entry.stampRally ? 'Yes' : 'No'}
                 </p>
               </div>
