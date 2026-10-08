@@ -18,66 +18,6 @@ function uniqueSorted(values: readonly (readonly string[])[]) {
 
 const CATALOGUES_PER_PAGE = 20
 
-function CompactTagGroup({ label, tags, variant }: { label: string; tags: string[]; variant: 'filled' | 'outlined' }) {
-function CompactTagGroup({ label, tags, variant }: { label: string; tags: readonly string[]; variant: 'filled' | 'outlined' }) {
-  const [expanded, setExpanded] = useState(false)
-  if (tags.length === 0) return null
-  const visibleTags = expanded ? tags : tags.slice(0, 3)
-  const tagStyle = variant === 'filled' ? 'bg-secondary' : 'border border-border text-muted-foreground'
-
-  return (
-    <div>
-      <p className="text-xs font-bold">{label}:</p>
-      <ul aria-label={label} className="mt-1.5 flex flex-wrap gap-1.5">
-        {visibleTags.map((tag) => (
-          <li key={tag} className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium', tagStyle)}>
-            {displayTag(tag)}
-          </li>
-        ))}
-        {tags.length > 3 && (
-          <li>
-            <button
-              type="button"
-              onClick={() => setExpanded((value) => !value)}
-              aria-expanded={expanded}
-              className="rounded-full border border-dashed border-border px-2.5 py-0.5 text-xs font-semibold text-primary hover:bg-secondary"
-              className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
-              {expanded ? 'Show less' : `+${tags.length - 3} more`}
-            </button>
-          </li>
-        )}
-      </ul>
-    </div>
-  )
-}
-
-function CompactInstagramHandles({ handles }: { handles: readonly string[] }) {
-  const [expanded, setExpanded] = useState(false)
-  const visibleHandles = expanded ? handles : handles.slice(0, 2)
-
-  if (handles.length === 0) return null
-
-  return (
-    <ul aria-label="Artist Instagram accounts" className="flex flex-wrap gap-1.5">
-      {visibleHandles.map((handle) => (
-        <li key={handle}>
-          <a href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground hover:text-primary">
-            <InstagramIcon className="size-4" />@{handle.replace(/^@/, '')}
-          </a>
-        </li>
-      ))}
-      {handles.length > 2 && (
-        <li>
-          <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} className="inline-flex rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-            {expanded ? 'Show less' : `+${handles.length - 2} account${handles.length === 3 ? '' : 's'}`}
-          </button>
-        </li>
-      )}
-    </ul>
-  )
-}
-
 function FilterDropdown({
   label,
   options,
@@ -252,25 +192,68 @@ export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
               <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="flex items-center justify-center gap-2 border-b border-border bg-muted px-4 py-3 text-center text-sm font-semibold text-primary transition-colors hover:bg-accent/50">
                 <span aria-hidden="true">›</span><span>Check catalogue posts here</span><span aria-hidden="true">‹</span>
               </Link>
-              <div className="flex flex-1 flex-col gap-3 p-4">
-                <h3 className="text-lg font-bold leading-tight">
               <div className="flex flex-col gap-3 p-4">
                 <h3 className="min-h-7 text-lg font-bold leading-tight">
                   <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="hover:text-primary">{entry.artistName}</Link>
                 </h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {entry.artistInstagrams.map((handle) => (
-                    <a key={handle} href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-2.5 py-1 text-xs text-muted-foreground hover:border-foreground hover:text-primary">
-                      <InstagramIcon className="size-4" />@{handle.replace(/^@/, '')}
-                    </a>
-                  ))}
+                {entry.artistInstagrams.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5" aria-label="Artist Instagram accounts">
+                    {entry.artistInstagrams.slice(0, 2).map((handle) => (
+                      <a key={handle} href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground hover:text-primary">
+                        <InstagramIcon className="size-4" />@{handle.replace(/^@/, '')}
+                      </a>
+                    ))}
+                    {entry.artistInstagrams.length > 2 && (
+                      <details className="group">
+                        <summary className="inline-flex cursor-pointer list-none rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&::-webkit-details-marker]:hidden">
+                          +{entry.artistInstagrams.length - 2} more account{entry.artistInstagrams.length === 3 ? '' : 's'}
+                        </summary>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {entry.artistInstagrams.slice(2).map((handle) => (
+                            <a key={handle} href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground hover:text-primary">
+                              <InstagramIcon className="size-4" />@{handle.replace(/^@/, '')}
+                            </a>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs font-bold">Fandom:</p>
+                  <ul aria-label="Fandoms" className="mt-1.5 flex flex-wrap gap-1.5">
+                    {entry.fandoms.slice(0, 3).map((tag) => (
+                      <li key={tag} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium">{displayTag(tag)}</li>
+                    ))}
+                    {entry.fandoms.length > 3 && (
+                      <li>
+                        <details>
+                          <summary className="cursor-pointer list-none rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:bg-secondary [&::-webkit-details-marker]:hidden">+{entry.fandoms.length - 3} more</summary>
+                          <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                            {entry.fandoms.slice(3).map((tag) => <li key={tag} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium">{displayTag(tag)}</li>)}
+                          </ul>
+                        </details>
+                      </li>
+                    )}
+                  </ul>
                 </div>
-                <p className="text-xs font-medium text-muted-foreground">Catalogue posts: {entry.instagramPosts.length}</p>
-                <CompactInstagramHandles handles={entry.artistInstagrams} />
-                <CompactTagGroup label="Fandom" tags={entry.fandoms} variant="filled" />
-                <div className="mt-auto">
-                  <CompactTagGroup label="Merch" tags={entry.merchTypes} variant="outlined" />
-                <CompactTagGroup label="Merch" tags={entry.merchTypes} variant="outlined" />
+                <div>
+                  <p className="text-xs font-bold">Merch:</p>
+                  <ul aria-label="Merch types" className="mt-1.5 flex flex-wrap gap-1.5">
+                    {entry.merchTypes.slice(0, 3).map((tag) => (
+                      <li key={tag} className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">{displayTag(tag)}</li>
+                    ))}
+                    {entry.merchTypes.length > 3 && (
+                      <li>
+                        <details>
+                          <summary className="cursor-pointer list-none rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:bg-secondary [&::-webkit-details-marker]:hidden">+{entry.merchTypes.length - 3} more</summary>
+                          <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                            {entry.merchTypes.slice(3).map((tag) => <li key={tag} className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">{displayTag(tag)}</li>)}
+                          </ul>
+                        </details>
+                      </li>
+                    )}
+                  </ul>
                 </div>
                 <p className={cn('inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold', entry.stampRally ? 'border-emerald-800 bg-emerald-700 text-white' : 'border-border bg-muted text-foreground')}>
                   <span aria-hidden="true">{entry.stampRally ? '✦' : '♡'}</span>Stamp Rally · {entry.stampRally ? 'Yes' : 'No'}
