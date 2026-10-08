@@ -83,7 +83,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
         <h2 id="catalogue-posts-heading" className="mb-5 text-2xl font-extrabold">{catalogue.instagramPosts.length > 0 ? 'Catalogue posts on Instagram' : 'Catalogue files'}</h2>
         {catalogue.instagramPosts.length > 0 ? (
           <div className="mx-auto flex max-w-2xl flex-col gap-8">
-            {catalogue.instagramPosts.slice(0, 3).map((postUrl, index) => (
+            {catalogue.instagramPosts.slice(0, 10).map((postUrl, index) => (
               <InstagramPostEmbed key={postUrl} postUrl={postUrl} title={`${catalogue.artistName} catalogue post ${index + 1}`} />
             ))}
           </div>
