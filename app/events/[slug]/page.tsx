@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, CalendarDays, MapPin } from 'lucide-react'
 import { CatalogueBrowser } from '@/components/catalogue-browser'
+import { InteractiveFloorPlan } from '@/components/interactive-floor-plan'
 import { EventEntryBadge } from '@/components/event-entry-badge'
 import { InstagramIcon } from '@/components/social-icons'
 import { formatDateRange, instagramUrl } from '@/lib/format'
@@ -91,6 +92,14 @@ export default async function EventPage({ params }: Props) {
           </nav>
         </div>
       </section>
+
+      {event.slug === 'nijifest-2026' && (
+        <section aria-labelledby="floor-plan-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-10">
+          <h2 id="floor-plan-heading" className="text-3xl font-extrabold tracking-tight">Find a booth on the floor plan</h2>
+          <p className="mt-2 text-muted-foreground">Select a highlighted booth to open its catalogue. Booths without a catalogue are shown for reference.</p>
+          <div className="mt-5"><InteractiveFloorPlan eventSlug={event.slug} entries={catalogues} /></div>
+        </section>
+      )}
 
       <section id="catalogue" aria-labelledby="catalogue-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-12">
         <h2 id="catalogue-heading" className="text-3xl font-extrabold tracking-tight">
