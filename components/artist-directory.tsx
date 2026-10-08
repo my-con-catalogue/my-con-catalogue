@@ -69,11 +69,7 @@ export function ArtistDirectory({ artists }: { artists: ArtistWithAppearances[] 
           </h2>
           <ul className="mt-4 grid gap-4 md:grid-cols-2">
             {groups.get(letter)!.map((artist) => {
-              const byYear = new Map<number, { slug: string; name: string }[]>()
-              for (const a of artist.appearances) {
-                byYear.set(a.year, [...(byYear.get(a.year) ?? []), a])
-              }
-              const years = [...byYear.keys()].sort((a, b) => b - a)
+              const appearances = [...artist.appearances].sort((a, b) => b.year - a.year || a.name.localeCompare(b.name))
               return (
                 <li key={artist.id} className="rounded-xl border border-border bg-card p-5">
                   <h3 className="text-xl font-bold">{artist.name}</h3>
@@ -95,28 +91,23 @@ export function ArtistDirectory({ artists }: { artists: ArtistWithAppearances[] 
                   )}
                   {artist.bio && <p className="mt-1 text-sm text-muted-foreground">{artist.bio}</p>}
                   <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Appearances ({artist.appearances.length})
+                    Appearances ({appearances.length})
                   </p>
-                  {years.length === 0 ? (
+                  {appearances.length === 0 ? (
                     <p className="mt-2 text-sm text-muted-foreground">No appearances archived yet.</p>
                   ) : (
-                    <dl className="mt-2 flex flex-col gap-2">
-                      {years.map((year) => (
-                        <div key={year} className="flex flex-wrap items-center gap-2">
-                          <dt className="w-12 font-heading text-sm font-bold">{year}</dt>
-                          {byYear.get(year)!.map((ev) => (
-                            <dd key={ev.slug}>
-                              <Link
-                                href={`/events/${ev.slug}`}
-                                className="inline-flex rounded-full bg-secondary px-3 py-1 text-sm font-medium hover:bg-foreground hover:text-background"
-                              >
-                                {ev.name}
-                              </Link>
-                            </dd>
-                          ))}
-                        </div>
+                    <ul className="mt-2 flex flex-wrap gap-2">
+                      {appearances.map((event) => (
+                        <li key={event.slug}>
+                          <Link
+                            href={`/events/${event.slug}`}
+                            className="inline-flex rounded-full bg-secondary px-3 py-1 text-sm font-medium transition-colors hover:bg-foreground hover:text-background"
+                          >
+                            <span className="mr-1.5 font-bold">{event.year}</span>{event.name}
+                          </Link>
+                        </li>
                       ))}
-                    </dl>
+                    </ul>
                   )}
                 </li>
               )
