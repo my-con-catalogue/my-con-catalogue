@@ -18,7 +18,7 @@ function uniqueSorted(values: readonly (readonly string[])[]) {
 
 const CATALOGUES_PER_PAGE = 20
 
-function CompactTagGroup({ label, tags, variant }: { label: string; tags: string[]; variant: 'filled' | 'outlined' }) {
+function CompactTagGroup({ label, tags, variant }: { label: string; tags: readonly string[]; variant: 'filled' | 'outlined' }) {
   const [expanded, setExpanded] = useState(false)
   if (tags.length === 0) return null
   const visibleTags = expanded ? tags : tags.slice(0, 3)
