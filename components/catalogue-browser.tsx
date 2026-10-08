@@ -18,6 +18,7 @@ function uniqueSorted(values: readonly (readonly string[])[]) {
 
 const CATALOGUES_PER_PAGE = 20
 
+function CompactTagGroup({ label, tags, variant }: { label: string; tags: string[]; variant: 'filled' | 'outlined' }) {
 function CompactTagGroup({ label, tags, variant }: { label: string; tags: readonly string[]; variant: 'filled' | 'outlined' }) {
   const [expanded, setExpanded] = useState(false)
   if (tags.length === 0) return null
@@ -40,6 +41,7 @@ function CompactTagGroup({ label, tags, variant }: { label: string; tags: readon
               onClick={() => setExpanded((value) => !value)}
               aria-expanded={expanded}
               className="rounded-full border border-dashed border-border px-2.5 py-0.5 text-xs font-semibold text-primary hover:bg-secondary"
+              className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               {expanded ? 'Show less' : `+${tags.length - 3} more`}
             </button>
@@ -47,6 +49,32 @@ function CompactTagGroup({ label, tags, variant }: { label: string; tags: readon
         )}
       </ul>
     </div>
+  )
+}
+
+function CompactInstagramHandles({ handles }: { handles: readonly string[] }) {
+  const [expanded, setExpanded] = useState(false)
+  const visibleHandles = expanded ? handles : handles.slice(0, 2)
+
+  if (handles.length === 0) return null
+
+  return (
+    <ul aria-label="Artist Instagram accounts" className="flex flex-wrap gap-1.5">
+      {visibleHandles.map((handle) => (
+        <li key={handle}>
+          <a href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground hover:text-primary">
+            <InstagramIcon className="size-4" />@{handle.replace(/^@/, '')}
+          </a>
+        </li>
+      ))}
+      {handles.length > 2 && (
+        <li>
+          <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} className="inline-flex rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+            {expanded ? 'Show less' : `+${handles.length - 2} account${handles.length === 3 ? '' : 's'}`}
+          </button>
+        </li>
+      )}
+    </ul>
   )
 }
 
@@ -226,6 +254,8 @@ export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
               </Link>
               <div className="flex flex-1 flex-col gap-3 p-4">
                 <h3 className="text-lg font-bold leading-tight">
+              <div className="flex flex-col gap-3 p-4">
+                <h3 className="min-h-7 text-lg font-bold leading-tight">
                   <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="hover:text-primary">{entry.artistName}</Link>
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
@@ -236,9 +266,11 @@ export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
                   ))}
                 </div>
                 <p className="text-xs font-medium text-muted-foreground">Catalogue posts: {entry.instagramPosts.length}</p>
+                <CompactInstagramHandles handles={entry.artistInstagrams} />
                 <CompactTagGroup label="Fandom" tags={entry.fandoms} variant="filled" />
                 <div className="mt-auto">
                   <CompactTagGroup label="Merch" tags={entry.merchTypes} variant="outlined" />
+                <CompactTagGroup label="Merch" tags={entry.merchTypes} variant="outlined" />
                 </div>
                 <p className={cn('inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold', entry.stampRally ? 'border-emerald-800 bg-emerald-700 text-white' : 'border-border bg-muted text-foreground')}>
                   <span aria-hidden="true">{entry.stampRally ? '✦' : '♡'}</span>Stamp Rally · {entry.stampRally ? 'Yes' : 'No'}
