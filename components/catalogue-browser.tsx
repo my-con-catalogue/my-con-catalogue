@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, ChevronDown, Search, X } from 'lucide-react'
 import { InstagramIcon } from '@/components/social-icons'
 import { instagramUrl } from '@/lib/format'
@@ -80,6 +80,77 @@ function FilterDropdown({
         </ul>
       </div>
     </details>
+  )
+}
+
+function FandomTagList({ tags }: { tags: readonly string[] }) {
+  const listRef = useRef<HTMLUListElement>(null)
+  const [visibleCount, setVisibleCount] = useState(tags.length)
+  const [expanded, setExpanded] = useState(false)
+
+  useEffect(() => {
+    const list = listRef.current
+    if (!list || expanded) return
+
+    const measureRows = () => {
+      const items = Array.from(list.children) as HTMLElement[]
+      const rowTops = [...new Set(items.map((item) => Math.round(item.getBoundingClientRect().top)))].sort((a, b) => a - b)
+      if (rowTops.length <= 3) return
+
+      const thirdRowTop = rowTops[2]
+      const overflowIndex = items.slice(0, visibleCount).findIndex((item) => Math.round(item.getBoundingClientRect().top) > thirdRowTop)
+      if (overflowIndex >= 0) {
+        setVisibleCount((current) => Math.min(current, overflowIndex))
+        return
+      }
+
+      const moreButton = visibleCount < tags.length ? items[visibleCount] : undefined
+      if (moreButton && Math.round(moreButton.getBoundingClientRect().top) > thirdRowTop) {
+        setVisibleCount((current) => Math.max(0, current - 1))
+      }
+    }
+
+    let frame = requestAnimationFrame(measureRows)
+    let observedWidth = list.clientWidth
+    const observer = new ResizeObserver((observations) => {
+      const width = observations[0]?.contentRect.width ?? list.clientWidth
+      if (Math.round(width) !== Math.round(observedWidth)) {
+        observedWidth = width
+        setVisibleCount(tags.length)
+      }
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(measureRows)
+    })
+    observer.observe(list)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
+  }, [expanded, tags.length, visibleCount])
+
+  return (
+    <ul ref={listRef} aria-label="Fandoms" className="mt-1.5 flex flex-wrap gap-1.5">
+      {(expanded ? tags : tags.slice(0, visibleCount)).map((tag) => (
+        <li key={tag} title={displayTag(tag)} className="max-w-full truncate whitespace-nowrap rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium">
+          {displayTag(tag)}
+        </li>
+      ))}
+      {!expanded && visibleCount < tags.length && (
+        <li>
+          <button type="button" onClick={() => setExpanded(true)} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:bg-secondary">
+            +{tags.length - visibleCount} more
+          </button>
+        </li>
+      )}
+      {expanded && (
+        <li>
+          <button type="button" onClick={() => { setExpanded(false); setVisibleCount(tags.length) }} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:bg-secondary">
+            Show less
+          </button>
+        </li>
+      )}
+    </ul>
   )
 }
 
@@ -196,23 +267,29 @@ export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
                 <h3 className="text-lg font-bold leading-tight">
                   <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="hover:text-primary">{entry.artistName}</Link>
                 </h3>
-                <div className="flex flex-col gap-1.5">
-                  {entry.artistInstagrams.map((handle) => (
-                    <a key={handle} href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary">
-                      <InstagramIcon className="size-4" />@{handle.replace(/^@/, '')}
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                  {entry.artistInstagrams.slice(0, 3).map((handle) => (
+                    <a key={handle} href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex min-w-0 items-center gap-1.5 truncate text-sm text-muted-foreground hover:text-primary">
+                      <InstagramIcon className="size-4 shrink-0" />@{handle.replace(/^@/, '')}
                     </a>
                   ))}
+                  {entry.artistInstagrams.length > 3 && (
+                    <details className="min-w-0">
+                      <summary className="cursor-pointer list-none truncate text-xs font-semibold text-primary underline underline-offset-2 [&::-webkit-details-marker]:hidden">+{entry.artistInstagrams.length - 3} more</summary>
+                      <div className="mt-1.5 flex flex-col gap-1.5">
+                        {entry.artistInstagrams.slice(3).map((handle) => (
+                          <a key={handle} href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary">
+                            <InstagramIcon className="size-4 shrink-0" />@{handle.replace(/^@/, '')}
+                          </a>
+                        ))}
+                      </div>
+                    </details>
+                  )}
                 </div>
                 <p className="text-xs font-medium text-muted-foreground">Catalogue posts: {entry.instagramPosts.length}</p>
                 <div>
                   <p className="text-xs font-bold">Fandom:</p>
-                  <ul aria-label="Fandoms" className="mt-1.5 flex flex-wrap gap-1.5">
-                  {entry.fandoms.map((f) => (
-                    <li key={f} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium">
-                      {displayTag(f)}
-                    </li>
-                  ))}
-                  </ul>
+                  <FandomTagList tags={entry.fandoms} />
                 </div>
                 <div className="mt-auto">
                   <p className="text-xs font-bold">Merch:</p>
