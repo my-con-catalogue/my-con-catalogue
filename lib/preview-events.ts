@@ -33,6 +33,7 @@ type PreviewEvent = {
 const eventInputs: PreviewEventInput[] = [
   { name: 'Anime Fest! 2026 / 3', slug: 'anime-fest-2026', year: 2026, displayOrder: 1, isUpcoming: true, entryStatus: 'Free entry', startDate: '2026-10-17', endDate: '2026-10-18', location: 'Lalaport Bukit Bintang City Centre', instagram: 'comic_fiesta', logoUrl: '/events/anime-fest.png' },
   { name: 'Comic Fiesta 2026', slug: 'comic-fiesta-2026', year: 2026, displayOrder: 2, isUpcoming: true, entryStatus: 'Ticketed', startDate: '2026-12-19', endDate: '2026-12-20', location: 'Kuala Lumpur Convention Centre', instagram: 'comic_fiesta', logoUrl: '/events/comic-fiesta.png' },
+  { name: 'NijiFest 2026', slug: 'nijifest-2026', year: 2026, displayOrder: 3, isUpcoming: true, entryStatus: 'TBA', location: 'LaLaport BBCC, Level 2', logoUrl: '/events/nijifest.png' },
   { name: 'Anime Fest! (2027)', slug: 'anime-fest-2027', year: 2027, displayOrder: 1, isUpcoming: true, entryStatus: 'TBA', instagram: 'comic_fiesta', logoUrl: '/events/anime-fest.png' },
   { name: 'Anime Fest! Plus (2027)', slug: 'anime-fest-plus-2027', year: 2027, displayOrder: 2, isUpcoming: true, entryStatus: 'TBA', instagram: 'comic_fiesta', logoUrl: '/events/anime-fest-plus.png' },
   { name: 'Cos-Mic (2027)', slug: 'cos-mic-2027', year: 2027, displayOrder: 3, isUpcoming: true, entryStatus: 'TBA', instagram: 'cosmic_asia', logoUrl: '/events/cos-mic.jpg' },
