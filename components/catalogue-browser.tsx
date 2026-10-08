@@ -193,32 +193,47 @@ export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
                 <span aria-hidden="true">›</span><span>Check catalogue posts here</span><span aria-hidden="true">‹</span>
               </Link>
               <div className="flex flex-1 flex-col gap-3 p-4">
-                <h3 className="min-h-7 text-lg font-bold leading-tight">
+                <h3 className="line-clamp-2 min-h-10 text-lg font-bold leading-tight">
                   <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="hover:text-primary">{entry.artistName}</Link>
                 </h3>
-                {entry.artistInstagrams.length > 0 && (
-                  <ul aria-label="Artist Instagram accounts" className="flex flex-wrap gap-1.5">
-                    {entry.artistInstagrams.map((handle) => (
-                      <li key={handle}>
-                        <a href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground hover:text-primary">
-                          <InstagramIcon className="size-4" />@{handle.replace(/^@/, '')}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <div aria-label="Artist Instagram accounts" className="flex min-h-10 flex-col justify-start gap-1">
+                  {entry.artistInstagrams[0] && (
+                    <a href={instagramUrl(entry.artistInstagrams[0])} target="_blank" rel="noopener noreferrer" className="inline-flex max-w-full items-center gap-1.5 truncate text-sm text-muted-foreground hover:text-primary">
+                      <InstagramIcon className="size-4 shrink-0" />@{entry.artistInstagrams[0].replace(/^@/, '')}
+                    </a>
+                  )}
+                  {entry.artistInstagrams[1] && (
+                    <div className="flex min-w-0 items-center gap-2 text-sm">
+                      <a href={instagramUrl(entry.artistInstagrams[1])} target="_blank" rel="noopener noreferrer" className="inline-flex min-w-0 items-center gap-1.5 truncate text-muted-foreground hover:text-primary">
+                        <InstagramIcon className="size-4 shrink-0" />@{entry.artistInstagrams[1].replace(/^@/, '')}
+                      </a>
+                      {entry.artistInstagrams.length > 2 && (
+                        <details className="shrink-0">
+                          <summary className="cursor-pointer list-none whitespace-nowrap text-xs font-semibold text-primary underline underline-offset-2 [&::-webkit-details-marker]:hidden">+{entry.artistInstagrams.length - 2} more</summary>
+                          <div className="mt-1 flex flex-col gap-1">
+                            {entry.artistInstagrams.slice(2).map((handle) => (
+                              <a key={handle} href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary">
+                                <InstagramIcon className="size-4 shrink-0" />@{handle.replace(/^@/, '')}
+                              </a>
+                            ))}
+                          </div>
+                        </details>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <div className="min-h-20">
                   <p className="text-xs font-bold">Fandom:</p>
-                  <ul aria-label="Fandoms" className="mt-1.5 flex flex-wrap gap-1.5">
-                    {entry.fandoms.slice(0, 3).map((tag) => (
-                      <li key={tag} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium">{displayTag(tag)}</li>
+                  <ul aria-label="Fandoms" className="mt-1.5 grid grid-cols-2 gap-1.5">
+                    {entry.fandoms.slice(0, entry.fandoms.length > 4 ? 3 : 4).map((tag) => (
+                      <li key={tag} title={displayTag(tag)} className="truncate rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium">{displayTag(tag)}</li>
                     ))}
-                    {entry.fandoms.length > 3 && (
+                    {entry.fandoms.length > 4 && (
                       <li>
                         <details>
-                          <summary className="cursor-pointer list-none rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:bg-secondary [&::-webkit-details-marker]:hidden">+{entry.fandoms.length - 3} more</summary>
-                          <ul className="mt-1.5 flex flex-wrap gap-1.5">
-                            {entry.fandoms.slice(3).map((tag) => <li key={tag} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium">{displayTag(tag)}</li>)}
+                          <summary className="cursor-pointer list-none truncate rounded-full border border-border bg-muted px-2.5 py-0.5 text-center text-xs font-semibold text-muted-foreground hover:bg-secondary [&::-webkit-details-marker]:hidden">+{entry.fandoms.length - 3} more</summary>
+                          <ul className="mt-1.5 grid grid-cols-2 gap-1.5">
+                            {entry.fandoms.slice(3).map((tag) => <li key={tag} title={displayTag(tag)} className="truncate rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium">{displayTag(tag)}</li>)}
                           </ul>
                         </details>
                       </li>
@@ -227,16 +242,16 @@ export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
                 </div>
                 <div className="min-h-20">
                   <p className="text-xs font-bold">Merch:</p>
-                  <ul aria-label="Merch types" className="mt-1.5 flex flex-wrap gap-1.5">
-                    {entry.merchTypes.slice(0, 3).map((tag) => (
-                      <li key={tag} className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">{displayTag(tag)}</li>
+                  <ul aria-label="Merch types" className="mt-1.5 grid grid-cols-2 gap-1.5">
+                    {entry.merchTypes.slice(0, entry.merchTypes.length > 4 ? 3 : 4).map((tag) => (
+                      <li key={tag} title={displayTag(tag)} className="truncate rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">{displayTag(tag)}</li>
                     ))}
-                    {entry.merchTypes.length > 3 && (
+                    {entry.merchTypes.length > 4 && (
                       <li>
                         <details>
-                          <summary className="cursor-pointer list-none rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:bg-secondary [&::-webkit-details-marker]:hidden">+{entry.merchTypes.length - 3} more</summary>
-                          <ul className="mt-1.5 flex flex-wrap gap-1.5">
-                            {entry.merchTypes.slice(3).map((tag) => <li key={tag} className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">{displayTag(tag)}</li>)}
+                          <summary className="cursor-pointer list-none truncate rounded-full border border-border bg-muted px-2.5 py-0.5 text-center text-xs font-semibold text-muted-foreground hover:bg-secondary [&::-webkit-details-marker]:hidden">+{entry.merchTypes.length - 3} more</summary>
+                          <ul className="mt-1.5 grid grid-cols-2 gap-1.5">
+                            {entry.merchTypes.slice(3).map((tag) => <li key={tag} title={displayTag(tag)} className="truncate rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">{displayTag(tag)}</li>)}
                           </ul>
                         </details>
                       </li>
