@@ -44,9 +44,9 @@ export function InteractiveFloorPlan({ eventSlug, entries }: { eventSlug: string
         <span className="text-muted-foreground">{entriesByBooth.size} booth catalogues linked</span>
       </div>
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        <div className="relative mx-auto aspect-[1440/874] w-full">
-          <Image src="/floorplans/nijifest-2026.jpg" alt="NijiFest floor plan showing booths D01 to D80" fill sizes="(max-width: 1200px) 100vw, 1152px" className="object-contain" priority unoptimized />
-          <svg viewBox="0 0 1440 874" role="group" aria-label="Interactive NijiFest booth map" className="absolute inset-0 size-full">
+        <div className="relative mx-auto w-full">
+          <Image src="/floorplans/nijifest-2026.jpg" alt="NijiFest floor plan showing booths D01 to D80" width={1440} height={874} sizes="(max-width: 1200px) 100vw, 1152px" className="block h-auto w-full" priority unoptimized />
+          <svg viewBox="0 0 1440 874" preserveAspectRatio="none" role="group" aria-label="Interactive NijiFest booth map" className="absolute inset-0 size-full">
             {spots.map(({ booth, x, y, angle, width, height }) => {
               const entry = entriesByBooth.get(booth)
               const active = Boolean(entry)
