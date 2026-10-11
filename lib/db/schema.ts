@@ -1,4 +1,4 @@
-import { boolean, date, integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
+import { boolean, date, integer, pgTable, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
 export const events = pgTable('events', {
   id: serial('id').primaryKey(),
@@ -52,6 +52,14 @@ export const catalogueEntries = pgTable('catalogue_entries', {
   catalogueFileUrls: text('catalogue_file_urls').array().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+export const eventBooths = pgTable('event_booths', {
+  id: serial('id').primaryKey(),
+  eventSlug: text('event_slug').notNull().references(() => events.slug, { onDelete: 'cascade' }),
+  boothNumber: text('booth_number').notNull(),
+  displayOrder: integer('display_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [uniqueIndex('event_booths_event_booth_idx').on(table.eventSlug, table.boothNumber)])
 
 export const stampRallies = pgTable('stamp_rallies', {
   id: serial('id').primaryKey(),
