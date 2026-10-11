@@ -112,6 +112,18 @@ $$;
 
 create unique index if not exists catalogue_entries_event_booth_idx on catalogue_entries(event_slug, booth_number);
 
+-- Expected booth numbers for each event, including booths without catalogues yet.
+create table if not exists event_booths (
+  id serial primary key,
+  event_slug text not null references events(slug) on delete cascade,
+  booth_number text not null,
+  display_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists event_booths_event_booth_idx on event_booths(event_slug, booth_number);
+create index if not exists event_booths_event_order_idx on event_booths(event_slug, display_order, id);
+
 create table if not exists stamp_rallies (
   id serial primary key,
   event_id integer not null references events(id) on delete cascade,
