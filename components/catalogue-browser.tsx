@@ -154,7 +154,7 @@ function FandomTagList({ tags }: { tags: readonly string[] }) {
   )
 }
 
-export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
+export function CatalogueBrowser({ entries, boothNumbers }: { entries: CatalogueEntry[]; boothNumbers: string[] }) {
   const [query, setQuery] = useState('')
   const [fandoms, setFandoms] = useState<Set<string>>(new Set())
   const [merch, setMerch] = useState<Set<string>>(new Set())
@@ -192,14 +192,16 @@ export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
   const pageNumbers = Array.from({ length: pageCount }, (_, index) => index + 1).filter(
     (number) => number === 1 || number === pageCount || Math.abs(number - currentPage) <= 1,
   )
-
-  if (entries.length === 0) {
-    return (
-      <p className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
-        No catalogues archived for this event yet.
-      </p>
-    )
+  const catalogueByBooth = new Map<string, CatalogueEntry>()
+  for (const entry of entries) {
+    if (entry.booth?.trim()) catalogueByBooth.set(entry.booth.trim().toLocaleLowerCase(), entry)
   }
+  const catalogueBoothNumbers = entries.map((entry) => entry.booth).filter((booth): booth is string => Boolean(booth?.trim()))
+  const configuredBooths = [...new Set(boothNumbers.map((booth) => booth.trim()).filter(Boolean))]
+  const unconfiguredCatalogueBooths = [...new Set(catalogueBoothNumbers)]
+    .filter((booth) => !configuredBooths.some((configured) => configured.toLocaleLowerCase() === booth.toLocaleLowerCase()))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+  const allBoothNumbers = [...configuredBooths, ...unconfiguredCatalogueBooths]
 
   return (
     <div className="flex flex-col gap-8">
@@ -221,6 +223,32 @@ export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
             className="h-11 w-full rounded-lg border border-input bg-background pl-10 pr-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
+        {allBoothNumbers.length > 0 && (
+          <section aria-label="Jump to a booth" className="rounded-lg border border-border bg-background p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-bold">Jump to a booth</h3>
+              <p className="text-xs text-muted-foreground"><span className="font-semibold text-primary">Colored</span> = catalogue available · Gray = not listed yet</p>
+            </div>
+            <ul className="mt-2 flex max-h-36 flex-wrap gap-1.5 overflow-y-auto pr-1">
+              {allBoothNumbers.map((booth) => {
+                const catalogue = catalogueByBooth.get(booth.trim().toLocaleLowerCase())
+                return (
+                  <li key={booth}>
+                    {catalogue ? (
+                      <Link href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} className="inline-flex rounded-md border border-primary/30 bg-accent px-2.5 py-1 text-sm font-semibold text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground">
+                        {booth}
+                      </Link>
+                    ) : (
+                      <span aria-label={`${booth}, catalogue not listed`} className="inline-flex cursor-not-allowed rounded-md border border-border bg-muted px-2.5 py-1 text-sm font-medium text-muted-foreground/60">
+                        {booth}
+                      </span>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        )}
         <div className="flex flex-wrap gap-2">
           <FilterDropdown label="Fandom" options={fandomOptions} selected={fandoms} onToggle={toggle(setFandoms)} searchable={fandomOptions.length > 8} />
           <FilterDropdown label="Merch type" options={merchOptions} selected={merch} onToggle={toggle(setMerch)} searchable={merchOptions.length > 8} />
@@ -250,7 +278,7 @@ export function CatalogueBrowser({ entries }: { entries: CatalogueEntry[] }) {
 
       {filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
-          No catalogues match these filters.
+          {entries.length === 0 ? 'No catalogues archived for this event yet.' : 'No catalogues match these filters.'}
         </p>
       ) : (
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
