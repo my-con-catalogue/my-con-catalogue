@@ -1,103 +1,117 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
-import { EventCard } from '@/components/event-card'
-import { PageHeader } from '@/components/page-header'
-import { getEvents, type EventWithCount } from '@/lib/queries'
+import { notFound } from 'next/navigation'
+import { ArrowLeft, CalendarDays, MapPin } from 'lucide-react'
+import { CatalogueBrowser } from '@/components/catalogue-browser'
+import { EventEntryBadge } from '@/components/event-entry-badge'
+import { EventStatusBadge } from '@/components/event-status-badge'
+import { InstagramIcon } from '@/components/social-icons'
+import { formatDateRange, instagramUrl } from '@/lib/format'
+import { getEventBoothNumbers, getEventBySlug, getEventCatalogues } from '@/lib/queries'
 
 export const revalidate = 300
 
-export const metadata: Metadata = {
-  title: 'Events',
-  description: 'Anime conventions in Malaysia, organised by year, with artist alley catalogues and stamp rallies.',
+type Props = { params: Promise<{ slug: string }> }
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const event = await getEventBySlug(slug)
+  if (!event) return { title: 'Event not found' }
+  return {
+    title: `${event.name} catalogues`,
+    description: `Artist alley catalogues for ${event.name}${event.location ? ` at ${event.location}` : ''}.`,
+  }
 }
 
-type Props = { searchParams: Promise<{ year?: string }> }
+export default async function EventPage({ params }: Props) {
+  const { slug } = await params
+  const event = await getEventBySlug(slug)
+  if (!event) notFound()
 
-export default async function EventsPage({ searchParams }: Props) {
-  const events = await getEvents()
-  const { year: yearParam } = await searchParams
-  const requestedYear = yearParam ? Number(yearParam) : null
-  const years = [...new Set(events.map((event) => event.year))].sort((a, b) => a - b)
-  const selectedYear = requestedYear && years.includes(requestedYear) ? requestedYear : null
-  const visibleEvents = selectedYear ? events.filter((event) => event.year === selectedYear) : events
-
-  const byYear = new Map<number, EventWithCount[]>()
-  for (const event of visibleEvents) {
-    const list = byYear.get(event.year) ?? []
-    list.push(event)
-    byYear.set(event.year, list)
-  }
-  const visibleYears = [...byYear.keys()].sort((a, b) => a - b)
+  const [catalogues, boothNumbers] = await Promise.all([
+    getEventCatalogues(event.slug),
+    getEventBoothNumbers(event.slug),
+  ])
 
   return (
     <>
-      <PageHeader
-        eyebrow="Events"
-        title="Conventions by year"
-        description="Browse all listed events or choose a year to narrow the list."
-      >
-        {years.length > 0 && (
-          <nav aria-label="Filter events by year" className="mt-6">
-            <ul className="flex flex-wrap gap-2">
-              <li>
-                <Link
-                  href="/events"
-                  aria-current={selectedYear === null ? 'page' : undefined}
-                  className={`inline-flex rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${selectedYear === null ? 'border-foreground bg-foreground text-background' : 'border-foreground bg-card hover:bg-foreground hover:text-background'}`}
-                >
-                  All Events
-                </Link>
-              </li>
-              {years.map((year) => (
-                <li key={year}>
-                  <Link
-                    href={`/events?year=${year}`}
-                    aria-current={selectedYear === year ? 'page' : undefined}
-                    className={`inline-flex rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${selectedYear === year ? 'border-foreground bg-foreground text-background' : 'border-foreground bg-card hover:bg-foreground hover:text-background'}`}
-                  >
-                    {year}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        )}
-      </PageHeader>
-
-      <div className="mx-auto flex max-w-6xl flex-col gap-14 px-4 py-14">
-        {events.length === 0 && <p className="text-muted-foreground">No events listed yet.</p>}
-        {events.length > 0 && visibleEvents.length === 0 && <p className="text-muted-foreground">No events are listed for {selectedYear} yet.</p>}
-        {visibleYears.map((year) => (
-          <section key={year} id={`year-${year}`} aria-labelledby={`heading-${year}`} className="scroll-mt-24">
-            <div className="flex items-baseline gap-4 border-b-2 border-foreground pb-3">
-              <h2 id={`heading-${year}`} className="text-4xl font-extrabold tracking-tight">
-                {year}
-              </h2>
-              <span className="text-sm text-muted-foreground">
-                {byYear.get(year)!.length} {byYear.get(year)!.length === 1 ? 'event' : 'events'}
-              </span>
-            </div>
-            <ul className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {byYear.get(year)!.map((event) => (
-                <li key={event.id}>
-                  <EventCard event={event} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-        <section className="rounded-2xl bg-primary p-7 text-primary-foreground md:flex md:items-center md:justify-between md:gap-8 md:p-9">
-          <div>
-            <h2 className="text-2xl font-extrabold">Want to see another event here?</h2>
-            <p className="mt-2 max-w-2xl leading-relaxed text-primary-foreground/85">
-              If there&apos;s an event you&apos;d like us to collect catalogues for but it isn&apos;t on this list, please send us a suggestion.
-            </p>
-          </div>
-          <Link href="/contact#suggestion-form" className="mt-5 inline-flex shrink-0 rounded-full bg-background px-5 py-3 font-semibold text-foreground transition-transform hover:-translate-y-0.5 md:mt-0">
-            Suggest an event <span className="ml-3" aria-hidden="true">↗</span>
+      <section className="border-b border-border bg-secondary/60">
+        <div className="mx-auto max-w-6xl px-4 py-10 md:py-14">
+          <Link href="/events" className="inline-flex items-center gap-1 text-sm font-semibold hover:text-primary">
+            <ArrowLeft className="size-4" aria-hidden="true" /> All events
           </Link>
-        </section>
-      </div>
+          <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-primary">{event.year}</p>
+          <h1 className="mt-1 text-4xl font-extrabold tracking-tight md:text-5xl">{event.name}</h1>
+          <div className="mt-5 flex aspect-square w-full max-w-xs items-center justify-center rounded-xl border border-dashed border-border bg-card/70 p-5">
+            {event.logoUrl ? (
+              <Image src={event.logoUrl} alt={`${event.name} logo`} width={320} height={130} className="h-full w-full object-contain" unoptimized />
+            ) : (
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Event logo</span>
+            )}
+          </div>
+          <div className="mt-4"><EventStatusBadge startDate={event.startDate} endDate={event.endDate} /></div>
+          {event.description && (
+            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{event.description}</p>
+          )}
+          <dl className="mt-6 flex flex-wrap gap-3 text-sm">
+            <div className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
+              <dt className="sr-only">Entry</dt>
+              <dd><EventEntryBadge status={event.entryStatus} /></dd>
+            </div>
+            <div className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
+              <dt className="sr-only">Date</dt>
+              <CalendarDays className="size-4" aria-hidden="true" />
+              <dd>{formatDateRange(event.startDate, event.endDate)}</dd>
+            </div>
+            <div className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
+              <dt className="sr-only">Location</dt>
+              <MapPin className="size-4" aria-hidden="true" />
+              <dd>{event.location ?? 'Location TBA'}</dd>
+            </div>
+            <div className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
+              <dt className="sr-only">Official social media account</dt>
+              <InstagramIcon className="size-4" />
+              <dd>
+                {event.instagram ? (
+                  <a
+                    href={instagramUrl(event.instagram)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold hover:text-primary"
+                  >
+                    @{event.instagram}
+                  </a>
+                ) : (
+                  'Social account TBA'
+                )}
+              </dd>
+            </div>
+          </dl>
+          <nav aria-label="Event sections" className="mt-8 flex gap-2">
+            <a href="#catalogue" className="rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background">
+              Catalogue ({catalogues.length})
+            </a>
+          </nav>
+        </div>
+      </section>
+
+      <section id="catalogue" aria-labelledby="catalogue-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-12">
+        <h2 id="catalogue-heading" className="text-3xl font-extrabold tracking-tight">
+          Artist alley catalogue
+        </h2>
+        <p className="mt-1 text-muted-foreground">Sorted by booth number A–Z. Filter by fandom, merch type, or stamp rally participation.</p>
+        <p className="mt-3 rounded-lg border border-primary/30 bg-accent/60 p-4 text-sm font-medium leading-relaxed">
+          Found something you love? Check the artist&apos;s account and show them some support by following, liking, or resharing their work.
+        </p>
+        <p className="mt-3 rounded-lg border border-border bg-card p-4 text-sm leading-relaxed text-muted-foreground">
+          Notice a missing booth number or catalogue? <Link href="/contact#artist-form" className="font-semibold text-primary underline underline-offset-2">Submit the catalogue here</Link>. Artists looking for fellow participants in a specific stamp rally can post in our <a href="https://discord.gg/F5nT5nxW3e" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2">Discord Stamp Rally forum</a>; we&apos;ll also share updates on <a href="https://www.instagram.com/my_concatalogue/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2">Instagram</a>.
+        </p>
+        <div className="mt-6">
+          <CatalogueBrowser entries={catalogues} boothNumbers={boothNumbers} />
+        </div>
+      </section>
+
     </>
   )
 }
