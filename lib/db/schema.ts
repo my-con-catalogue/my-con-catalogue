@@ -44,6 +44,7 @@ export const catalogueEntries = pgTable('catalogue_entries', {
   eventSlug: text('event_slug').notNull().references(() => events.slug, { onDelete: 'cascade' }),
   catalogueType: text('catalogue_type').notNull().default('booth_catalogue'),
   booth: text('booth_number').notNull(),
+  pickupNote: text('pickup_note'),
   artistName: text('artist_name').notNull(),
   artistInstagrams: text('artist_instagrams').array().notNull().default([]),
   fandoms: text('fandom_tags').array().notNull().default([]),
