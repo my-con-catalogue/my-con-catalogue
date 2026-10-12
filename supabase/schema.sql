@@ -84,10 +84,10 @@ create table if not exists catalogue_entries (
   merch_tags text[] not null default '{}',
   stamp_rally boolean not null default false,
   instagram_post_urls text[] not null default '{}',
+  catalogue_links text[] not null default '{}',
   catalogue_file_urls text[] not null default '{}',
   created_at timestamptz not null default now(),
-  check (cardinality(artist_instagrams) >= 1),
-  check ((cardinality(instagram_post_urls) between 1 and 3) or cardinality(catalogue_file_urls) > 0)
+  constraint catalogue_entries_artist_instagrams_nonempty check (cardinality(artist_instagrams) >= 1)
 );
 
 alter table catalogue_entries add column if not exists catalogue_type text not null default 'booth_catalogue';
@@ -97,9 +97,13 @@ alter table catalogue_entries add constraint catalogue_entries_catalogue_type_ch
   check (catalogue_type in ('booth_catalogue', 'pickup_only'));
 alter table catalogue_entries add column if not exists artist_instagrams text[] not null default '{}';
 alter table catalogue_entries add column if not exists catalogue_file_urls text[] not null default '{}';
+alter table catalogue_entries add column if not exists catalogue_links text[] not null default '{}';
 alter table catalogue_entries drop constraint if exists catalogue_entries_check;
-alter table catalogue_entries add constraint catalogue_entries_check
-  check ((cardinality(instagram_post_urls) between 1 and 3) or cardinality(catalogue_file_urls) > 0);
+alter table catalogue_entries drop constraint if exists catalogue_entries_check1;
+alter table catalogue_entries drop constraint if exists catalogue_entries_check_1;
+alter table catalogue_entries drop constraint if exists catalogue_entries_artist_instagrams_nonempty;
+alter table catalogue_entries add constraint catalogue_entries_artist_instagrams_nonempty
+  check (cardinality(artist_instagrams) >= 1);
 alter table catalogue_entries drop column if exists artist_logo_url;
 
 do $$

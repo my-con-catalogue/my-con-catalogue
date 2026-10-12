@@ -314,14 +314,16 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
         </p>
       ) : (
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleEntries.map((entry) => (
+          {visibleEntries.map((entry) => {
+            const hasCatalogueMaterial = entry.instagramPosts.length > 0 || entry.catalogueLinks.length > 0 || entry.catalogueFileUrls.length > 0
+            return (
             <li key={entry.id} className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
               <div className="flex items-center justify-between bg-foreground px-4 py-3 text-background">
                 <span className="text-xs font-bold uppercase tracking-wider">Booth number</span>
                 <span className="rounded-md bg-accent px-3 py-1 font-heading text-lg font-extrabold text-accent-foreground">{entry.booth}</span>
               </div>
               <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="flex items-center justify-center gap-2 border-b border-border bg-muted px-4 py-3 text-center text-sm font-semibold text-primary transition-colors hover:bg-accent/50">
-                <span aria-hidden="true">›</span><span>Check catalogue posts here</span><span aria-hidden="true">‹</span>
+                <span aria-hidden="true">›</span><span>{hasCatalogueMaterial ? 'Check catalogue material here' : 'View artist details'}</span><span aria-hidden="true">‹</span>
               </Link>
               {entry.catalogueType === 'pickup_only' && entry.pickupNote?.trim() && (
                 <p className="border-b border-border bg-accent/60 px-4 py-3 text-sm leading-relaxed text-foreground">
@@ -351,7 +353,11 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
                     </details>
                   )}
                 </div>
-                <p className="text-xs font-medium text-muted-foreground">Catalogue posts: {entry.instagramPosts.length}</p>
+                <p className={cn('text-xs font-semibold', hasCatalogueMaterial ? 'text-muted-foreground' : 'text-rose-700')}>
+                  {hasCatalogueMaterial
+                    ? `Catalogue available${entry.instagramPosts.length > 0 ? ` · ${entry.instagramPosts.length} Instagram post${entry.instagramPosts.length === 1 ? '' : 's'}` : ''}`
+                    : 'Catalogue unavailable'}
+                </p>
                 <div>
                   <p className="text-xs font-bold">Fandom:</p>
                   <FandomTagList tags={entry.fandoms} />
@@ -371,7 +377,8 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
                 </p>
               </div>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
       {filtered.length > CATALOGUES_PER_PAGE && (

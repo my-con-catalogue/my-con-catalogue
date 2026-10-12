@@ -14,6 +14,7 @@ export const previewCatalogueEntries = [
       'https://www.instagram.com/p/Dd6WaEYmCnA/',
       'https://www.instagram.com/p/DeHNmU6mMFM/',
     ],
+    catalogueLinks: [],
     catalogueFileUrls: [],
   },
   {
@@ -31,6 +32,7 @@ export const previewCatalogueEntries = [
       'https://www.instagram.com/p/DeGk4EBgWXZ/',
       'https://www.instagram.com/p/DeI3wBnAdu3/',
     ],
+    catalogueLinks: [],
     catalogueFileUrls: [],
   },
 ] as const

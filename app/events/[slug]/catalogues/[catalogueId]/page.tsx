@@ -12,6 +12,15 @@ function displayTag(tag: string) {
   return tag.toLocaleLowerCase().replace(/\b\p{L}/gu, (letter) => letter.toLocaleUpperCase())
 }
 
+function externalLink(value: string) {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url : null
+  } catch {
+    return null
+  }
+}
+
 export const revalidate = 300
 
 type Props = { params: Promise<{ slug: string; catalogueId: string }> }
@@ -85,14 +94,15 @@ export default async function CatalogueDetailPage({ params }: Props) {
         )}
       </p>
       <section aria-labelledby="catalogue-posts-heading" className="mt-8">
-        <h2 id="catalogue-posts-heading" className="mb-5 text-2xl font-extrabold">{catalogue.instagramPosts.length > 0 ? 'Catalogue posts on Instagram' : 'Catalogue files'}</h2>
+        <h2 id="catalogue-posts-heading" className="mb-5 text-2xl font-extrabold">Catalogue material</h2>
         {catalogue.instagramPosts.length > 0 ? (
           <div className="mx-auto flex max-w-2xl flex-col gap-8">
             {catalogue.instagramPosts.slice(0, 10).map((postUrl, index) => (
               <InstagramPostEmbed key={postUrl} postUrl={postUrl} title={`${catalogue.artistName} catalogue post ${index + 1}`} />
             ))}
           </div>
-        ) : catalogue.catalogueFileUrls.length > 0 ? (
+        ) : null}
+        {catalogue.catalogueFileUrls.length > 0 && (
           <div className="mx-auto flex max-w-3xl flex-col gap-6">
             {catalogue.catalogueFileUrls.map((fileUrl, index) => {
               const isImage = /\.(avif|gif|jpe?g|png|webp)(?:$|[?#])/i.test(fileUrl)
@@ -113,8 +123,26 @@ export default async function CatalogueDetailPage({ params }: Props) {
               )
             })}
           </div>
-        ) : (
-          <p className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">The artist&apos;s Instagram catalogue posts haven&apos;t been added yet.</p>
+        )}
+        {catalogue.catalogueLinks.length > 0 && (
+          <div className="mt-6 rounded-xl border border-border bg-card p-5">
+            <h3 className="font-bold">Catalogue links</h3>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {catalogue.catalogueLinks.map((link, index) => {
+                const url = externalLink(link)
+                return url ? (
+                  <li key={link}>
+                    <a href={url.href} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-primary underline underline-offset-2 hover:bg-accent">
+                      Open catalogue link {index + 1} · {url.hostname.replace(/^www\./, '')} ↗
+                    </a>
+                  </li>
+                ) : null
+              })}
+            </ul>
+          </div>
+        )}
+        {catalogue.instagramPosts.length === 0 && catalogue.catalogueFileUrls.length === 0 && catalogue.catalogueLinks.length === 0 && (
+          <p className="rounded-xl border border-dashed border-border bg-muted/40 p-8 text-center font-semibold text-muted-foreground">Catalogue unavailable for now. Please check back later.</p>
         )}
       </section>
     </div>
