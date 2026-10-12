@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, CalendarDays, MapPin } from 'lucide-react'
 import { CatalogueBrowser } from '@/components/catalogue-browser'
+import { AnimeFestFloorplan } from '@/components/anime-fest-floorplan'
 import { EventEntryBadge } from '@/components/event-entry-badge'
 import { EventStatusBadge } from '@/components/event-status-badge'
 import { InstagramIcon } from '@/components/social-icons'
@@ -88,13 +89,30 @@ export default async function EventPage({ params }: Props) {
               </dd>
             </div>
           </dl>
-          <nav aria-label="Event sections" className="mt-8 flex gap-2">
+          <nav aria-label="Event sections" className="mt-8 flex flex-wrap gap-2">
+            {event.slug === 'anime-fest-2026' && (
+              <a href="#interactive-map" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
+                Interactive map
+              </a>
+            )}
             <a href="#catalogue" className="rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background">
               Catalogue ({catalogues.length})
             </a>
           </nav>
         </div>
       </section>
+
+      {event.slug === 'anime-fest-2026' && (
+        <section id="interactive-map" aria-labelledby="interactive-map-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-10">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 id="interactive-map-heading" className="text-3xl font-extrabold tracking-tight">Anime Fest! 2026 floor plan</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Select a highlighted booth to open its catalogue. More booths become clickable as catalogue entries are added.</p>
+            </div>
+          </div>
+          <AnimeFestFloorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
+        </section>
+      )}
 
       <section id="catalogue" aria-labelledby="catalogue-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-12">
         <h2 id="catalogue-heading" className="text-3xl font-extrabold tracking-tight">
