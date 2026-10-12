@@ -38,11 +38,11 @@ values
       'https://www.instagram.com/p/DeI3wBnAdu3/'
     ]::text[]
   )
-on conflict (event_slug, booth_number) do update set
+on conflict (event_slug, booth_number) where catalogue_type = 'booth_catalogue' do update set
   artist_name = excluded.artist_name,
   artist_instagrams = excluded.artist_instagrams,
   fandom_tags = excluded.fandom_tags,
   merch_tags = excluded.merch_tags,
   stamp_rally = excluded.stamp_rally,
   instagram_post_urls = excluded.instagram_post_urls,
-  updated_at = now();
+  catalogue_type = excluded.catalogue_type;
