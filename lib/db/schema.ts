@@ -51,6 +51,7 @@ export const catalogueEntries = pgTable('catalogue_entries', {
   merchTypes: text('merch_tags').array().notNull().default([]),
   stampRally: boolean('stamp_rally').notNull().default(false),
   instagramPosts: text('instagram_post_urls').array().notNull().default([]),
+  catalogueLinks: text('catalogue_links').array().notNull().default([]),
   catalogueFileUrls: text('catalogue_file_urls').array().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
