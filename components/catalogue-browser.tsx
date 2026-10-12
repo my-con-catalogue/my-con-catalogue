@@ -259,17 +259,17 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
               <h3 className="text-sm font-bold">Jump to a booth</h3>
               <p className="text-xs text-muted-foreground"><span className="font-semibold text-primary">Colored</span> = catalogue available · Gray = not listed yet</p>
             </div>
-            <ul className="mt-2 flex max-h-36 flex-wrap gap-1.5 overflow-y-auto pr-1">
+            <ul className="mt-2 grid max-h-36 grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-1.5 overflow-y-auto pr-1">
               {allBoothNumbers.map((booth) => {
                 const catalogue = catalogueByBooth.get(booth.trim().toLocaleLowerCase())
                 return (
-                  <li key={booth}>
+                  <li key={booth} className="min-w-0">
                     {catalogue ? (
-                      <Link href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} className="inline-flex rounded-md border border-primary/30 bg-accent px-2.5 py-1 text-sm font-semibold text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground">
+                      <Link href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} className="flex w-full items-center justify-center whitespace-nowrap rounded-md border border-primary/30 bg-accent px-2.5 py-1 text-sm font-semibold text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground">
                         {booth}
                       </Link>
                     ) : (
-                      <span aria-label={`${booth}, catalogue not listed`} className="inline-flex cursor-not-allowed rounded-md border border-border bg-muted px-2.5 py-1 text-sm font-medium text-muted-foreground/60">
+                      <span aria-label={`${booth}, catalogue not listed`} className="flex w-full cursor-not-allowed items-center justify-center whitespace-nowrap rounded-md border border-border bg-muted px-2.5 py-1 text-sm font-medium text-muted-foreground/60">
                         {booth}
                       </span>
                     )}
