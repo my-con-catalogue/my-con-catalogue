@@ -114,9 +114,9 @@ export function AnimeFestFloorplan({ entries }: { entries: readonly CatalogueEnt
                 <title>{`${boothLabel} · Cosplay Market — this archive covers Artist Alley and Art Market catalogues`}</title>
                 <rect {...box} rx="3" fill="#6b7280" fillOpacity="0.82" stroke="#f3f4f6" strokeOpacity="0.85" strokeWidth="1.5" />
               </g>
-            ) : href ? (
-              <a key={boothLabel} href={href} aria-label={`${boothLabel}: ${entry.artistName}`}>
-                <title>{`${boothLabel} · ${entry.artistName} — open catalogue`}</title>
+            ) : href && entry ? (
+  <a key={boothLabel} href={href} aria-label={`${boothLabel}: ${entry.artistName}`}>
+    <title>{`${boothLabel} · ${entry.artistName} — open catalogue`}</title>
                 <rect {...box} rx="3" className="fill-amber-300/20 stroke-amber-200/90 transition-colors hover:fill-amber-200/45 focus:fill-amber-200/45" strokeWidth="2.5" />
               </a>
             ) : (
