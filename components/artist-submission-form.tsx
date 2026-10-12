@@ -18,15 +18,15 @@ export function ArtistSubmissionForm() {
         <div className="flex flex-wrap gap-3">
           <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 has-[:checked]:border-foreground has-[:checked]:bg-accent">
             <input type="radio" name="submissionType" value="new" defaultChecked required className="accent-primary" />
-            New catalogue
+            New booth catalogue
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 has-[:checked]:border-foreground has-[:checked]:bg-accent">
+            <input type="radio" name="submissionType" value="pickup-only" className="accent-primary" />
+            Pick-up catalogue
           </label>
           <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 has-[:checked]:border-foreground has-[:checked]:bg-accent">
             <input type="radio" name="submissionType" value="update" className="accent-primary" />
             Update my info
-          </label>
-          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 has-[:checked]:border-foreground has-[:checked]:bg-accent">
-            <input type="radio" name="submissionType" value="stamp-rally" className="accent-primary" />
-            Stamp rally
           </label>
         </div>
       </fieldset>
@@ -34,14 +34,14 @@ export function ArtistSubmissionForm() {
         <FormField id="a-name" label="Artist / circle name" required>
           <input id="a-name" name="artistName" type="text" required maxLength={100} className={inputClass} />
         </FormField>
-        <FormField id="a-ig" label="Instagram handle" required>
-          <input id="a-ig" name="instagram" type="text" required maxLength={100} placeholder="@yourhandle" className={inputClass} />
+        <FormField id="a-ig" label="Social media handle" required>
+          <input id="a-ig" name="socialMediaHandle" type="text" required maxLength={100} placeholder="@mycc (IG)" className={inputClass} />
         </FormField>
         <FormField id="a-event" label="Event name & year" required>
           <input id="a-event" name="eventName" type="text" required maxLength={150} placeholder="e.g. Comic Fiesta 2025" className={inputClass} />
         </FormField>
-        <FormField id="a-booth" label="Booth number" required>
-          <input id="a-booth" name="booth" type="text" required maxLength={30} className={inputClass} />
+        <FormField id="a-booth" label="Booth number" hint="If pick-up only, pls put PO only." required>
+          <input id="a-booth" name="booth" type="text" required maxLength={30} aria-describedby="a-booth-hint" className={inputClass} />
         </FormField>
       </div>
       <FormField id="a-url" label="Catalogue link" hint="Link to your catalogue image (Instagram post, Google Drive, etc.)">

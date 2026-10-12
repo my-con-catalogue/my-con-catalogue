@@ -11,7 +11,7 @@ export function SuggestionForm() {
 
   return (
     <form action={action} key={state.status === 'success' ? state.message : undefined} className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-4">
         <FormField id="s-name" label="Name">
           <input id="s-name" name="name" type="text" maxLength={100} autoComplete="name" className={inputClass} />
         </FormField>

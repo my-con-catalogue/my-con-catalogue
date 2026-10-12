@@ -7,6 +7,7 @@ To add a booth, open **Supabase → Table Editor → catalogue_entries → Inser
 | Column | What to enter |
 | --- | --- |
 | `event_slug` | The event slug, such as `anime-fest-2026` |
+| `catalogue_type` | `booth_catalogue` for an artist alley booth; `pickup_only` for a pick-up-only catalogue |
 | `booth_number` | Booth number, such as `A01` |
 | `artist_name` | Artist or circle name |
 | `artist_instagrams` | Array of Instagram handles, with or without `@` |
@@ -16,8 +17,22 @@ To add a booth, open **Supabase → Table Editor → catalogue_entries → Inser
 | `instagram_post_urls` | One to three public Instagram post URLs. Leave empty when using file URLs instead. |
 | `catalogue_file_urls` | Public URLs to catalogue PDF/image files (for example, in a public Supabase Storage bucket). Use this when there are no Instagram catalogue posts. |
 
-The event page sorts entries by booth number and displays catalogue links instead of artist logos. Each catalogue detail page embeds Instagram posts when provided, or displays PDF/image files from `catalogue_file_urls` when there are no Instagram catalogue posts. The artist directory combines handles from matching artist entries, removes duplicates, and displays every linked account. Enter all artist accounts in `artist_instagrams` on each relevant entry. The database requires at least one Instagram post URL or one public catalogue file URL.
+The event page separates `booth_catalogue` and `pickup_only` entries into tabs. Booth catalogues sort by booth number; pick-up entries can share `booth_number` set to `PO only` and sort by artist name. Only booth catalogues require a unique booth number per event. Each catalogue detail page embeds Instagram posts when provided, or displays PDF/image files from `catalogue_file_urls` when there are no Instagram catalogue posts. The artist directory combines handles from matching artist entries, removes duplicates, and displays every linked account. Enter all artist accounts in `artist_instagrams` on each relevant entry. The database requires at least one Instagram post URL or one public catalogue file URL.
 
-Artist uploads submitted through the public form are stored privately for review. To publish an approved upload, copy it into a public bucket (for example, `catalogues`), copy its public URL into `catalogue_file_urls`, and leave `instagram_post_urls` empty. Do not make the private `catalogue-submissions` bucket public.
+Artist catalogue uploads submitted through the public form are stored privately in `catalogue-submissions` for review. To publish an approved upload, copy it into a public bucket (for example, `catalogues`), copy its public URL into `catalogue_file_urls`, and leave `instagram_post_urls` empty. Do not make the private bucket public. The separate Stamp Rally form writes review data to `stamp_rally_submissions`; its optional upload stays private in the same bucket under `stamp-rally-submissions/`.
+
+## Configure the booth-number list for an event
+
+The event page also shows every booth number entered in the `event_booths` table. Booths with a catalogue are colored and link directly to that catalogue; booths without a catalogue are gray. Catalogue booths are also added automatically, so you do not need to duplicate them in `event_booths` unless you want to control their order.
+
+In **Supabase → Table Editor → event_booths → Insert row**, add one row per expected booth:
+
+| Column | What to enter |
+| --- | --- |
+| `event_slug` | The event slug, e.g. `anime-fest-2026` |
+| `booth_number` | The exact booth label, e.g. `A-01` |
+| `display_order` | Optional list position; use 1, 2, 3… to set the order |
+
+Repeat for each booth at that event. Leave `display_order` as `0` to keep the booths in the order you added them, or use 1, 2, 3… to set a custom order. The same booth label may be used at another event because booth numbers are unique per event. To add many booths at once, use the Table Editor's CSV import with the columns `event_slug,booth_number,display_order`. The new table is created by `schema.sql` for a fresh database; for an existing site, run `migrations/20261011_event_booths.sql` if needed, followed by `migrations/20261012_pickup_and_stamp_rally_submissions.sql`, before deploying the matching code.
 
 Keep the `DATABASE_URL` in the server-side environment only. Do not put database credentials in client-side code.

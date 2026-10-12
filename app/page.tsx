@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowRight, BookOpen, Coffee, MessageCircle, Palette, Stamp } from 'lucide-react'
 import { EventCard } from '@/components/event-card'
 import { InstagramIcon } from '@/components/social-icons'
+import { getEventStatus } from '@/lib/event-status'
 import { getEvents, getStats } from '@/lib/queries'
 
 export const revalidate = 300
@@ -32,10 +33,12 @@ const features = [
 
 export default async function HomePage() {
   const [events, stats] = await Promise.all([getEvents(), getStats()])
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }).format(new Date())
   const upcoming = events
-    .filter((event) => event.isUpcoming && (!event.startDate || event.startDate >= today))
+    .filter((event) => getEventStatus(event.startDate, event.endDate) !== 'past')
     .sort((a, b) => {
+      const aStatus = getEventStatus(a.startDate, a.endDate)
+      const bStatus = getEventStatus(b.startDate, b.endDate)
+      if (aStatus !== bStatus) return aStatus === 'ongoing' ? -1 : 1
       if (a.startDate && b.startDate) return a.startDate.localeCompare(b.startDate)
       if (a.startDate) return -1
       if (b.startDate) return 1

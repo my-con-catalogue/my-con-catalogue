@@ -1,4 +1,4 @@
-import { boolean, date, integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
+import { boolean, date, integer, pgTable, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
 export const events = pgTable('events', {
   id: serial('id').primaryKey(),
@@ -42,6 +42,7 @@ export const catalogues = pgTable('catalogues', {
 export const catalogueEntries = pgTable('catalogue_entries', {
   id: serial('id').primaryKey(),
   eventSlug: text('event_slug').notNull().references(() => events.slug, { onDelete: 'cascade' }),
+  catalogueType: text('catalogue_type').notNull().default('booth_catalogue'),
   booth: text('booth_number').notNull(),
   artistName: text('artist_name').notNull(),
   artistInstagrams: text('artist_instagrams').array().notNull().default([]),
@@ -52,6 +53,14 @@ export const catalogueEntries = pgTable('catalogue_entries', {
   catalogueFileUrls: text('catalogue_file_urls').array().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+export const eventBooths = pgTable('event_booths', {
+  id: serial('id').primaryKey(),
+  eventSlug: text('event_slug').notNull().references(() => events.slug, { onDelete: 'cascade' }),
+  boothNumber: text('booth_number').notNull(),
+  displayOrder: integer('display_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [uniqueIndex('event_booths_event_booth_idx').on(table.eventSlug, table.boothNumber)])
 
 export const stampRallies = pgTable('stamp_rallies', {
   id: serial('id').primaryKey(),
@@ -92,7 +101,8 @@ export const artistSubmissions = pgTable('artist_submissions', {
   id: serial('id').primaryKey(),
   submissionType: text('submission_type').notNull(),
   artistName: text('artist_name').notNull(),
-  instagram: text('instagram').notNull(),
+  socialMediaHandle: text('social_media_handle'),
+  instagram: text('instagram'),
   email: text('email'),
   eventName: text('event_name').notNull(),
   booth: text('booth'),
@@ -114,6 +124,19 @@ export const fanCafeSubmissions = pgTable('fan_cafe_submissions', {
   socialPlatform: text('social_platform').notNull(),
   socialAccount: text('social_account').notNull(),
   fandom: text('fandom').notNull(),
+  notes: text('notes'),
+  status: text('status').notNull().default('pending'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const stampRallySubmissions = pgTable('stamp_rally_submissions', {
+  id: serial('id').primaryKey(),
+  artistNames: text('artist_names').notNull(),
+  socialMediaHandles: text('social_media_handles').notNull(),
+  eventName: text('event_name').notNull(),
+  fandom: text('fandom').notNull(),
+  postLink: text('post_link'),
+  uploadFilePath: text('upload_file_path'),
   notes: text('notes'),
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { ArrowUpRight, CalendarDays, MapPin } from 'lucide-react'
 import { InstagramIcon } from '@/components/social-icons'
 import { EventEntryBadge } from '@/components/event-entry-badge'
+import { EventStatusBadge } from '@/components/event-status-badge'
 import { formatDateRange } from '@/lib/format'
 import type { EventWithCount } from '@/lib/queries'
 
@@ -26,9 +27,7 @@ export function EventCard({ event }: { event: EventWithCount }) {
         </h3>
         <ArrowUpRight className="size-5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" aria-hidden="true" />
       </div>
-      {event.isUpcoming && (
-        <span className="mt-3 self-start rounded-full border border-red-800 bg-red-700 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm">Upcoming</span>
-      )}
+      <div className="mt-3"><EventStatusBadge startDate={event.startDate} endDate={event.endDate} /></div>
       <dl className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <dt className="sr-only">Entry</dt>

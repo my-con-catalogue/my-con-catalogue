@@ -1,6 +1,6 @@
 import { and, asc, count, desc, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { catalogueEntries, events, fanCafes, stampRallies } from '@/lib/db/schema'
+import { catalogueEntries, eventBooths, events, fanCafes, stampRallies } from '@/lib/db/schema'
 import { previewEvents } from '@/lib/preview-events'
 import { previewFanCafes } from '@/lib/preview-fan-cafes'
 import { previewCatalogueEntries } from '@/lib/preview-catalogue-entries'
@@ -51,6 +51,7 @@ export async function getEventCatalogues(eventSlug: string) {
   return db
     .select({
       id: catalogueEntries.id,
+      catalogueType: catalogueEntries.catalogueType,
       booth: catalogueEntries.booth,
       instagramPosts: catalogueEntries.instagramPosts,
       catalogueFileUrls: catalogueEntries.catalogueFileUrls,
@@ -67,6 +68,17 @@ export async function getEventCatalogues(eventSlug: string) {
 }
 
 export type CatalogueEntry = Awaited<ReturnType<typeof getEventCatalogues>>[number]
+export type CatalogueType = 'booth_catalogue' | 'pickup_only'
+
+export async function getEventBoothNumbers(eventSlug: string): Promise<string[]> {
+  if (!databaseConfigured) return []
+  const rows = await db
+    .select({ boothNumber: eventBooths.boothNumber })
+    .from(eventBooths)
+    .where(eq(eventBooths.eventSlug, eventSlug))
+    .orderBy(asc(eventBooths.displayOrder), asc(eventBooths.id))
+  return rows.map((row) => row.boothNumber)
+}
 
 export async function getEventCatalogueById(eventSlug: string, catalogueId: number) {
   if (!databaseConfigured) {
@@ -77,6 +89,7 @@ export async function getEventCatalogueById(eventSlug: string, catalogueId: numb
   const [entry] = await db
     .select({
       id: catalogueEntries.id,
+      catalogueType: catalogueEntries.catalogueType,
       eventSlug: catalogueEntries.eventSlug,
       eventName: events.name,
       eventYear: events.year,

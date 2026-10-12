@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { artistSubmissions, fanCafeSubmissions, suggestions } from '@/lib/db/schema'
+import { artistSubmissions, fanCafeSubmissions, stampRallySubmissions, suggestions } from '@/lib/db/schema'
 
 export type FormState = { status: 'idle' | 'success' | 'error'; message: string }
 
@@ -34,7 +34,7 @@ export async function submitSuggestion(_prev: FormState, formData: FormData): Pr
 export async function submitArtistCatalogue(_prev: FormState, formData: FormData): Promise<FormState> {
   const submissionType = field(formData, 'submissionType', 20)
   const artistName = field(formData, 'artistName', 100)
-  const instagram = field(formData, 'instagram', 100).replace(/^@/, '')
+  const socialMediaHandle = field(formData, 'socialMediaHandle', 100).replace(/^@/, '')
   const eventName = field(formData, 'eventName', 150)
   const booth = field(formData, 'booth', 30)
   const uploadedValue = formData.get('catalogueFile')
@@ -44,11 +44,11 @@ export async function submitArtistCatalogue(_prev: FormState, formData: FormData
   const catalogueUrl = field(formData, 'catalogueUrl', 500)
   const notes = field(formData, 'notes', 2000)
 
-  if (!['new', 'update', 'stamp-rally'].includes(submissionType)) {
-    return { status: 'error', message: 'Please choose whether this is a new catalogue, an update, or a stamp rally.' }
+  if (!['new', 'update', 'pickup-only'].includes(submissionType)) {
+    return { status: 'error', message: 'Please choose whether this is a booth catalogue, pick-up catalogue, or update.' }
   }
-  if (!artistName || !instagram || !eventName || !booth) {
-    return { status: 'error', message: 'Artist name, Instagram handle, event, and booth number are required.' }
+  if (!artistName || !socialMediaHandle || !eventName || !booth) {
+    return { status: 'error', message: 'Artist name, social media handle, event, and booth number are required.' }
   }
   if (catalogueFile) {
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
@@ -81,7 +81,7 @@ export async function submitArtistCatalogue(_prev: FormState, formData: FormData
     await db.insert(artistSubmissions).values({
       submissionType,
       artistName,
-      instagram,
+      socialMediaHandle,
       eventName,
       booth,
       fandoms: fandoms || null,
@@ -110,10 +110,10 @@ function storageObjectUrl(projectUrl: string, bucket: string, objectPath: string
   return `${projectUrl}/storage/v1/object/${encodeURIComponent(bucket)}/${encodedPath}`
 }
 
-async function uploadCatalogueSubmission(file: File) {
+async function uploadCatalogueSubmission(file: File, folder = 'artist-submissions') {
   const { projectUrl, serviceKey, bucket } = storageConfig()
   const safeName = file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^\.+/, '').slice(-120) || 'catalogue'
-  const objectPath = `artist-submissions/${crypto.randomUUID()}/${safeName}`
+  const objectPath = `${folder}/${crypto.randomUUID()}/${safeName}`
   const response = await fetch(storageObjectUrl(projectUrl, bucket, objectPath), {
     method: 'POST',
     headers: {
@@ -188,6 +188,63 @@ export async function submitFanCafe(_prev: FormState, formData: FormData): Promi
     })
     return { status: 'success', message: 'Thanks! Your fan cafe submission is in the review queue.' }
   } catch {
+    return { status: 'error', message: 'We could not save your submission. Please try again later.' }
+  }
+}
+
+export async function submitStampRally(_prev: FormState, formData: FormData): Promise<FormState> {
+  const artistNames = field(formData, 'artistNames', 500)
+  const socialMediaHandles = field(formData, 'socialMediaHandles', 500)
+  const eventName = field(formData, 'eventName', 150)
+  const fandom = field(formData, 'fandom', 200)
+  const postLink = field(formData, 'postLink', 500)
+  const notes = field(formData, 'notes', 2000)
+  const uploadedValue = formData.get('stampRallyFile')
+  const stampRallyFile = uploadedValue instanceof File && uploadedValue.size > 0 ? uploadedValue : null
+
+  if (!artistNames || !socialMediaHandles || !eventName || !fandom) {
+    return { status: 'error', message: 'Artist names, social media handles, event, and fandom are required.' }
+  }
+  if (postLink) {
+    try {
+      const url = new URL(postLink)
+      if (!['http:', 'https:'].includes(url.protocol)) throw new Error()
+    } catch {
+      return { status: 'error', message: 'The stamp rally post link must be a valid http(s) URL.' }
+    }
+  }
+  if (stampRallyFile) {
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(stampRallyFile.type)) {
+      return { status: 'error', message: 'Upload a PDF, JPG, PNG, or WebP file.' }
+    }
+    if (stampRallyFile.size > 15 * 1024 * 1024) {
+      return { status: 'error', message: 'The upload must be 15 MB or smaller.' }
+    }
+  }
+
+  let uploadFilePath: string | null = null
+  if (stampRallyFile) {
+    try {
+      uploadFilePath = await uploadCatalogueSubmission(stampRallyFile, 'stamp-rally-submissions')
+    } catch {
+      return { status: 'error', message: 'File upload is not configured or failed. Please try again, or submit the post link.' }
+    }
+  }
+
+  try {
+    await db.insert(stampRallySubmissions).values({
+      artistNames,
+      socialMediaHandles,
+      eventName,
+      fandom,
+      postLink: postLink || null,
+      uploadFilePath,
+      notes: notes || null,
+    })
+    return { status: 'success', message: 'Thanks! Your stamp rally submission is in the review queue.' }
+  } catch {
+    if (uploadFilePath) await removeCatalogueSubmission(uploadFilePath)
     return { status: 'error', message: 'We could not save your submission. Please try again later.' }
   }
 }

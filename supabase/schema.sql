@@ -75,6 +75,7 @@ alter table catalogues drop column if exists artist_logo_url;
 create table if not exists catalogue_entries (
   id serial primary key,
   event_slug text not null references events(slug) on delete cascade,
+  catalogue_type text not null default 'booth_catalogue' check (catalogue_type in ('booth_catalogue', 'pickup_only')),
   booth_number text not null,
   artist_name text not null,
   artist_instagrams text[] not null default '{}',
@@ -88,6 +89,10 @@ create table if not exists catalogue_entries (
   check ((cardinality(instagram_post_urls) between 1 and 3) or cardinality(catalogue_file_urls) > 0)
 );
 
+alter table catalogue_entries add column if not exists catalogue_type text not null default 'booth_catalogue';
+alter table catalogue_entries drop constraint if exists catalogue_entries_catalogue_type_check;
+alter table catalogue_entries add constraint catalogue_entries_catalogue_type_check
+  check (catalogue_type in ('booth_catalogue', 'pickup_only'));
 alter table catalogue_entries add column if not exists artist_instagrams text[] not null default '{}';
 alter table catalogue_entries add column if not exists catalogue_file_urls text[] not null default '{}';
 alter table catalogue_entries drop constraint if exists catalogue_entries_check;
@@ -110,7 +115,21 @@ begin
 end
 $$;
 
-create unique index if not exists catalogue_entries_event_booth_idx on catalogue_entries(event_slug, booth_number);
+drop index if exists catalogue_entries_event_booth_idx;
+create unique index if not exists catalogue_entries_event_booth_idx
+  on catalogue_entries(event_slug, booth_number) where catalogue_type = 'booth_catalogue';
+
+-- Expected booth numbers for each event, including booths without catalogues yet.
+create table if not exists event_booths (
+  id serial primary key,
+  event_slug text not null references events(slug) on delete cascade,
+  booth_number text not null,
+  display_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists event_booths_event_booth_idx on event_booths(event_slug, booth_number);
+create index if not exists event_booths_event_order_idx on event_booths(event_slug, display_order, id);
 
 create table if not exists stamp_rallies (
   id serial primary key,
@@ -175,6 +194,7 @@ create table if not exists artist_submissions (
   id serial primary key,
   submission_type text not null,
   artist_name text not null,
+  social_media_handle text,
   instagram text,
   email text,
   event_name text not null,
@@ -189,8 +209,23 @@ create table if not exists artist_submissions (
 );
 
 alter table artist_submissions add column if not exists catalogue_file_path text;
+alter table artist_submissions add column if not exists social_media_handle text;
+update artist_submissions set social_media_handle = instagram where social_media_handle is null and instagram is not null;
 alter table artist_submissions alter column email drop not null;
+alter table artist_submissions alter column instagram drop not null;
 
+create table if not exists stamp_rally_submissions (
+  id serial primary key,
+  artist_names text not null,
+  social_media_handles text not null,
+  event_name text not null,
+  fandom text not null,
+  post_link text,
+  upload_file_path text,
+  notes text,
+  status text not null default 'pending',
+  created_at timestamptz not null default now()
+);
 create table if not exists fan_cafe_submissions (
   id serial primary key,
   name text not null,
