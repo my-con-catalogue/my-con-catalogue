@@ -25,28 +25,27 @@ function addAt(level: BoothSpot['level'], zone: string, booths: Array<[number, n
   booths.forEach(([number, x, y]) => boothSpots.push({ level, zone, number, x, y }))
 }
 
-// Coordinates are in the attached 1728 × 806 floor-plan image's viewBox,
-// so image and clickable areas scale together at every browser width.
-addAt('L1', 'D', [[12, 130, 52], [11, 168, 52], [10, 151, 97], [9, 186, 97]])
-add('L1', 'D', [8, 7, 6, 5, 4, 3, 2, 1], [326, 360, 394, 428, 500, 534, 568, 603], [72])
-add('L1', 'A', Array.from({ length: 12 }, (_, i) => i + 1), [716], [78, 114, 149, 185, 257, 293, 329, 365, 401, 437, 473, 537])
-add('L1', 'B', Array.from({ length: 12 }, (_, i) => i + 1), [774], [78, 114, 149, 185, 257, 293, 329, 365, 401, 437, 473, 537])
-addAt('L2', 'J', [[10, 914, 199], [9, 950, 199], [8, 1008, 199], [7, 1044, 199], [6, 1138, 199], [5, 1174, 199], [4, 1231, 199], [3, 1330, 228], [2, 1390, 228], [1, 1425, 228]])
-add('L2', 'F', Array.from({ length: 12 }, (_, i) => i + 1), [1584], [234, 270, 306, 342, 420, 456, 492, 528, 596, 632, 668, 704])
-add('L2', 'G', Array.from({ length: 12 }, (_, i) => i + 1), [1646], [234, 270, 306, 342, 420, 456, 492, 528, 596, 632, 668, 704])
-add('L1', 'C', Array.from({ length: 4 }, (_, i) => i + 1), [126], [638, 674, 710, 746])
-add('L1', 'C', Array.from({ length: 4 }, (_, i) => i + 5), [214], [638, 674, 710, 746])
-add('L1', 'C', Array.from({ length: 4 }, (_, i) => i + 9), [250], [638, 674, 710, 746])
-add('L1', 'C', Array.from({ length: 4 }, (_, i) => i + 13), [338], [638, 674, 710, 746])
-add('L1', 'E', [9, 10, 11, 12], [606, 640, 710, 745], [668])
-add('L1', 'E', [13, 14, 15, 16], [640, 674, 745, 779], [621])
-add('L1', 'E', Array.from({ length: 8 }, (_, i) => i + 1), [493, 528, 563, 598, 668, 703, 738, 772], [755])
-add('L2', 'H', Array.from({ length: 4 }, (_, i) => i + 1), [895], [597, 631, 665, 699])
-addAt('L2', 'H', [[5, 985, 615], [6, 985, 649], [7, 985, 683], [8, 1020, 615], [9, 1020, 649], [10, 1020, 683]])
-add('L2', 'H', Array.from({ length: 4 }, (_, i) => i + 11), [1107], [597, 631, 665, 699])
-add('L2', 'K', [6, 7, 8, 9], [1275, 1310, 1372, 1407], [496])
-add('L2', 'K', [10, 11, 12, 13, 14], [1303, 1371, 1407, 1468, 1502], [572])
-add('L2', 'K', [1, 2, 3, 4, 5], [1258, 1294, 1355, 1425, 1460], [694])
+// Centers of the printed booth squares in the supplied 1688 × 802 image.
+// SVG hit areas use the same viewBox, so they remain aligned as it scales.
+addAt('L1', 'D', [[12, 115, 46], [11, 149, 46], [10, 133, 91], [9, 168, 91]])
+add('L1', 'D', [8, 7, 6, 5, 4, 3, 2, 1], [309, 343, 380, 416, 483, 518, 553, 589], [67])
+add('L1', 'A', Array.from({ length: 12 }, (_, i) => i + 1), [698], [74, 110, 146, 182, 253, 289, 325, 361, 431, 467, 503, 539])
+add('L1', 'B', Array.from({ length: 12 }, (_, i) => i + 1), [756], [74, 110, 146, 182, 253, 289, 325, 361, 431, 467, 503, 539])
+addAt('L2', 'J', [[10, 896, 195], [9, 931, 195], [8, 990, 195], [7, 1026, 195], [6, 1118, 195], [5, 1154, 195], [4, 1213, 195], [3, 1313, 210], [2, 1372, 210], [1, 1407, 210]])
+add('L2', 'F', Array.from({ length: 12 }, (_, i) => i + 1), [1565], [228, 263, 299, 335, 405, 441, 477, 513, 583, 619, 655, 691])
+add('L2', 'G', Array.from({ length: 12 }, (_, i) => i + 1), [1624], [228, 263, 299, 335, 405, 441, 477, 513, 583, 619, 655, 691])
+add('L1', 'C', Array.from({ length: 4 }, (_, i) => i + 1), [108], [633, 669, 706, 742])
+add('L1', 'C', Array.from({ length: 4 }, (_, i) => i + 5), [196], [633, 669, 706, 742])
+add('L1', 'C', Array.from({ length: 4 }, (_, i) => i + 9), [232], [633, 669, 706, 742])
+add('L1', 'C', Array.from({ length: 4 }, (_, i) => i + 13), [321], [633, 669, 706, 742])
+addAt('L1', 'E', [[9, 588, 662], [10, 623, 662], [11, 694, 662], [12, 729, 662], [13, 611, 618], [14, 646, 618], [15, 717, 618], [16, 753, 618]])
+add('L1', 'E', Array.from({ length: 8 }, (_, i) => i + 1), [473, 508, 544, 580, 647, 683, 719, 755], [749])
+add('L2', 'H', Array.from({ length: 4 }, (_, i) => i + 1), [877], [590, 626, 662, 698])
+addAt('L2', 'H', [[5, 965, 607], [6, 965, 643], [7, 965, 679], [8, 1000, 607], [9, 1000, 643], [10, 1000, 679]])
+add('L2', 'H', Array.from({ length: 4 }, (_, i) => i + 11), [1088], [590, 626, 662, 698])
+add('L2', 'K', [6, 7, 8, 9], [1258, 1293, 1355, 1390], [490])
+addAt('L2', 'K', [[10, 1284, 565], [11, 1349, 565], [12, 1384, 565], [13, 1447, 565], [14, 1482, 565]])
+add('L2', 'K', [1, 2, 3, 4, 5], [1240, 1275, 1335, 1406, 1442], [687])
 
 function normalizeBooth(value: string) {
   return value.toLocaleUpperCase().replace(/[^A-Z0-9]/g, '')
@@ -85,7 +84,7 @@ function findEntry(spot: BoothSpot, entries: readonly CatalogueEntry[]) {
 export function AnimeFestFloorplan({ entries }: { entries: readonly CatalogueEntry[] }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-[#0b1324] shadow-sm">
-      <div className="relative aspect-[1728/806] w-full">
+        <div className="relative aspect-[1688/802] w-full">
         <Image
           src="/events/anime-fest-2026-floorplan.png"
           alt="Anime Fest! 2026 floor plan showing Level 1 and Level 2 booth numbers"
@@ -95,7 +94,7 @@ export function AnimeFestFloorplan({ entries }: { entries: readonly CatalogueEnt
           className="object-fill"
         />
         <svg
-          viewBox="0 0 1728 806"
+          viewBox="0 0 1688 802"
           preserveAspectRatio="none"
           className="absolute inset-0 size-full"
           role="group"
@@ -108,15 +107,15 @@ export function AnimeFestFloorplan({ entries }: { entries: readonly CatalogueEnt
               || spot.zone === 'E' || spot.zone === 'J' || spot.zone === 'K'
             const entry = findEntry(spot, entries)
             const href = entry && !cosplayMarket ? `/events/${entry.eventSlug}/catalogues/${entry.id}` : undefined
-            const box = { x: spot.x - 16, y: spot.y - 15, width: 32, height: 30 }
+            const box = { x: spot.x - 17, y: spot.y - 17, width: 34, height: 34 }
             return cosplayMarket ? (
               <g key={boothLabel} aria-label={`${boothLabel}: Cosplay Market, outside this archive's scope`}>
                 <title>{`${boothLabel} · Cosplay Market — this archive covers Artist Alley and Art Market catalogues`}</title>
                 <rect {...box} rx="3" fill="#6b7280" fillOpacity="0.82" stroke="#f3f4f6" strokeOpacity="0.85" strokeWidth="1.5" />
               </g>
-            ) : href && entry ? (
-  <a key={boothLabel} href={href} aria-label={`${boothLabel}: ${entry.artistName}`}>
-    <title>{`${boothLabel} · ${entry.artistName} — open catalogue`}</title>
+            ) : href ? (
+              <a key={boothLabel} href={href} aria-label={`${boothLabel}: ${entry.artistName}`}>
+                <title>{`${boothLabel} · ${entry.artistName} — open catalogue`}</title>
                 <rect {...box} rx="3" className="fill-amber-300/20 stroke-amber-200/90 transition-colors hover:fill-amber-200/45 focus:fill-amber-200/45" strokeWidth="2.5" />
               </a>
             ) : (
