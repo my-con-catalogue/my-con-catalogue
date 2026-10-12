@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, ChevronDown, Search, X } from 'lucide-react'
 import { InstagramIcon } from '@/components/social-icons'
 import { instagramUrl } from '@/lib/format'
-import type { CatalogueEntry } from '@/lib/queries'
+import type { CatalogueEntry, CatalogueType } from '@/lib/queries'
 import { cn } from '@/lib/utils'
 
 function displayTag(tag: string) {
@@ -154,15 +154,19 @@ function FandomTagList({ tags }: { tags: readonly string[] }) {
   )
 }
 
-export function CatalogueBrowser({ entries, boothNumbers }: { entries: CatalogueEntry[]; boothNumbers: string[] }) {
+export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: readonly CatalogueEntry[]; boothNumbers?: readonly string[] }) {
+  const [catalogueType, setCatalogueType] = useState<CatalogueType>('booth_catalogue')
   const [query, setQuery] = useState('')
   const [fandoms, setFandoms] = useState<Set<string>>(new Set())
   const [merch, setMerch] = useState<Set<string>>(new Set())
   const [stampRally, setStampRally] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(1)
 
-  const fandomOptions = useMemo(() => uniqueSorted(entries.map((e) => e.fandoms)), [entries])
-  const merchOptions = useMemo(() => uniqueSorted(entries.map((e) => e.merchTypes)), [entries])
+  const typeEntries = entries.filter((entry) => entry.catalogueType === catalogueType)
+  const boothCatalogueEntries = entries.filter((entry) => entry.catalogueType === 'booth_catalogue')
+  const pickupEntries = entries.filter((entry) => entry.catalogueType === 'pickup_only')
+  const fandomOptions = useMemo(() => uniqueSorted(typeEntries.map((e) => e.fandoms)), [typeEntries])
+  const merchOptions = useMemo(() => uniqueSorted(typeEntries.map((e) => e.merchTypes)), [typeEntries])
 
   const toggle = (setter: typeof setFandoms) => (value: string) => {
     setPage(1)
@@ -174,7 +178,7 @@ export function CatalogueBrowser({ entries, boothNumbers }: { entries: Catalogue
     })
   }
 
-  const filtered = entries.filter((e) => {
+  const filtered = typeEntries.filter((e) => {
     const q = query.trim().toLowerCase()
     if (q && !e.artistName.toLowerCase().includes(q) && !(e.booth ?? '').toLowerCase().includes(q)) return false
     if (fandoms.size > 0 && !e.fandoms.some((f) => fandoms.has(f))) return false
@@ -193,10 +197,10 @@ export function CatalogueBrowser({ entries, boothNumbers }: { entries: Catalogue
     (number) => number === 1 || number === pageCount || Math.abs(number - currentPage) <= 1,
   )
   const catalogueByBooth = new Map<string, CatalogueEntry>()
-  for (const entry of entries) {
+  for (const entry of boothCatalogueEntries) {
     if (entry.booth?.trim()) catalogueByBooth.set(entry.booth.trim().toLocaleLowerCase(), entry)
   }
-  const catalogueBoothNumbers = entries.map((entry) => entry.booth).filter((booth): booth is string => Boolean(booth?.trim()))
+  const catalogueBoothNumbers = boothCatalogueEntries.map((entry) => entry.booth).filter((booth): booth is string => Boolean(booth?.trim()))
   const configuredBooths = [...new Set(boothNumbers.map((booth) => booth.trim()).filter(Boolean))]
   const unconfiguredCatalogueBooths = [...new Set(catalogueBoothNumbers)]
     .filter((booth) => !configuredBooths.some((configured) => configured.toLocaleLowerCase() === booth.toLocaleLowerCase()))
@@ -206,6 +210,32 @@ export function CatalogueBrowser({ entries, boothNumbers }: { entries: Catalogue
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:p-5">
+        <div role="group" aria-label="Catalogue type" className="flex flex-wrap gap-2">
+          {([
+            { value: 'booth_catalogue', label: 'Booth Catalogue', count: boothCatalogueEntries.length },
+            { value: 'pickup_only', label: 'Pick-Up Only', count: pickupEntries.length },
+          ] as const).map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={catalogueType === option.value}
+              onClick={() => {
+                setCatalogueType(option.value)
+                setQuery('')
+                setFandoms(new Set())
+                setMerch(new Set())
+                setStampRally(new Set())
+                setPage(1)
+              }}
+              className={cn(
+                'rounded-full border px-4 py-2 text-sm font-semibold transition-colors',
+                catalogueType === option.value ? 'border-foreground bg-foreground text-background' : 'border-input bg-background hover:bg-secondary',
+              )}
+            >
+              {option.label} <span className="ml-1 opacity-75">({option.count})</span>
+            </button>
+          ))}
+        </div>
         <div className="relative">
           <label htmlFor="catalogue-search" className="sr-only">
             Search artists or booth numbers
@@ -223,7 +253,7 @@ export function CatalogueBrowser({ entries, boothNumbers }: { entries: Catalogue
             className="h-11 w-full rounded-lg border border-input bg-background pl-10 pr-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
-        {allBoothNumbers.length > 0 && (
+        {catalogueType === 'booth_catalogue' && allBoothNumbers.length > 0 && (
           <section aria-label="Jump to a booth" className="rounded-lg border border-border bg-background p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-bold">Jump to a booth</h3>
@@ -256,7 +286,7 @@ export function CatalogueBrowser({ entries, boothNumbers }: { entries: Catalogue
         </div>
         <div className="flex items-center justify-between gap-3 border-t border-border pt-4 text-sm">
           <p aria-live="polite">
-            Showing <strong>{firstVisible}–{lastVisible}</strong> of {filtered.length} matching catalogues ({entries.length} total)
+            Showing <strong>{firstVisible}–{lastVisible}</strong> of {filtered.length} matching catalogues ({typeEntries.length} total)
           </p>
           {hasFilters && (
             <button
@@ -278,7 +308,9 @@ export function CatalogueBrowser({ entries, boothNumbers }: { entries: Catalogue
 
       {filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
-          {entries.length === 0 ? 'No catalogues archived for this event yet.' : 'No catalogues match these filters.'}
+          {typeEntries.length === 0
+            ? catalogueType === 'pickup_only' ? 'No pick-up catalogues archived for this event yet.' : 'No booth catalogues archived for this event yet.'
+            : 'No catalogues match these filters.'}
         </p>
       ) : (
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
