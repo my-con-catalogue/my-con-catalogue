@@ -88,13 +88,42 @@ export default async function EventPage({ params }: Props) {
               </dd>
             </div>
           </dl>
-          <nav aria-label="Event sections" className="mt-8 flex gap-2">
+          <nav aria-label="Event sections" className="mt-8 flex flex-wrap gap-2">
+            {event.slug === 'anime-fest-2026' && (
+              <a href="#interactive-map" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
+                Interactive map
+              </a>
+            )}
             <a href="#catalogue" className="rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background">
               Catalogue ({catalogues.length})
             </a>
           </nav>
         </div>
       </section>
+
+      {event.slug === 'anime-fest-2026' && (
+        <section id="interactive-map" aria-labelledby="interactive-map-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-10">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 id="interactive-map-heading" className="text-3xl font-extrabold tracking-tight">Anime Fest! 2026 interactive map</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Interactive map hosted by the event organiser. Select a booth in the map to see its directory listing.</p>
+            </div>
+            <a href="https://map-af26-llp.comicfiesta.org/" target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
+              Open map in a new tab ↗
+            </a>
+          </div>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <iframe
+              src="https://map-af26-llp.comicfiesta.org/"
+              title="Anime Fest! 2026 LaLaport interactive artists map"
+              loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
+              className="h-[75vh] min-h-[680px] w-full border-0"
+            />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">The organizer&apos;s map may block embedding in some browsers. If it does not appear, use “Open map in a new tab.”</p>
+        </section>
+      )}
 
       <section id="catalogue" aria-labelledby="catalogue-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-12">
         <h2 id="catalogue-heading" className="text-3xl font-extrabold tracking-tight">
