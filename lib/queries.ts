@@ -51,6 +51,7 @@ export async function getEventCatalogues(eventSlug: string) {
   return db
     .select({
       id: catalogueEntries.id,
+      catalogueType: catalogueEntries.catalogueType,
       booth: catalogueEntries.booth,
       instagramPosts: catalogueEntries.instagramPosts,
       catalogueFileUrls: catalogueEntries.catalogueFileUrls,
@@ -67,6 +68,7 @@ export async function getEventCatalogues(eventSlug: string) {
 }
 
 export type CatalogueEntry = Awaited<ReturnType<typeof getEventCatalogues>>[number]
+export type CatalogueType = 'booth_catalogue' | 'pickup_only'
 
 export async function getEventBoothNumbers(eventSlug: string): Promise<string[]> {
   if (!databaseConfigured) return []
@@ -87,6 +89,7 @@ export async function getEventCatalogueById(eventSlug: string, catalogueId: numb
   const [entry] = await db
     .select({
       id: catalogueEntries.id,
+      catalogueType: catalogueEntries.catalogueType,
       eventSlug: catalogueEntries.eventSlug,
       eventName: events.name,
       eventYear: events.year,

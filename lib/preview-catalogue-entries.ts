@@ -2,6 +2,7 @@ export const previewCatalogueEntries = [
   {
     id: 1,
     eventSlug: 'anime-fest-2026',
+    catalogueType: 'booth_catalogue',
     booth: 'A-01',
     artistName: 'Mirimoco',
     artistInstagrams: ['mirimoco'],
@@ -17,6 +18,7 @@ export const previewCatalogueEntries = [
   {
     id: 2,
     eventSlug: 'anime-fest-2026',
+    catalogueType: 'booth_catalogue',
     booth: 'A-02',
     artistName: 'WanTan Hime',
     artistInstagrams: ['wanqin_art', 'kinniku_hime'],
