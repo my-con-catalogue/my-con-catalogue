@@ -29,7 +29,7 @@ export default function ContactPage() {
           </a>
         </nav>
       </PageHeader>
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 lg:grid-cols-[1fr_1.4fr]">
+      <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-14">
         <section id="suggestion-form" aria-labelledby="suggestion-heading" className="scroll-mt-24 self-start rounded-2xl border border-border bg-card p-6 md:p-8">
           <h2 id="suggestion-heading" className="text-2xl font-extrabold">Send a suggestion</h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -49,7 +49,7 @@ export default function ContactPage() {
             <ArtistSubmissionForm />
           </div>
         </section>
-        <section id="stamp-rally-form" aria-labelledby="stamp-rally-heading" className="scroll-mt-24 rounded-2xl border border-border bg-card p-6 lg:col-span-2 md:p-8">
+        <section id="stamp-rally-form" aria-labelledby="stamp-rally-heading" className="scroll-mt-24 rounded-2xl border border-border bg-card p-6 md:p-8">
           <h2 id="stamp-rally-heading" className="text-2xl font-extrabold">Submit a stamp rally</h2>
           <p className="mt-1 text-sm text-muted-foreground">Share the participating artists, fandom, and post or file so others can find the stamp rally.</p>
           <div className="mt-6">
