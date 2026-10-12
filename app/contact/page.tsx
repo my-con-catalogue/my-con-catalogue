@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { ArtistSubmissionForm } from '@/components/artist-submission-form'
 import { PageHeader } from '@/components/page-header'
 import { SuggestionForm } from '@/components/suggestion-form'
+import { StampRallySubmissionForm } from '@/components/stamp-rally-submission-form'
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -23,6 +24,9 @@ export default function ContactPage() {
           <a href="#artist-form" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
             Artist catalogue
           </a>
+          <a href="#stamp-rally-form" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
+            Stamp rally
+          </a>
         </nav>
       </PageHeader>
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 lg:grid-cols-[1fr_1.4fr]">
@@ -43,6 +47,13 @@ export default function ContactPage() {
           </p>
           <div className="mt-6">
             <ArtistSubmissionForm />
+          </div>
+        </section>
+        <section id="stamp-rally-form" aria-labelledby="stamp-rally-heading" className="scroll-mt-24 rounded-2xl border border-border bg-card p-6 lg:col-span-2 md:p-8">
+          <h2 id="stamp-rally-heading" className="text-2xl font-extrabold">Submit a stamp rally</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Share the participating artists, fandom, and post or file so others can find the stamp rally.</p>
+          <div className="mt-6">
+            <StampRallySubmissionForm />
           </div>
         </section>
       </div>
