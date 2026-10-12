@@ -9,6 +9,7 @@ To add a booth, open **Supabase → Table Editor → catalogue_entries → Inser
 | `event_slug` | The event slug, such as `anime-fest-2026` |
 | `catalogue_type` | `booth_catalogue` for an artist alley booth; `pickup_only` for a pick-up-only catalogue |
 | `booth_number` | Booth number, such as `A01` |
+| `pickup_note` | Optional pick-up details, such as an order cutoff or which day collection is available. Shown only for pick-up entries. |
 | `artist_name` | Artist or circle name |
 | `artist_instagrams` | Array of Instagram handles, with or without `@` |
 | `fandom_tags` | Array of fandom tags |

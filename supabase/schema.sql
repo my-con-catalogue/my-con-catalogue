@@ -77,6 +77,7 @@ create table if not exists catalogue_entries (
   event_slug text not null references events(slug) on delete cascade,
   catalogue_type text not null default 'booth_catalogue' check (catalogue_type in ('booth_catalogue', 'pickup_only')),
   booth_number text not null,
+  pickup_note text,
   artist_name text not null,
   artist_instagrams text[] not null default '{}',
   fandom_tags text[] not null default '{}',
@@ -90,6 +91,7 @@ create table if not exists catalogue_entries (
 );
 
 alter table catalogue_entries add column if not exists catalogue_type text not null default 'booth_catalogue';
+alter table catalogue_entries add column if not exists pickup_note text;
 alter table catalogue_entries drop constraint if exists catalogue_entries_catalogue_type_check;
 alter table catalogue_entries add constraint catalogue_entries_catalogue_type_check
   check (catalogue_type in ('booth_catalogue', 'pickup_only'));
