@@ -265,11 +265,11 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
                 return (
                   <li key={booth} className="min-w-0">
                     {catalogue ? (
-                      <Link href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} className="flex w-full items-center justify-center whitespace-nowrap rounded-md border border-primary/30 bg-accent px-2.5 py-1 text-sm font-semibold text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground">
+                      <Link href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} className="flex min-h-9 w-full min-w-0 items-center justify-center rounded-md border border-primary/30 bg-accent px-1.5 py-1 text-center text-xs font-semibold leading-tight text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-2 sm:text-sm [overflow-wrap:anywhere]">
                         {booth}
                       </Link>
                     ) : (
-                      <span aria-label={`${booth}, catalogue not listed`} className="flex w-full cursor-not-allowed items-center justify-center whitespace-nowrap rounded-md border border-border bg-muted px-2.5 py-1 text-sm font-medium text-muted-foreground/60">
+                      <span aria-label={`${booth}, catalogue not listed`} className="flex min-h-9 w-full min-w-0 cursor-not-allowed items-center justify-center rounded-md border border-border bg-muted px-1.5 py-1 text-center text-xs font-medium leading-tight text-muted-foreground/60 sm:px-2 sm:text-sm [overflow-wrap:anywhere]">
                         {booth}
                       </span>
                     )}
