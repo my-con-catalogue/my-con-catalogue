@@ -67,3 +67,25 @@
     @apply font-heading text-balance;
   }
 }
+
+@keyframes booth-number-scroll {
+  to {
+    transform: translateX(calc(-50% - 1rem));
+  }
+}
+
+.booth-number-track-overflow {
+  animation: none;
+}
+
+.booth-number-marquee-container:hover .booth-number-track-overflow,
+.booth-number-marquee-container:focus-visible .booth-number-track-overflow {
+  animation: booth-number-scroll 5s linear infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booth-number-marquee-container:hover .booth-number-track-overflow,
+  .booth-number-marquee-container:focus-visible .booth-number-track-overflow {
+    animation: none;
+  }
+}

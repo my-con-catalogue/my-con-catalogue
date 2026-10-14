@@ -34,8 +34,8 @@ export function ArtistSubmissionForm() {
         <FormField id="a-name" label="Artist / circle name" required>
           <input id="a-name" name="artistName" type="text" required maxLength={100} className={inputClass} />
         </FormField>
-        <FormField id="a-ig" label="Social media handle" required>
-          <input id="a-ig" name="socialMediaHandle" type="text" required maxLength={100} placeholder="@mycc (IG)" className={inputClass} />
+        <FormField id="a-ig" label="Social media handle" hint="Optional. Add your Instagram, X/Twitter, Facebook, or another profile/handle if you have one.">
+          <input id="a-ig" name="socialMediaHandle" type="text" maxLength={300} placeholder="e.g. @mycc (IG) or https://facebook.com/mycc" className={inputClass} />
         </FormField>
         <FormField id="a-event" label="Event name & year" required>
           <input id="a-event" name="eventName" type="text" required maxLength={150} placeholder="e.g. Comic Fiesta 2025" className={inputClass} />
