@@ -3,8 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { Search } from 'lucide-react'
-import { InstagramIcon } from '@/components/social-icons'
-import { instagramUrl } from '@/lib/format'
+import { ArtistSocialLinks } from '@/components/artist-social-links'
 import type { ArtistWithAppearances } from '@/lib/queries'
 
 function letterFor(name: string) {
@@ -73,22 +72,14 @@ export function ArtistDirectory({ artists }: { artists: ArtistWithAppearances[] 
               return (
                 <li key={artist.id} className="rounded-xl border border-border bg-card p-5">
                   <h3 className="text-xl font-bold">{artist.name}</h3>
-                  {artist.artistInstagrams.length > 0 && (
-                    <ul aria-label={`${artist.name} Instagram accounts`} className="mt-2 flex flex-wrap gap-2">
-                      {artist.artistInstagrams.map((handle) => (
-                        <li key={handle}>
-                          <a
-                            href={instagramUrl(handle)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3 py-1 text-sm text-muted-foreground transition-colors hover:border-foreground hover:text-primary"
-                          >
-                            <InstagramIcon className="size-4" />@{handle}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <ArtistSocialLinks
+                    name={artist.name}
+                    instagrams={artist.artistInstagrams}
+                    links={artist.artistSocialLinks}
+                    className="mt-2 flex flex-wrap gap-2"
+                    linkClassName="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3 py-1 text-sm text-muted-foreground transition-colors hover:border-foreground hover:text-primary"
+                    iconClassName="size-4 shrink-0"
+                  />
                   {artist.bio && <p className="mt-1 text-sm text-muted-foreground">{artist.bio}</p>}
                   <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Appearances ({appearances.length})

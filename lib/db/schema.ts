@@ -47,6 +47,7 @@ export const catalogueEntries = pgTable('catalogue_entries', {
   pickupNote: text('pickup_note'),
   artistName: text('artist_name').notNull(),
   artistInstagrams: text('artist_instagrams').array().notNull().default([]),
+  artistSocialLinks: text('artist_social_links').array().notNull().default([]),
   fandoms: text('fandom_tags').array().notNull().default([]),
   merchTypes: text('merch_tags').array().notNull().default([]),
   stampRally: boolean('stamp_rally').notNull().default(false),

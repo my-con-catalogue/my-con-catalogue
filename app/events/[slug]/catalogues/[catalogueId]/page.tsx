@@ -3,9 +3,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
-import { InstagramIcon } from '@/components/social-icons'
 import { getEventBySlug, getEventCatalogueById } from '@/lib/queries'
-import { instagramUrl } from '@/lib/format'
+import { getArtistSocialAccounts } from '@/lib/artist-socials'
+import { ArtistSocialLinks } from '@/components/artist-social-links'
 import { InstagramPostEmbed } from '@/components/instagram-post-embed'
 
 function displayTag(tag: string) {
@@ -45,6 +45,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
   const data = await getCatalogue(params)
   if (!data) notFound()
   const { event, catalogue } = data
+  const artistSocialAccounts = getArtistSocialAccounts(catalogue.artistInstagrams, catalogue.artistSocialLinks)
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
@@ -55,13 +56,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
         <div>
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">{event.name} · {event.year}</p>
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">{catalogue.artistName}</h1>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
-            {catalogue.artistInstagrams.map((handle) => (
-              <a key={handle} href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary">
-                <InstagramIcon className="size-4" aria-hidden="true" />@{handle.replace(/^@/, '')}
-              </a>
-            ))}
-          </div>
+          <ArtistSocialLinks name={catalogue.artistName} instagrams={catalogue.artistInstagrams} links={catalogue.artistSocialLinks} className="mt-3 flex flex-wrap gap-x-4 gap-y-2" linkClassName="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary" />
         </div>
         <div className="flex flex-col items-start gap-2">
           <span className="rounded-md bg-foreground px-3 py-1.5 text-sm font-bold text-background">Booth {catalogue.booth}</span>
@@ -87,12 +82,31 @@ export default async function CatalogueDetailPage({ params }: Props) {
         </div>
       </div>
       <p className="mt-5 rounded-lg border border-primary/30 bg-accent/60 p-4 text-sm font-medium leading-relaxed">
-        {catalogue.artistInstagrams.length > 0 ? (
-          <>Please check out {catalogue.artistName}&apos;s account{catalogue.artistInstagrams.length === 1 ? '' : 's'}: {catalogue.artistInstagrams.map((handle, index) => <span key={handle}>{index > 0 ? ', ' : ''}<a href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="font-bold underline underline-offset-2">@{handle.replace(/^@/, '')}</a></span>)}. Support them by following, liking, or resharing their work.</>
-        ) : (
-          <>Please look up {catalogue.artistName}&apos;s social accounts and support them by following, liking, or resharing their work.</>
-        )}
-      </p>
+  {artistSocialAccounts.length > 0 ? (
+    <>
+      Please check out {catalogue.artistName}&apos;s social media accounts:{' '}
+      {artistSocialAccounts.map((account, index) => (
+        <span key={account.href}>
+          {index > 0 ? ', ' : ''}
+          <a
+            href={account.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold underline underline-offset-2"
+          >
+            {account.label} ({account.platform})
+          </a>
+        </span>
+      ))}
+      . Support them by following, liking, or resharing their work.
+    </>
+  ) : (
+    <>
+      Please look up {catalogue.artistName}&apos;s social accounts and support
+      them by following, liking, or resharing their work.
+    </>
+  )}
+</p>
       <section aria-labelledby="catalogue-posts-heading" className="mt-8">
         <h2 id="catalogue-posts-heading" className="mb-5 text-2xl font-extrabold">Catalogue material</h2>
         {catalogue.instagramPosts.length > 0 ? (
