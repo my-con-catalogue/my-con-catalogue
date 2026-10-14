@@ -34,7 +34,7 @@ export function getArtistSocialAccounts(instagrams: readonly string[], links: re
     ...instagrams.map((handle) => {
       const clean = handle.trim().replace(/^@/, '')
       return clean ? { platform: 'Instagram' as const, href: instagramUrl(clean), label: `@${clean}` } : null
-    }).filter((account): account is ArtistSocialAccount => account !== null),
+    }).filter((account) => account !== null),
     ...links.map(accountFromUrl).filter((account): account is ArtistSocialAccount => account !== null),
   ]
   const seen = new Set<string>()
