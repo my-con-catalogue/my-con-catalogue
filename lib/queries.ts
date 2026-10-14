@@ -63,6 +63,7 @@ export async function getEventCatalogues(eventSlug: string) {
       eventSlug: catalogueEntries.eventSlug,
       artistName: catalogueEntries.artistName,
       artistInstagrams: catalogueEntries.artistInstagrams,
+      artistSocialLinks: catalogueEntries.artistSocialLinks,
     })
     .from(catalogueEntries)
     .where(eq(catalogueEntries.eventSlug, eventSlug))
@@ -105,6 +106,7 @@ export async function getEventCatalogueById(eventSlug: string, catalogueId: numb
       stampRally: catalogueEntries.stampRally,
       artistName: catalogueEntries.artistName,
       artistInstagrams: catalogueEntries.artistInstagrams,
+      artistSocialLinks: catalogueEntries.artistSocialLinks,
     })
     .from(catalogueEntries)
     .innerJoin(events, eq(catalogueEntries.eventSlug, events.slug))
@@ -148,6 +150,7 @@ export async function getArtistsWithAppearances() {
       slug: string
       name: string
       artistInstagrams: string[]
+      artistSocialLinks: string[]
       bio: string | null
       appearances: { slug: string; name: string; year: number }[]
     }>()
@@ -160,10 +163,12 @@ export async function getArtistsWithAppearances() {
         slug: key.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
         name: entry.artistName,
         artistInstagrams: uniqueInstagramHandles([...entry.artistInstagrams]),
+        artistSocialLinks: [...entry.artistSocialLinks],
         bio: null,
         appearances: [],
       }
       artist.artistInstagrams = uniqueInstagramHandles([...artist.artistInstagrams, ...entry.artistInstagrams])
+      artist.artistSocialLinks = [...new Set([...artist.artistSocialLinks, ...entry.artistSocialLinks])]
       if (!artist.appearances.some((appearance) => appearance.slug === event.slug)) {
         artist.appearances.push({ slug: event.slug, name: event.name, year: event.year })
       }
@@ -177,6 +182,7 @@ export async function getArtistsWithAppearances() {
       slug: sql<string>`lower(regexp_replace(${catalogueEntries.artistName}, '[^a-zA-Z0-9]+', '-', 'g'))`,
       name: catalogueEntries.artistName,
       artistInstagrams: catalogueEntries.artistInstagrams,
+      artistSocialLinks: catalogueEntries.artistSocialLinks,
       bio: sql<string | null>`null::text`,
       eventSlug: events.slug,
       eventName: events.name,
@@ -191,6 +197,7 @@ export async function getArtistsWithAppearances() {
     slug: string
     name: string
     artistInstagrams: string[]
+    artistSocialLinks: string[]
     bio: string | null
     appearances: { slug: string; name: string; year: number }[]
   }>()
@@ -204,12 +211,14 @@ export async function getArtistsWithAppearances() {
         slug: row.slug.replace(/^-+|-+$/g, ''),
         name: row.name,
         artistInstagrams: uniqueInstagramHandles(row.artistInstagrams),
+        artistSocialLinks: [...row.artistSocialLinks],
         bio: row.bio,
         appearances: [],
       }
       map.set(key, artist)
     }
     artist.artistInstagrams = uniqueInstagramHandles([...artist.artistInstagrams, ...row.artistInstagrams])
+    artist.artistSocialLinks = [...new Set([...artist.artistSocialLinks, ...row.artistSocialLinks])]
     if (row.eventSlug && row.eventName && row.eventYear && !artist.appearances.some((a) => a.slug === row.eventSlug)) {
       artist.appearances.push({ slug: row.eventSlug, name: row.eventName, year: row.eventYear })
     }
