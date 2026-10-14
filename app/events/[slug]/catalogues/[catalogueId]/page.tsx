@@ -82,12 +82,31 @@ export default async function CatalogueDetailPage({ params }: Props) {
         </div>
       </div>
       <p className="mt-5 rounded-lg border border-primary/30 bg-accent/60 p-4 text-sm font-medium leading-relaxed">
-        {artistSocialAccounts.length > 0 ? (
-          <>Please check out {catalogue.artistName}&apos;s social media accounts: {artistSocialAccounts.map((account, index) => <span key={account.href}>{index > 0 ? ', ' : ''}<a href={account.href} target="_blank" rel="noopener noreferrer" className="font-bold underline underline-offset-2">{account.label} ({account.platform})</a></span>}. Support them by following, liking, or resharing their work.</>
-        ) : (
-          <>Please look up {catalogue.artistName}&apos;s social accounts and support them by following, liking, or resharing their work.</>
-        )}
-      </p>
+  {artistSocialAccounts.length > 0 ? (
+    <>
+      Please check out {catalogue.artistName}&apos;s social media accounts:{' '}
+      {artistSocialAccounts.map((account, index) => (
+        <span key={account.href}>
+          {index > 0 ? ', ' : ''}
+          <a
+            href={account.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold underline underline-offset-2"
+          >
+            {account.label} ({account.platform})
+          </a>
+        </span>
+      ))}
+      . Support them by following, liking, or resharing their work.
+    </>
+  ) : (
+    <>
+      Please look up {catalogue.artistName}&apos;s social accounts and support
+      them by following, liking, or resharing their work.
+    </>
+  )}
+</p>
       <section aria-labelledby="catalogue-posts-heading" className="mt-8">
         <h2 id="catalogue-posts-heading" className="mb-5 text-2xl font-extrabold">Catalogue material</h2>
         {catalogue.instagramPosts.length > 0 ? (
