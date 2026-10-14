@@ -18,6 +18,33 @@ function uniqueSorted(values: readonly (readonly string[])[]) {
 
 const CATALOGUES_PER_PAGE = 20
 
+function BoothNumberText({ value }: { value: string }) {
+  const viewportRef = useRef<HTMLSpanElement>(null)
+  const textRef = useRef<HTMLSpanElement>(null)
+  const [overflows, setOverflows] = useState(false)
+
+  useEffect(() => {
+    const viewport = viewportRef.current
+    const text = textRef.current
+    if (!viewport || !text) return
+    const measure = () => setOverflows(text.getBoundingClientRect().width > viewport.clientWidth + 1)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(viewport)
+    observer.observe(text)
+    return () => observer.disconnect()
+  }, [value])
+
+  return (
+    <span ref={viewportRef} title={value} className="block min-w-0 max-w-full overflow-hidden">
+      <span className={cn('booth-number-track flex w-max whitespace-nowrap', overflows && 'booth-number-track-overflow')}>
+        <span ref={textRef}>{value}</span>
+        <span className="pl-8" aria-hidden="true">{value}</span>
+      </span>
+    </span>
+  )
+}
+
 function FilterDropdown({
   label,
   options,
@@ -265,12 +292,12 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
                 return (
                   <li key={booth} className="min-w-0">
                     {catalogue ? (
-                      <Link href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} className="flex min-h-9 w-full min-w-0 items-center justify-center rounded-md border border-primary/30 bg-accent px-1.5 py-1 text-center text-xs font-semibold leading-tight text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-2 sm:text-sm [overflow-wrap:anywhere]">
-                        {booth}
+                      <Link href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} className="booth-number-marquee-container flex h-9 w-full min-w-0 items-center justify-center overflow-hidden rounded-md border border-primary/30 bg-accent px-1.5 py-1 text-xs font-semibold leading-tight text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-2 sm:text-sm">
+                        <BoothNumberText value={booth} />
                       </Link>
                     ) : (
-                      <span aria-label={`${booth}, catalogue not listed`} className="flex min-h-9 w-full min-w-0 cursor-not-allowed items-center justify-center rounded-md border border-border bg-muted px-1.5 py-1 text-center text-xs font-medium leading-tight text-muted-foreground/60 sm:px-2 sm:text-sm [overflow-wrap:anywhere]">
-                        {booth}
+                      <span aria-label={`${booth}, catalogue not listed`} className="booth-number-marquee-container flex h-9 w-full min-w-0 cursor-not-allowed items-center justify-center overflow-hidden rounded-md border border-border bg-muted px-1.5 py-1 text-xs font-medium leading-tight text-muted-foreground/60 sm:px-2 sm:text-sm">
+                        <BoothNumberText value={booth} />
                       </span>
                     )}
                   </li>
