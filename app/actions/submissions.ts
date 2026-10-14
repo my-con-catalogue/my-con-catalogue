@@ -34,7 +34,7 @@ export async function submitSuggestion(_prev: FormState, formData: FormData): Pr
 export async function submitArtistCatalogue(_prev: FormState, formData: FormData): Promise<FormState> {
   const submissionType = field(formData, 'submissionType', 20)
   const artistName = field(formData, 'artistName', 100)
-  const socialMediaHandle = field(formData, 'socialMediaHandle', 100).replace(/^@/, '')
+  const socialMediaHandle = field(formData, 'socialMediaHandle', 300)
   const eventName = field(formData, 'eventName', 150)
   const booth = field(formData, 'booth', 30)
   const uploadedValue = formData.get('catalogueFile')
@@ -47,8 +47,8 @@ export async function submitArtistCatalogue(_prev: FormState, formData: FormData
   if (!['new', 'update', 'pickup-only'].includes(submissionType)) {
     return { status: 'error', message: 'Please choose whether this is a booth catalogue, pick-up catalogue, or update.' }
   }
-  if (!artistName || !socialMediaHandle || !eventName || !booth) {
-    return { status: 'error', message: 'Artist name, social media handle, event, and booth number are required.' }
+  if (!artistName || !eventName || !booth) {
+    return { status: 'error', message: 'Artist name, event, and booth number are required. Social media handle is optional.' }
   }
   if (catalogueFile) {
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
