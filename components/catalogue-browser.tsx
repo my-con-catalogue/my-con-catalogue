@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, ChevronDown, Search, X } from 'lucide-react'
-import { InstagramIcon } from '@/components/social-icons'
-import { instagramUrl } from '@/lib/format'
+import { ArtistSocialLinks } from '@/components/artist-social-links'
+import { getArtistSocialAccounts } from '@/lib/artist-socials'
 import type { CatalogueEntry, CatalogueType } from '@/lib/queries'
 import { cn } from '@/lib/utils'
 
@@ -83,7 +83,7 @@ function FilterDropdown({
   )
 }
 
-function FandomTagList({ tags }: { tags: readonly string[] }) {
+function TagList({ tags, label, maxRows = 3, outlined = false }: { tags: readonly string[]; label: string; maxRows?: number; outlined?: boolean }) {
   const listRef = useRef<HTMLUListElement>(null)
   const [visibleCount, setVisibleCount] = useState(tags.length)
   const [expanded, setExpanded] = useState(false)
@@ -95,17 +95,17 @@ function FandomTagList({ tags }: { tags: readonly string[] }) {
     const measureRows = () => {
       const items = Array.from(list.children) as HTMLElement[]
       const rowTops = [...new Set(items.map((item) => Math.round(item.getBoundingClientRect().top)))].sort((a, b) => a - b)
-      if (rowTops.length <= 3) return
+      if (rowTops.length <= maxRows) return
 
-      const thirdRowTop = rowTops[2]
-      const overflowIndex = items.slice(0, visibleCount).findIndex((item) => Math.round(item.getBoundingClientRect().top) > thirdRowTop)
+      const lastVisibleRowTop = rowTops[maxRows - 1]
+      const overflowIndex = items.slice(0, visibleCount).findIndex((item) => Math.round(item.getBoundingClientRect().top) > lastVisibleRowTop)
       if (overflowIndex >= 0) {
         setVisibleCount((current) => Math.min(current, overflowIndex))
         return
       }
 
       const moreButton = visibleCount < tags.length ? items[visibleCount] : undefined
-      if (moreButton && Math.round(moreButton.getBoundingClientRect().top) > thirdRowTop) {
+      if (moreButton && Math.round(moreButton.getBoundingClientRect().top) > lastVisibleRowTop) {
         setVisibleCount((current) => Math.max(0, current - 1))
       }
     }
@@ -127,12 +127,12 @@ function FandomTagList({ tags }: { tags: readonly string[] }) {
       cancelAnimationFrame(frame)
       observer.disconnect()
     }
-  }, [expanded, tags.length, visibleCount])
+  }, [expanded, label, maxRows, tags.length, visibleCount])
 
   return (
-    <ul ref={listRef} aria-label="Fandoms" className="mt-1.5 flex flex-wrap gap-1.5">
+    <ul ref={listRef} aria-label={label} className="mt-1.5 flex flex-wrap gap-1.5">
       {(expanded ? tags : tags.slice(0, visibleCount)).map((tag) => (
-        <li key={tag} title={displayTag(tag)} className="max-w-full truncate whitespace-nowrap rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium">
+        <li key={tag} title={displayTag(tag)} className={cn('max-w-full truncate whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium', outlined ? 'border border-border text-muted-foreground' : 'bg-secondary')}>
           {displayTag(tag)}
         </li>
       ))}
@@ -334,25 +334,26 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
                 <h3 className="text-lg font-bold leading-tight">
                   <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="hover:text-primary">{entry.artistName}</Link>
                 </h3>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                  {entry.artistInstagrams.slice(0, 3).map((handle) => (
-                    <a key={handle} href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex min-w-0 items-center gap-1.5 truncate text-sm text-muted-foreground hover:text-primary">
-                      <InstagramIcon className="size-4 shrink-0" />@{handle.replace(/^@/, '')}
-                    </a>
-                  ))}
-                  {entry.artistInstagrams.length > 3 && (
-                    <details className="min-w-0">
-                      <summary className="cursor-pointer list-none truncate text-xs font-semibold text-primary underline underline-offset-2 [&::-webkit-details-marker]:hidden">+{entry.artistInstagrams.length - 3} more</summary>
-                      <div className="mt-1.5 flex flex-col gap-1.5">
-                        {entry.artistInstagrams.slice(3).map((handle) => (
-                          <a key={handle} href={instagramUrl(handle)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary">
-                            <InstagramIcon className="size-4 shrink-0" />@{handle.replace(/^@/, '')}
-                          </a>
-                        ))}
-                      </div>
-                    </details>
-                  )}
-                </div>
+                {(() => {
+                  const accounts = getArtistSocialAccounts(entry.artistInstagrams, entry.artistSocialLinks)
+                  return (
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                      {accounts.slice(0, 3).map((account) => (
+                        <ArtistSocialLinks key={account.href} name={entry.artistName} instagrams={[]} links={[account.href]} />
+                      ))}
+                      {accounts.length > 3 && (
+                        <details className="min-w-0">
+                          <summary className="cursor-pointer list-none truncate text-xs font-semibold text-primary underline underline-offset-2 [&::-webkit-details-marker]:hidden">+{accounts.length - 3} more</summary>
+                          <div className="mt-1.5 flex flex-col gap-1.5">
+                            {accounts.slice(3).map((account) => (
+                              <ArtistSocialLinks key={account.href} name={entry.artistName} instagrams={[]} links={[account.href]} />
+                            ))}
+                          </div>
+                        </details>
+                      )}
+                    </div>
+                  )
+                })()}
                 <p className={cn('text-xs font-semibold', hasCatalogueMaterial ? 'text-muted-foreground' : 'text-rose-700')}>
                   {hasCatalogueMaterial
                     ? `Catalogue available${entry.instagramPosts.length > 0 ? ` · ${entry.instagramPosts.length} Instagram post${entry.instagramPosts.length === 1 ? '' : 's'}` : ''}`
@@ -360,17 +361,11 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
                 </p>
                 <div>
                   <p className="text-xs font-bold">Fandom:</p>
-                  <FandomTagList tags={entry.fandoms} />
+                  <TagList tags={entry.fandoms} label="Fandoms" maxRows={3} />
                 </div>
                 <div className="mt-auto">
                   <p className="text-xs font-bold">Merch:</p>
-                  <ul aria-label="Merch types" className="mt-1.5 flex flex-wrap gap-1.5">
-                  {entry.merchTypes.map((m) => (
-                    <li key={m} className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
-                      {displayTag(m)}
-                    </li>
-                  ))}
-                  </ul>
+                  <TagList tags={entry.merchTypes} label="Merch types" maxRows={3} outlined />
                 </div>
                 <p className={cn('inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold', entry.stampRally ? 'border-emerald-800 bg-emerald-700 text-white' : 'border-border bg-muted text-foreground')}>
                   <span aria-hidden="true">{entry.stampRally ? '✦' : '♡'}</span>Stamp Rally · {entry.stampRally ? 'Yes' : 'No'}
