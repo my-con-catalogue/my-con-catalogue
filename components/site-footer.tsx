@@ -14,7 +14,7 @@ const footerLinks = [
 const socials = [
   { href: 'https://www.instagram.com/my_concatalogue/', label: 'Instagram', Icon: InstagramIcon },
   { href: 'https://discord.gg/F5nT5nxW3e', label: 'Discord', Icon: MessageCircle },
-  { href: 'https://mycc.vercel.app/', label: 'Website', Icon: Globe2 },
+  { href: 'https://my-con-catalogue.vercel.app/', label: 'Website', Icon: Globe2 },
 ]
 
 export function SiteFooter() {
