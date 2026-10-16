@@ -1,4 +1,5 @@
 import { boolean, date, integer, pgTable, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 
 export const events = pgTable('events', {
   id: serial('id').primaryKey(),
@@ -88,6 +89,18 @@ export const fanCafes = pgTable('fan_cafes', {
   startTime: text('start_time'),
   endTime: text('end_time'),
   description: text('description'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const interestChecks = pgTable('interest_checks', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  socialPostUrl: text('social_post_url'),
+  type: text('type').notNull(),
+  eventName: text('event_name').notNull(),
+  year: integer('year').notNull(),
+  startDate: date('start_date').notNull().default(sql`((now() at time zone 'Asia/Kuala_Lumpur')::date)`),
+  cutoffDate: date('cutoff_date').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
