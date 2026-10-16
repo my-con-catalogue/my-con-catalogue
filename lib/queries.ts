@@ -14,6 +14,10 @@ function cleanTextArray(values: readonly unknown[] | null | undefined): string[]
   )
 }
 
+function sortedTags(values: readonly unknown[] | null | undefined): string[] {
+  return cleanTextArray(values).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }))
+}
+
 function uniqueInstagramHandles(handles: string[]) {
   return [...new Set(handles.map((handle) => handle.trim().replace(/^@/, '')).filter(Boolean))]
 }
@@ -53,13 +57,19 @@ export async function getEventBySlug(slug: string) {
 }
 
 export async function getEventCatalogues(eventSlug: string) {
-  if (!databaseConfigured) return previewCatalogueEntries.filter((entry) => entry.eventSlug === eventSlug)
+  if (!databaseConfigured) return previewCatalogueEntries.filter((entry) => entry.eventSlug === eventSlug).map((entry) => ({
+    ...entry,
+    orderCutoff: null,
+    fandoms: sortedTags(entry.fandoms),
+    merchTypes: sortedTags(entry.merchTypes),
+  }))
   const rows = await db
     .select({
       id: catalogueEntries.id,
       catalogueType: catalogueEntries.catalogueType,
       booth: catalogueEntries.booth,
       pickupNote: catalogueEntries.pickupNote,
+      orderCutoff: catalogueEntries.orderCutoff,
       instagramPosts: catalogueEntries.instagramPosts,
       catalogueLinks: catalogueEntries.catalogueLinks,
       catalogueFileUrls: catalogueEntries.catalogueFileUrls,
@@ -79,8 +89,8 @@ export async function getEventCatalogues(eventSlug: string) {
   // Keep malformed tag values from reaching the UI's text sorting and rendering.
   return rows.map((entry) => ({
     ...entry,
-    fandoms: cleanTextArray(entry.fandoms),
-    merchTypes: cleanTextArray(entry.merchTypes),
+    fandoms: sortedTags(entry.fandoms),
+    merchTypes: sortedTags(entry.merchTypes),
   }))
 }
 
@@ -101,7 +111,14 @@ export async function getEventCatalogueById(eventSlug: string, catalogueId: numb
   if (!databaseConfigured) {
     const entry = previewCatalogueEntries.find((item) => item.eventSlug === eventSlug && item.id === catalogueId)
     const event = previewEvents.find((item) => item.slug === eventSlug)
-    return entry && event ? { ...entry, eventName: event.name, eventYear: event.year } : null
+    return entry && event ? {
+      ...entry,
+      orderCutoff: null,
+      fandoms: sortedTags(entry.fandoms),
+      merchTypes: sortedTags(entry.merchTypes),
+      eventName: event.name,
+      eventYear: event.year,
+    } : null
   }
   const [entry] = await db
     .select({
@@ -112,6 +129,7 @@ export async function getEventCatalogueById(eventSlug: string, catalogueId: numb
       eventYear: events.year,
       booth: catalogueEntries.booth,
       pickupNote: catalogueEntries.pickupNote,
+      orderCutoff: catalogueEntries.orderCutoff,
       instagramPosts: catalogueEntries.instagramPosts,
       catalogueLinks: catalogueEntries.catalogueLinks,
       catalogueFileUrls: catalogueEntries.catalogueFileUrls,
@@ -126,7 +144,11 @@ export async function getEventCatalogueById(eventSlug: string, catalogueId: numb
     .innerJoin(events, eq(catalogueEntries.eventSlug, events.slug))
     .where(and(eq(catalogueEntries.eventSlug, eventSlug), eq(catalogueEntries.id, catalogueId)))
     .limit(1)
-  return entry ?? null
+  return entry ? {
+    ...entry,
+    fandoms: sortedTags(entry.fandoms),
+    merchTypes: sortedTags(entry.merchTypes),
+  } : null
 }
 
 export async function getEventStampRallies(eventId: number) {

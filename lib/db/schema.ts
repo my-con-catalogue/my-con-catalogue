@@ -45,6 +45,7 @@ export const catalogueEntries = pgTable('catalogue_entries', {
   catalogueType: text('catalogue_type').notNull().default('booth_catalogue'),
   booth: text('booth_number').notNull(),
   pickupNote: text('pickup_note'),
+  orderCutoff: text('order_cutoff'),
   artistName: text('artist_name').notNull(),
   artistInstagrams: text('artist_instagrams').array().notNull().default([]),
   artistSocialLinks: text('artist_social_links').array().notNull().default([]),

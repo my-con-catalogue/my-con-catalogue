@@ -105,8 +105,7 @@ const sections: { title: string; content: ReactNode }[] = [
         <p>
           If you are the copyright holder of material featured on this website and believe it has been included
           incorrectly or would like it removed or updated, contact us through{' '}
-          <a href="https://discord.gg/F5nT5nxW3e" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-4">Discord</a>{' '}
-          or <a href="https://www.instagram.com/my_concatalogue/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-4">Instagram</a>, or{' '}
+          <a href="https://www.instagram.com/my_concatalogue/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-4">Instagram</a>, or{' '}
           <Link href="/contact" className="font-semibold text-primary underline underline-offset-4">submit a suggestion</Link>.{' '}
           Provide the relevant information and we will review the request.
         </p>

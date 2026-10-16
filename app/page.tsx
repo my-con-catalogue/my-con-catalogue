@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, BookOpen, Coffee, MessageCircle, Palette, Stamp } from 'lucide-react'
+import { ArrowRight, BookOpen, Coffee, Palette, Stamp } from 'lucide-react'
 import { EventCard } from '@/components/event-card'
 import { InstagramIcon } from '@/components/social-icons'
 import { getEventStatus } from '@/lib/event-status'
@@ -185,15 +185,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="join-community" className="mx-auto max-w-6xl px-4 py-12">
+      <section aria-labelledby="stay-in-the-loop" className="mx-auto max-w-6xl px-4 py-12">
         <div className="rounded-2xl border-2 border-foreground bg-card p-7 shadow-[6px_6px_0_0_var(--color-foreground)] md:flex md:items-center md:justify-between md:gap-8 md:p-9">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wider text-primary">Stay in the loop</p>
-            <h2 id="join-community" className="mt-1 text-3xl font-extrabold tracking-tight">Join the community ♡</h2>
-            <p className="mt-2 max-w-xl leading-relaxed text-muted-foreground">Join our Discord or follow us on Instagram for more MYConCatalogue updates.</p>
+            <h2 id="stay-in-the-loop" className="text-3xl font-extrabold tracking-tight">Stay in the loop</h2>
+            <p className="mt-2 max-w-xl leading-relaxed text-muted-foreground">Follow us on Instagram for more MYConCatalogue updates.</p>
           </div>
           <div className="mt-5 flex shrink-0 flex-wrap gap-3 md:mt-0">
-            <a href="https://discord.gg/F5nT5nxW3e" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5"><MessageCircle className="size-4" aria-hidden="true" />Join Discord</a>
             <a href="https://www.instagram.com/my_concatalogue/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-foreground px-5 py-3 font-semibold transition-colors hover:bg-foreground hover:text-background"><InstagramIcon className="size-4" />Follow on Instagram</a>
           </div>
         </div>
