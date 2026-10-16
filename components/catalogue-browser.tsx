@@ -352,10 +352,11 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
               <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="flex items-center justify-center gap-2 border-b border-border bg-muted px-4 py-3 text-center text-sm font-semibold text-primary transition-colors hover:bg-accent/50">
                 <span aria-hidden="true">›</span><span>{hasCatalogueMaterial ? 'Check catalogue material here' : 'View artist details'}</span><span aria-hidden="true">‹</span>
               </Link>
-              {entry.catalogueType === 'pickup_only' && entry.pickupNote?.trim() && (
-                <p className="border-b border-border bg-accent/60 px-4 py-3 text-sm leading-relaxed text-foreground">
-                  <span className="font-bold">Pick-up note: </span>{entry.pickupNote}
-                </p>
+              {entry.catalogueType === 'pickup_only' && (entry.pickupNote?.trim() || entry.orderCutoff?.trim()) && (
+                <div className="border-b border-border bg-accent/60 px-4 py-3 text-sm leading-relaxed text-foreground">
+                  {entry.orderCutoff?.trim() && <p><span className="font-bold">Order cutoff: </span>{entry.orderCutoff}</p>}
+                  {entry.pickupNote?.trim() && <p><span className="font-bold">Pick-up note: </span>{entry.pickupNote}</p>}
+                </div>
               )}
               <div className="flex flex-1 flex-col gap-3 p-4">
                 <h3 className="text-lg font-bold leading-tight">

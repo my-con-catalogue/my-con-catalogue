@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { InstagramIcon } from '@/components/social-icons'
-import { MessageCircle, Globe2 } from 'lucide-react'
+import { Mail, Globe2 } from 'lucide-react'
 
 const footerLinks = [
   { href: '/about', label: 'About' },
@@ -13,7 +13,7 @@ const footerLinks = [
 
 const socials = [
   { href: 'https://www.instagram.com/my_concatalogue/', label: 'Instagram', Icon: InstagramIcon },
-  { href: 'https://discord.gg/F5nT5nxW3e', label: 'Discord', Icon: MessageCircle },
+  { href: 'mailto:myconcatalogue@gmail.com', label: 'Email', Icon: Mail },
   { href: 'https://my-con-catalogue.vercel.app/', label: 'Website', Icon: Globe2 },
 ]
 
