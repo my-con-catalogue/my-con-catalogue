@@ -8,6 +8,12 @@ import { previewCatalogueEntries } from '@/lib/preview-catalogue-entries'
 export type EventRow = typeof events.$inferSelect
 const databaseConfigured = Boolean(process.env.DATABASE_URL)
 
+function cleanTextArray(values: readonly unknown[] | null | undefined): string[] {
+  return (values ?? []).filter(
+    (value): value is string => typeof value === 'string' && value.trim().length > 0,
+  )
+}
+
 function uniqueInstagramHandles(handles: string[]) {
   return [...new Set(handles.map((handle) => handle.trim().replace(/^@/, '')).filter(Boolean))]
 }
@@ -48,7 +54,7 @@ export async function getEventBySlug(slug: string) {
 
 export async function getEventCatalogues(eventSlug: string) {
   if (!databaseConfigured) return previewCatalogueEntries.filter((entry) => entry.eventSlug === eventSlug)
-  return db
+  const rows = await db
     .select({
       id: catalogueEntries.id,
       catalogueType: catalogueEntries.catalogueType,
@@ -68,6 +74,14 @@ export async function getEventCatalogues(eventSlug: string) {
     .from(catalogueEntries)
     .where(eq(catalogueEntries.eventSlug, eventSlug))
     .orderBy(sql`lower(${catalogueEntries.booth})`, sql`lower(${catalogueEntries.artistName})`)
+
+  // Postgres arrays may contain NULL elements even when the array column is NOT NULL.
+  // Keep malformed tag values from reaching the UI's text sorting and rendering.
+  return rows.map((entry) => ({
+    ...entry,
+    fandoms: cleanTextArray(entry.fandoms),
+    merchTypes: cleanTextArray(entry.merchTypes),
+  }))
 }
 
 export type CatalogueEntry = Awaited<ReturnType<typeof getEventCatalogues>>[number]
