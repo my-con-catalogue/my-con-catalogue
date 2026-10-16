@@ -66,10 +66,11 @@ export default async function CatalogueDetailPage({ params }: Props) {
           </span>
         </div>
       </header>
-      {catalogue.catalogueType === 'pickup_only' && catalogue.pickupNote?.trim() && (
-        <p className="mt-6 rounded-xl border border-primary/30 bg-accent/60 p-4 text-sm leading-relaxed text-foreground">
-          <span className="font-bold">Pick-up note: </span>{catalogue.pickupNote}
-        </p>
+      {catalogue.catalogueType === 'pickup_only' && (catalogue.orderCutoff?.trim() || catalogue.pickupNote?.trim()) && (
+        <div className="mt-6 rounded-xl border border-primary/30 bg-accent/60 p-4 text-sm leading-relaxed text-foreground">
+          {catalogue.orderCutoff?.trim() && <p><span className="font-bold">Order cutoff: </span>{catalogue.orderCutoff}</p>}
+          {catalogue.pickupNote?.trim() && <p><span className="font-bold">Pick-up note: </span>{catalogue.pickupNote}</p>}
+        </div>
       )}
       <div className="mt-6 flex flex-col gap-4">
         <div>
