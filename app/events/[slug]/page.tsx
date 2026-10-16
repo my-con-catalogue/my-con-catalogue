@@ -123,7 +123,7 @@ export default async function EventPage({ params }: Props) {
           Found something you love? Check the artist&apos;s account and show them some support by following, liking, or resharing their work.
         </p>
         <p className="mt-3 rounded-lg border border-border bg-card p-4 text-sm leading-relaxed text-muted-foreground">
-          Notice a missing booth number or catalogue? <Link href="/contact#artist-form" className="font-semibold text-primary underline underline-offset-2">Submit the catalogue here</Link>. Artists looking for fellow participants in a specific stamp rally can post in our <a href="https://discord.gg/F5nT5nxW3e" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2">Discord Stamp Rally forum</a>; we&apos;ll also share updates on <a href="https://www.instagram.com/my_concatalogue/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2">Instagram</a>.
+          Notice a missing booth number or catalogue? <Link href="/contact#artist-form" className="font-semibold text-primary underline underline-offset-2">Submit the catalogue here</Link>. If you are looking for fellow artists interested in a Stamp Rally, tag us on <a href="https://www.instagram.com/my_concatalogue/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2">Instagram</a> and we&apos;ll repost it. An interest check page will also be available on this website.
         </p>
         <div className="mt-6">
           <CatalogueBrowser entries={catalogues} boothNumbers={boothNumbers} />
