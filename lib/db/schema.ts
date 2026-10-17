@@ -99,8 +99,7 @@ export const interestChecks = pgTable('interest_checks', {
   type: text('type').notNull(),
   eventName: text('event_name').notNull(),
   year: integer('year').notNull(),
-  startDate: date('start_date').notNull().default(sql`((now() at time zone 'Asia/Kuala_Lumpur')::date)`),
-  cutoffDate: date('cutoff_date').notNull(),
+  cutoffDate: date('cutoff_date'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
