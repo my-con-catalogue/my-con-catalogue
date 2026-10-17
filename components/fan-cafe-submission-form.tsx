@@ -20,12 +20,12 @@ export function FanCafeSubmissionForm() {
         </FormField>
         <div className="min-w-0">
           <FormField id="fc-start-date" label="Start date" required>
-            <input id="fc-start-date" name="startDate" type="date" required className={`${inputClass} block min-w-0 max-w-full appearance-auto`} />
+            <input id="fc-start-date" name="startDate" type="date" required className={`${inputClass} box-border block w-full min-w-0 max-w-full appearance-auto`} style={{ width: '100%', minWidth: 0 }} />
           </FormField>
         </div>
         <div className="min-w-0">
           <FormField id="fc-end-date" label="End date">
-            <input id="fc-end-date" name="endDate" type="date" className={`${inputClass} block min-w-0 max-w-full appearance-auto`} />
+            <input id="fc-end-date" name="endDate" type="date" className={`${inputClass} box-border block w-full min-w-0 max-w-full appearance-auto`} style={{ width: '100%', minWidth: 0 }} />
           </FormField>
         </div>
         <FormField id="fc-platform" label="Social platform" required>
