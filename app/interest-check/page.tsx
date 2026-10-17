@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { CalendarDays, ExternalLink } from 'lucide-react'
 import { InstagramPostEmbed } from '@/components/instagram-post-embed'
 import { PageHeader } from '@/components/page-header'
-import { getEventStatus } from '@/lib/event-status'
 import { formatDateRange } from '@/lib/format'
 import { getInterestChecks } from '@/lib/queries'
 
@@ -83,7 +82,8 @@ export default async function InterestCheckPage({ searchParams }: Props) {
                 <h2 id={`interest-year-${year}`} className="border-b-2 border-foreground pb-3 text-3xl font-extrabold">{year}</h2>
                 <ul className="mt-6 grid gap-6 md:grid-cols-2">
                   {yearItems.map((item) => {
-                    const status = getEventStatus(item.startDate, item.cutoffDate)
+                    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+                    const status = item.cutoffDate && item.cutoffDate < today ? 'past' : 'ongoing'
                     const postUrl = item.socialPostUrl ? validHttpUrl(item.socialPostUrl) : null
                     return (
                       <li key={item.id} className="flex flex-col rounded-xl border border-border bg-card p-5">
@@ -103,7 +103,7 @@ export default async function InterestCheckPage({ searchParams }: Props) {
                         <dl className="mt-5 flex flex-col gap-4 border-t border-border pt-4 text-sm">
                           <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</dt><dd className="mt-1 inline-flex rounded-full bg-accent px-3 py-1 font-semibold text-accent-foreground">{item.type}</dd></div>
                           <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Event</dt><dd className="mt-1">{item.eventName}</dd></div>
-                          <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cutoff date</dt><dd className="mt-0.5">{formatDateRange(item.cutoffDate, item.cutoffDate)}</dd></div></div>
+                          <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cutoff date</dt><dd className="mt-0.5">{item.cutoffDate ? formatDateRange(item.cutoffDate, item.cutoffDate) : 'No cutoff date'}</dd></div></div>
                         </dl>
                       </li>
                     )
