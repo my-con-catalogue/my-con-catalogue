@@ -29,11 +29,13 @@ function isInstagramPost(value: string) {
   return Boolean(url && ['instagram.com', 'www.instagram.com'].includes(url.hostname) && /^\/(p|reel|tv)\/[A-Za-z0-9_-]+\/?$/.test(url.pathname))
 }
 
-const statusStyles = {
-  upcoming: 'bg-sky-100 text-sky-900',
-  ongoing: 'bg-emerald-700 text-white',
-  past: 'bg-muted text-muted-foreground',
-} as const
+function getStatusStyle(status: string) {
+  const normalized = status.trim().toLowerCase()
+  if (normalized === 'upcoming') return 'bg-sky-100 text-sky-900'
+  if (normalized === 'ongoing' || normalized === 'open') return 'bg-emerald-700 text-white'
+  if (normalized === 'closed' || normalized === 'past') return 'bg-muted text-muted-foreground'
+  return 'bg-accent text-accent-foreground'
+}
 
 export default async function InterestCheckPage({ searchParams }: Props) {
   const items = await getInterestChecks()
@@ -83,13 +85,15 @@ export default async function InterestCheckPage({ searchParams }: Props) {
                 <ul className="mt-6 grid gap-6 md:grid-cols-2">
                   {yearItems.map((item) => {
                     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
-                    const status = item.cutoffDate && item.cutoffDate < today ? 'past' : 'ongoing'
+                    const automaticStatus = item.cutoffDate && item.cutoffDate < today ? 'Past' : 'Ongoing'
+                    // A non-empty status entered in Supabase takes precedence over date-based status.
+                    const status = item.status?.trim() || automaticStatus
                     const postUrl = item.socialPostUrl ? validHttpUrl(item.socialPostUrl) : null
                     return (
                       <li key={item.id} className="flex flex-col rounded-xl border border-border bg-card p-5">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <h3 className="text-xl font-bold leading-tight">{item.title}</h3>
-                          <span className={`inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${statusStyles[status]}`}>{status}</span>
+                          <span className={`inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${getStatusStyle(status)}`}>{status}</span>
                         </div>
                         {item.socialPostUrl && (isInstagramPost(item.socialPostUrl) ? (
                           <div className="mt-4">
@@ -102,6 +106,7 @@ export default async function InterestCheckPage({ searchParams }: Props) {
                         ) : null)}
                         <dl className="mt-5 flex flex-col gap-4 border-t border-border pt-4 text-sm">
                           <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</dt><dd className="mt-1 inline-flex rounded-full bg-accent px-3 py-1 font-semibold text-accent-foreground">{item.type}</dd></div>
+                          {item.fandom?.trim() && <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fandom</dt><dd className="mt-1">{item.fandom}</dd></div>}
                           <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Event</dt><dd className="mt-1">{item.eventName}</dd></div>
                           <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cutoff date</dt><dd className="mt-0.5">{item.cutoffDate ? formatDateRange(item.cutoffDate, item.cutoffDate) : 'No cutoff date'}</dd></div></div>
                         </dl>
