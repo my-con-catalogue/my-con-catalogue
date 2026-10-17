@@ -173,6 +173,25 @@ alter table fan_cafes add column if not exists end_time text;
 
 create index if not exists fan_cafes_start_date_idx on fan_cafes(start_date desc);
 
+create table if not exists interest_checks (
+  id serial primary key,
+  title text not null,
+  social_post_url text,
+  type text not null,
+  event_name text not null,
+  fandom text,
+  status text,
+  year integer not null,
+  start_date date not null default ((now() at time zone 'Asia/Kuala_Lumpur')::date),
+  cutoff_date date not null,
+  created_at timestamptz not null default now()
+);
+
+alter table interest_checks add column if not exists fandom text;
+alter table interest_checks add column if not exists status text;
+
+create index if not exists interest_checks_year_cutoff_idx on interest_checks(year, cutoff_date);
+
 insert into fan_cafes (name, fandom, location, start_date, instagram_post_url, start_time, end_time)
 select 'Alien Stage CSE: The Grand Birthday Banquet', 'Alien Stage', 'Doutor Coffee, LaLaport BBCC', '2026-11-22', 'https://www.instagram.com/p/DdgiZpEJsSo/', '11:00 AM', '5:00 PM'
 where not exists (select 1 from fan_cafes where instagram_post_url = 'https://www.instagram.com/p/DdgiZpEJsSo/');

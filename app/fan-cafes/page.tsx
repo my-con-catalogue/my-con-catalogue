@@ -6,6 +6,7 @@ import { FanCafeSubmissionForm } from '@/components/fan-cafe-submission-form'
 import { InstagramPostEmbed } from '@/components/instagram-post-embed'
 import { InstagramIcon } from '@/components/social-icons'
 import { formatDateRange, instagramUrl } from '@/lib/format'
+import { getEventStatus } from '@/lib/event-status'
 import { getFanCafes } from '@/lib/queries'
 
 export const revalidate = 300
@@ -26,7 +27,6 @@ export default async function FanCafesPage({ searchParams }: Props) {
   const visibleCafes = selectedYear
     ? cafes.filter((cafe) => cafe.startDate?.startsWith(String(selectedYear)))
     : cafes
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }).format(new Date())
   const cafesByYear = new Map<string, typeof cafes>()
   for (const cafe of visibleCafes) {
     const year = cafe.startDate?.slice(0, 4) ?? 'TBA'
@@ -86,9 +86,14 @@ export default async function FanCafesPage({ searchParams }: Props) {
                           <InstagramPostEmbed postUrl={cafe.instagramPostUrl} title={`${cafe.name} Instagram post`} />
                         </div>
                       )}
-                      <p className={`mt-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${cafe.startDate && (cafe.endDate ?? cafe.startDate) >= today ? 'bg-emerald-700 text-white' : cafe.startDate ? 'bg-muted text-muted-foreground' : 'border border-border text-muted-foreground'}`}>
-                        {cafe.startDate ? ((cafe.endDate ?? cafe.startDate) >= today ? 'Upcoming' : 'Past') : 'Date TBA'}
-                      </p>
+                      {(() => {
+                        const status = getEventStatus(cafe.startDate, cafe.endDate)
+                        return (
+                          <p className={`mt-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${status === 'ongoing' ? 'bg-emerald-700 text-white' : status === 'upcoming' ? 'bg-blue-100 text-blue-900' : 'bg-muted text-muted-foreground'}`}>
+                            {cafe.startDate ? status : 'Date TBA'}
+                          </p>
+                        )
+                      })()}
                       {cafe.fandom && (
                         <div className="mt-4">
                           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fandom</p>
