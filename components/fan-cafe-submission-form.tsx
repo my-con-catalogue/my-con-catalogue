@@ -11,19 +11,23 @@ export function FanCafeSubmissionForm() {
 
   return (
     <form action={action} key={state.status === 'success' ? state.message : undefined} className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField id="fc-name" label="Event name" required>
           <input id="fc-name" name="name" type="text" required maxLength={150} className={inputClass} />
         </FormField>
         <FormField id="fc-location" label="Location" required>
           <input id="fc-location" name="location" type="text" required maxLength={200} placeholder="Cafe name, city, or venue" className={inputClass} />
         </FormField>
-        <FormField id="fc-start-date" label="Start date" required>
-          <input id="fc-start-date" name="startDate" type="date" required className={inputClass} />
-        </FormField>
-        <FormField id="fc-end-date" label="End date">
-          <input id="fc-end-date" name="endDate" type="date" className={inputClass} />
-        </FormField>
+        <div className="min-w-0">
+          <FormField id="fc-start-date" label="Start date" required>
+            <input id="fc-start-date" name="startDate" type="date" required className={`${inputClass} block min-w-0 max-w-full appearance-auto`} />
+          </FormField>
+        </div>
+        <div className="min-w-0">
+          <FormField id="fc-end-date" label="End date">
+            <input id="fc-end-date" name="endDate" type="date" className={`${inputClass} block min-w-0 max-w-full appearance-auto`} />
+          </FormField>
+        </div>
         <FormField id="fc-platform" label="Social platform" required>
           <select id="fc-platform" name="socialPlatform" required defaultValue="" className={inputClass}>
             <option value="" disabled>Choose a platform</option>
