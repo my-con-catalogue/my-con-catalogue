@@ -179,11 +179,16 @@ create table if not exists interest_checks (
   social_post_url text,
   type text not null,
   event_name text not null,
+  fandom text,
+  status text,
   year integer not null,
   start_date date not null default ((now() at time zone 'Asia/Kuala_Lumpur')::date),
   cutoff_date date not null,
   created_at timestamptz not null default now()
 );
+
+alter table interest_checks add column if not exists fandom text;
+alter table interest_checks add column if not exists status text;
 
 create index if not exists interest_checks_year_cutoff_idx on interest_checks(year, cutoff_date);
 
