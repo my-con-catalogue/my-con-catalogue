@@ -98,6 +98,8 @@ export const interestChecks = pgTable('interest_checks', {
   socialPostUrl: text('social_post_url'),
   type: text('type').notNull(),
   eventName: text('event_name').notNull(),
+  fandom: text('fandom'),
+  status: text('status'),
   year: integer('year').notNull(),
   cutoffDate: date('cutoff_date'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
