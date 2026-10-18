@@ -28,12 +28,18 @@ export function FanCafeSubmissionForm() {
             <input id="fc-end-date" name="endDate" type="date" className={`${inputClass} box-border block w-full min-w-0 max-w-full appearance-auto`} style={{ width: '100%', minWidth: 0, maxWidth: '100%' }} />
           </FormField>
         </div>
+        <FormField id="fc-start-time" label="Start time">
+          <input id="fc-start-time" name="startTime" type="time" className={inputClass} />
+        </FormField>
+        <FormField id="fc-end-time" label="End time">
+          <input id="fc-end-time" name="endTime" type="time" className={inputClass} />
+        </FormField>
         <FormField id="fc-platform" label="Social platform" required>
           <select id="fc-platform" name="socialPlatform" required defaultValue="" className={inputClass}>
             <option value="" disabled>Choose a platform</option>
             <option>Instagram</option>
             <option>TikTok</option>
-            <option>X</option>
+            <option>X / Twitter</option>
             <option>Facebook</option>
             <option>Other</option>
           </select>
