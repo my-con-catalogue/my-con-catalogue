@@ -28,12 +28,16 @@ export function FanCafeSubmissionForm() {
             <input id="fc-end-date" name="endDate" type="date" className={`${inputClass} box-border block w-full min-w-0 max-w-full appearance-auto`} style={{ width: '100%', minWidth: 0, maxWidth: '100%' }} />
           </FormField>
         </div>
-        <FormField id="fc-start-time" label="Start time">
-          <input id="fc-start-time" name="startTime" type="time" className={inputClass} />
-        </FormField>
-        <FormField id="fc-end-time" label="End time">
-          <input id="fc-end-time" name="endTime" type="time" className={inputClass} />
-        </FormField>
+        <div className="min-w-0 w-full overflow-hidden">
+          <FormField id="fc-start-time" label="Start time">
+            <input id="fc-start-time" name="startTime" type="time" className={`${inputClass} box-border block w-full min-w-0 max-w-full`} style={{ width: '100%', minWidth: 0, maxWidth: '100%' }} />
+          </FormField>
+        </div>
+        <div className="min-w-0 w-full overflow-hidden">
+          <FormField id="fc-end-time" label="End time">
+            <input id="fc-end-time" name="endTime" type="time" className={`${inputClass} box-border block w-full min-w-0 max-w-full`} style={{ width: '100%', minWidth: 0, maxWidth: '100%' }} />
+          </FormField>
+        </div>
         <FormField id="fc-platform" label="Social platform" required>
           <select id="fc-platform" name="socialPlatform" required defaultValue="" className={inputClass}>
             <option value="" disabled>Choose a platform</option>
