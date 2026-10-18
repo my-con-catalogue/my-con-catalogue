@@ -161,6 +161,7 @@ create table if not exists fan_cafes (
   end_date date,
   instagram text,
   instagram_post_url text,
+  social_post_url text,
   start_time text,
   end_time text,
   description text,
@@ -168,6 +169,7 @@ create table if not exists fan_cafes (
 );
 
 alter table fan_cafes add column if not exists instagram_post_url text;
+alter table fan_cafes add column if not exists social_post_url text;
 alter table fan_cafes add column if not exists start_time text;
 alter table fan_cafes add column if not exists end_time text;
 
@@ -262,6 +264,8 @@ create table if not exists fan_cafe_submissions (
   location text not null,
   start_date date not null,
   end_date date,
+  start_time text,
+  end_time text,
   social_platform text not null,
   social_account text not null,
   fandom text not null,
@@ -270,6 +274,9 @@ create table if not exists fan_cafe_submissions (
   created_at timestamptz not null default now(),
   check (end_date is null or end_date >= start_date)
 );
+
+alter table fan_cafe_submissions add column if not exists start_time text;
+alter table fan_cafe_submissions add column if not exists end_time text;
 
 create index if not exists catalogues_event_id_idx on catalogues(event_id);
 create index if not exists catalogues_artist_id_idx on catalogues(artist_id);
