@@ -3,6 +3,7 @@ import { ArtistSubmissionForm } from '@/components/artist-submission-form'
 import { PageHeader } from '@/components/page-header'
 import { SuggestionForm } from '@/components/suggestion-form'
 import { StampRallySubmissionForm } from '@/components/stamp-rally-submission-form'
+import { FanCafeSubmissionForm } from '@/components/fan-cafe-submission-form'
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -26,6 +27,9 @@ export default function ContactPage() {
           </a>
           <a href="#stamp-rally-form" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
             Stamp rally
+          </a>
+          <a href="#fan-cafe-form" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
+            Fan Cafe
           </a>
         </nav>
       </PageHeader>
@@ -54,6 +58,13 @@ export default function ContactPage() {
           <p className="mt-1 text-sm text-muted-foreground">Share the participating artists, fandom, and post or file so others can find the stamp rally.</p>
           <div className="mt-6">
             <StampRallySubmissionForm />
+          </div>
+        </section>
+        <section id="fan-cafe-form" aria-labelledby="fan-cafe-heading" className="w-full scroll-mt-24 rounded-2xl border-2 border-foreground bg-card p-6 shadow-[6px_6px_0_0_var(--color-foreground)] md:p-8">
+          <h2 id="fan-cafe-heading" className="text-2xl font-extrabold">Submit a Fan Cafe or collab event</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Share the event name, date, location, social account, and fandom for review.</p>
+          <div className="mt-6">
+            <FanCafeSubmissionForm />
           </div>
         </section>
       </div>

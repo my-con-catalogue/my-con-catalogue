@@ -11,25 +11,39 @@ export function FanCafeSubmissionForm() {
 
   return (
     <form action={action} key={state.status === 'success' ? state.message : undefined} className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField id="fc-name" label="Event name" required>
           <input id="fc-name" name="name" type="text" required maxLength={150} className={inputClass} />
         </FormField>
         <FormField id="fc-location" label="Location" required>
           <input id="fc-location" name="location" type="text" required maxLength={200} placeholder="Cafe name, city, or venue" className={inputClass} />
         </FormField>
-        <FormField id="fc-start-date" label="Start date" required>
-          <input id="fc-start-date" name="startDate" type="date" required className={inputClass} />
-        </FormField>
-        <FormField id="fc-end-date" label="End date">
-          <input id="fc-end-date" name="endDate" type="date" className={inputClass} />
-        </FormField>
+        <div className="min-w-0 w-full overflow-hidden">
+          <FormField id="fc-start-date" label="Start date" required>
+            <input id="fc-start-date" name="startDate" type="date" required className={`${inputClass} box-border block w-full min-w-0 max-w-full appearance-auto`} style={{ width: '100%', minWidth: 0, maxWidth: '100%' }} />
+          </FormField>
+        </div>
+        <div className="min-w-0 w-full overflow-hidden">
+          <FormField id="fc-end-date" label="End date">
+            <input id="fc-end-date" name="endDate" type="date" className={`${inputClass} box-border block w-full min-w-0 max-w-full appearance-auto`} style={{ width: '100%', minWidth: 0, maxWidth: '100%' }} />
+          </FormField>
+        </div>
+        <div className="min-w-0 w-full overflow-hidden">
+          <FormField id="fc-start-time" label="Start time">
+            <input id="fc-start-time" name="startTime" type="time" className={`${inputClass} box-border block w-full min-w-0 max-w-full`} style={{ width: '100%', minWidth: 0, maxWidth: '100%' }} />
+          </FormField>
+        </div>
+        <div className="min-w-0 w-full overflow-hidden">
+          <FormField id="fc-end-time" label="End time">
+            <input id="fc-end-time" name="endTime" type="time" className={`${inputClass} box-border block w-full min-w-0 max-w-full`} style={{ width: '100%', minWidth: 0, maxWidth: '100%' }} />
+          </FormField>
+        </div>
         <FormField id="fc-platform" label="Social platform" required>
           <select id="fc-platform" name="socialPlatform" required defaultValue="" className={inputClass}>
             <option value="" disabled>Choose a platform</option>
             <option>Instagram</option>
             <option>TikTok</option>
-            <option>X</option>
+            <option>X / Twitter</option>
             <option>Facebook</option>
             <option>Other</option>
           </select>

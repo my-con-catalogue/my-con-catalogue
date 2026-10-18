@@ -1,6 +1,6 @@
 import { and, asc, count, desc, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { catalogueEntries, eventBooths, events, fanCafes, stampRallies } from '@/lib/db/schema'
+import { catalogueEntries, eventBooths, events, fanCafes, interestChecks, stampRallies } from '@/lib/db/schema'
 import { previewEvents } from '@/lib/preview-events'
 import { previewFanCafes } from '@/lib/preview-fan-cafes'
 import { previewCatalogueEntries } from '@/lib/preview-catalogue-entries'
@@ -177,6 +177,14 @@ export async function getFanCafes() {
     if (b.startDate) return 1
     return a.name.localeCompare(b.name)
   })
+}
+
+export async function getInterestChecks() {
+  if (!databaseConfigured) return []
+  return db
+    .select()
+    .from(interestChecks)
+    .orderBy(asc(interestChecks.year), asc(interestChecks.cutoffDate), asc(interestChecks.title))
 }
 
 export async function getArtistsWithAppearances() {

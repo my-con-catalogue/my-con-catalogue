@@ -152,6 +152,8 @@ export async function submitFanCafe(_prev: FormState, formData: FormData): Promi
   const location = field(formData, 'location', 200)
   const startDate = field(formData, 'startDate', 10)
   const endDate = field(formData, 'endDate', 10)
+  const startTime = field(formData, 'startTime', 5)
+  const endTime = field(formData, 'endTime', 5)
   const socialPlatform = field(formData, 'socialPlatform', 30)
   const socialAccount = field(formData, 'socialAccount', 300)
   const fandom = field(formData, 'fandom', 150)
@@ -171,7 +173,10 @@ export async function submitFanCafe(_prev: FormState, formData: FormData): Promi
   if (endDate && endDate < startDate) {
     return { status: 'error', message: 'The end date must be on or after the start date.' }
   }
-  if (!['Instagram', 'TikTok', 'X', 'Facebook', 'Other'].includes(socialPlatform)) {
+  if ((startTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(startTime)) || (endTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(endTime))) {
+    return { status: 'error', message: 'Please enter valid start and end times.' }
+  }
+  if (!['Instagram', 'TikTok', 'X', 'X / Twitter', 'Facebook', 'Other'].includes(socialPlatform)) {
     return { status: 'error', message: 'Please choose a valid social platform.' }
   }
 
@@ -181,6 +186,8 @@ export async function submitFanCafe(_prev: FormState, formData: FormData): Promi
       location,
       startDate,
       endDate: endDate || null,
+      startTime: startTime || null,
+      endTime: endTime || null,
       socialPlatform,
       socialAccount,
       fandom,

@@ -6,6 +6,7 @@ const footerLinks = [
   { href: '/about', label: 'About' },
   { href: '/events', label: 'Events' },
   { href: '/fan-cafes', label: 'Fan Cafes' },
+  { href: '/interest-check', label: 'Interest Check' },
   { href: '/artists', label: 'Artists' },
   { href: '/contact', label: 'Contact' },
   { href: '/disclaimer', label: 'Disclaimer' },

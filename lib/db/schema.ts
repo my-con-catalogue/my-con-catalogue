@@ -1,4 +1,5 @@
 import { boolean, date, integer, pgTable, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 
 export const events = pgTable('events', {
   id: serial('id').primaryKey(),
@@ -85,9 +86,23 @@ export const fanCafes = pgTable('fan_cafes', {
   endDate: date('end_date'),
   instagram: text('instagram'),
   instagramPostUrl: text('instagram_post_url'),
+  socialPostUrl: text('social_post_url'),
   startTime: text('start_time'),
   endTime: text('end_time'),
   description: text('description'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const interestChecks = pgTable('interest_checks', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  socialPostUrl: text('social_post_url'),
+  type: text('type').notNull(),
+  eventName: text('event_name').notNull(),
+  fandom: text('fandom'),
+  status: text('status'),
+  year: integer('year').notNull(),
+  cutoffDate: date('cutoff_date'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -125,6 +140,8 @@ export const fanCafeSubmissions = pgTable('fan_cafe_submissions', {
   location: text('location').notNull(),
   startDate: date('start_date').notNull(),
   endDate: date('end_date'),
+  startTime: text('start_time'),
+  endTime: text('end_time'),
   socialPlatform: text('social_platform').notNull(),
   socialAccount: text('social_account').notNull(),
   fandom: text('fandom').notNull(),

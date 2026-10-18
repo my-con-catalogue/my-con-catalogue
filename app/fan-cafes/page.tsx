@@ -3,12 +3,21 @@ import Link from 'next/link'
 import { CalendarDays, Clock3, MapPin } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
 import { FanCafeSubmissionForm } from '@/components/fan-cafe-submission-form'
-import { InstagramPostEmbed } from '@/components/instagram-post-embed'
+import { SocialPostEmbed } from '@/components/social-post-embed'
 import { InstagramIcon } from '@/components/social-icons'
 import { formatDateRange, instagramUrl } from '@/lib/format'
+import { getEventStatus } from '@/lib/event-status'
 import { getFanCafes } from '@/lib/queries'
 
 export const revalidate = 300
+
+function formatCafeTime(value: string) {
+  const match = value.match(/^(\d{2}):(\d{2})$/)
+  if (!match) return value
+  const date = new Date()
+  date.setHours(Number(match[1]), Number(match[2]), 0, 0)
+  return new Intl.DateTimeFormat('en-MY', { hour: 'numeric', minute: '2-digit', hour12: true }).format(date)
+}
 
 export const metadata: Metadata = {
   title: 'Fan Cafes',
@@ -26,7 +35,6 @@ export default async function FanCafesPage({ searchParams }: Props) {
   const visibleCafes = selectedYear
     ? cafes.filter((cafe) => cafe.startDate?.startsWith(String(selectedYear)))
     : cafes
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }).format(new Date())
   const cafesByYear = new Map<string, typeof cafes>()
   for (const cafe of visibleCafes) {
     const year = cafe.startDate?.slice(0, 4) ?? 'TBA'
@@ -81,14 +89,19 @@ export default async function FanCafesPage({ searchParams }: Props) {
                   {cafesByYear.get(year)!.map((cafe) => (
                     <li key={cafe.id} className="flex flex-col rounded-xl border border-border bg-card p-5">
                       <h3 className="text-xl font-bold leading-tight">{cafe.name}</h3>
-                      {cafe.instagramPostUrl && (
+                      {(cafe.socialPostUrl || cafe.instagramPostUrl) && (
                         <div className="mt-4">
-                          <InstagramPostEmbed postUrl={cafe.instagramPostUrl} title={`${cafe.name} Instagram post`} />
+                          <SocialPostEmbed postUrl={cafe.socialPostUrl || cafe.instagramPostUrl!} title={`${cafe.name} social media post`} />
                         </div>
                       )}
-                      <p className={`mt-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${cafe.startDate && (cafe.endDate ?? cafe.startDate) >= today ? 'bg-emerald-700 text-white' : cafe.startDate ? 'bg-muted text-muted-foreground' : 'border border-border text-muted-foreground'}`}>
-                        {cafe.startDate ? ((cafe.endDate ?? cafe.startDate) >= today ? 'Upcoming' : 'Past') : 'Date TBA'}
-                      </p>
+                      {(() => {
+                        const status = getEventStatus(cafe.startDate, cafe.endDate)
+                        return (
+                          <p className={`mt-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${status === 'ongoing' ? 'bg-emerald-700 text-white' : status === 'upcoming' ? 'bg-blue-100 text-blue-900' : 'bg-muted text-muted-foreground'}`}>
+                            {cafe.startDate ? status : 'Date TBA'}
+                          </p>
+                        )
+                      })()}
                       {cafe.fandom && (
                         <div className="mt-4">
                           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fandom</p>
@@ -109,7 +122,7 @@ export default async function FanCafesPage({ searchParams }: Props) {
                         </div>
                         <div className="flex items-start gap-2">
                           <Clock3 className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                          <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time</dt><dd className="mt-0.5">{cafe.startTime && cafe.endTime ? `${cafe.startTime} – ${cafe.endTime}` : cafe.startTime ?? 'TBA'}</dd></div>
+                          <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time</dt><dd className="mt-0.5">{cafe.startTime && cafe.endTime ? `${formatCafeTime(cafe.startTime)} – ${formatCafeTime(cafe.endTime)}` : cafe.startTime ? formatCafeTime(cafe.startTime) : cafe.endTime ? formatCafeTime(cafe.endTime) : 'TBA'}</dd></div>
                         </div>
                         <div className="flex items-start gap-2">
                           <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
