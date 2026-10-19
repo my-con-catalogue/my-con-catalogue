@@ -43,15 +43,13 @@ function BoothNumberText({ value }: { value: string }) {
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(viewport)
-    observer.observe(text)
     return () => observer.disconnect()
   }, [value])
 
   return (
-    <span ref={viewportRef} title={value} className="block min-w-0 max-w-full overflow-hidden">
-      <span className={cn('booth-number-track flex w-max whitespace-nowrap', overflows && 'booth-number-track-overflow')}>
-        <span ref={textRef}>{value}</span>
-        <span className="pl-8" aria-hidden="true">{value}</span>
+    <span ref={viewportRef} title={value} className="block min-w-0 max-w-full overflow-hidden text-center">
+      <span ref={textRef} className={cn('inline-block w-max whitespace-nowrap text-[10px] sm:text-xs', overflows && 'invisible')}>
+        {value}
       </span>
     </span>
   )
@@ -351,11 +349,11 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
                 return (
                   <li key={booth} className="min-w-0">
                     {catalogue ? (
-                      <Link href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} className="booth-number-marquee-container flex h-9 w-full min-w-0 items-center justify-center overflow-hidden rounded-md border border-primary/30 bg-accent px-1.5 py-1 text-xs font-semibold leading-tight text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-2 sm:text-sm">
+                      <Link aria-label={`View catalogue for booth ${booth}`} href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} className="flex h-9 w-full min-w-0 items-center justify-center overflow-hidden rounded-md border border-primary/30 bg-accent px-1.5 py-1 text-xs font-semibold leading-tight text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-2 sm:text-sm">
                         <BoothNumberText value={booth} />
                       </Link>
                     ) : (
-                      <span aria-label={`${booth}, catalogue not listed`} className="booth-number-marquee-container flex h-9 w-full min-w-0 cursor-not-allowed items-center justify-center overflow-hidden rounded-md border border-border bg-muted px-1.5 py-1 text-xs font-medium leading-tight text-muted-foreground/60 sm:px-2 sm:text-sm">
+                      <span aria-label={`${booth}, catalogue not listed`} className="flex h-9 w-full min-w-0 cursor-not-allowed items-center justify-center overflow-hidden rounded-md border border-border bg-muted px-1.5 py-1 text-xs font-medium leading-tight text-muted-foreground/60 sm:px-2 sm:text-sm">
                         <BoothNumberText value={booth} />
                       </span>
                     )}
