@@ -17,6 +17,18 @@ function uniqueSorted(values: readonly (readonly string[])[]) {
 }
 
 const CATALOGUES_PER_PAGE = 20
+type SavedCatalogueFilters = {
+  catalogueType?: CatalogueType
+  query?: string
+  fandoms?: unknown
+  merch?: unknown
+  stampRally?: unknown
+  page?: number
+}
+
+function storedStringSet(value: unknown) {
+  return new Set(Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [])
+}
 
 function BoothNumberText({ value }: { value: string }) {
   const viewportRef = useRef<HTMLSpanElement>(null)
@@ -188,6 +200,53 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
   const [merch, setMerch] = useState<Set<string>>(new Set())
   const [stampRally, setStampRally] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(1)
+  const storageKey = entries[0]?.eventSlug ? `mcc:catalogue-filters:${entries[0].eventSlug}` : null
+  const [restoredStorageKey, setRestoredStorageKey] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!storageKey) return
+
+    // Keep each event's catalogue filters when the visitor opens a booth and
+    // returns to the event page in this tab.
+    setCatalogueType('booth_catalogue')
+    setQuery('')
+    setFandoms(new Set())
+    setMerch(new Set())
+    setStampRally(new Set())
+    setPage(1)
+
+    try {
+      const savedValue = window.sessionStorage.getItem(storageKey)
+      if (savedValue) {
+        const saved = JSON.parse(savedValue) as SavedCatalogueFilters
+        if (saved.catalogueType === 'booth_catalogue' || saved.catalogueType === 'pickup_only') setCatalogueType(saved.catalogueType)
+        if (typeof saved.query === 'string') setQuery(saved.query)
+        setFandoms(storedStringSet(saved.fandoms))
+        setMerch(storedStringSet(saved.merch))
+        setStampRally(storedStringSet(saved.stampRally))
+        if (typeof saved.page === 'number' && Number.isInteger(saved.page) && saved.page > 0) setPage(saved.page)
+      }
+    } catch {
+      // If storage is unavailable or contains invalid data, use the default filters.
+    }
+    setRestoredStorageKey(storageKey)
+  }, [storageKey])
+
+  useEffect(() => {
+    if (!storageKey || restoredStorageKey !== storageKey) return
+    try {
+      window.sessionStorage.setItem(storageKey, JSON.stringify({
+        catalogueType,
+        query,
+        fandoms: [...fandoms],
+        merch: [...merch],
+        stampRally: [...stampRally],
+        page,
+      } satisfies SavedCatalogueFilters))
+    } catch {
+      // The catalogue still works normally if session storage is unavailable.
+    }
+  }, [catalogueType, query, fandoms, merch, stampRally, page, restoredStorageKey, storageKey])
 
   const typeEntries = entries.filter((entry) => entry.catalogueType === catalogueType)
   const boothCatalogueEntries = entries.filter((entry) => entry.catalogueType === 'booth_catalogue')
