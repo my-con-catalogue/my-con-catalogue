@@ -41,3 +41,7 @@ create table if not exists public.stamp_rally_submissions (
 
 create index if not exists stamp_rally_submissions_created_at_idx
   on public.stamp_rally_submissions(created_at desc);
+
+-- Form submissions can contain personal/social contact details; keep them off
+-- the public and authenticated Data API. Server-side service-role access only.
+grant select, insert, update, delete on public.stamp_rally_submissions to service_role;

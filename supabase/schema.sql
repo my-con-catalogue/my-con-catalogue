@@ -24,6 +24,7 @@ alter table events add column if not exists entry_status text not null default '
 insert into events (slug, name, year, display_order, is_upcoming, start_date, end_date, location, instagram, logo_url, entry_status) values
   ('anime-fest-2026', 'Anime Fest! 2026 / 3', 2026, 1, true, '2026-10-17', '2026-10-18', 'Lalaport Bukit Bintang City Centre', 'comic_fiesta', '/events/anime-fest.png', 'Free entry'),
   ('comic-fiesta-2026', 'Comic Fiesta 2026', 2026, 2, true, '2026-12-19', '2026-12-20', 'Kuala Lumpur Convention Centre', 'comic_fiesta', '/events/comic-fiesta.png', 'Ticketed'),
+  ('otakyun-2026', 'Otakyun 2026', 2026, 3, true, null, null, null, null, '/events/otakyun.png', 'TBA'),
   ('anime-fest-2027', 'Anime Fest! (2027)', 2027, 1, true, null, null, null, 'comic_fiesta', '/events/anime-fest.png', 'TBA'),
   ('anime-fest-plus-2027', 'Anime Fest! Plus (2027)', 2027, 2, true, null, null, null, 'comic_fiesta', '/events/anime-fest-plus.png', 'TBA'),
   ('cos-mic-2027', 'Cos-Mic (2027)', 2027, 3, true, null, null, null, 'cosmic_asia', '/events/cos-mic.jpg', 'TBA'),
@@ -193,6 +194,29 @@ alter table interest_checks add column if not exists fandom text;
 alter table interest_checks add column if not exists status text;
 
 create index if not exists interest_checks_year_cutoff_idx on interest_checks(year, cutoff_date);
+
+-- Explicit Data API grants for every table created by this schema script.
+grant select on public.events to anon;
+grant select, insert, update, delete on public.events to authenticated, service_role;
+grant select on public.artists to anon;
+grant select, insert, update, delete on public.artists to authenticated, service_role;
+grant select on public.catalogues to anon;
+grant select, insert, update, delete on public.catalogues to authenticated, service_role;
+grant select on public.catalogue_entries to anon;
+grant select, insert, update, delete on public.catalogue_entries to authenticated, service_role;
+grant select on public.event_booths to anon;
+grant select, insert, update, delete on public.event_booths to authenticated, service_role;
+grant select on public.stamp_rallies to anon;
+grant select, insert, update, delete on public.stamp_rallies to authenticated, service_role;
+grant select on public.fan_cafes to anon;
+grant select, insert, update, delete on public.fan_cafes to authenticated, service_role;
+grant select on public.interest_checks to anon;
+grant select, insert, update, delete on public.interest_checks to authenticated, service_role;
+-- Form submissions may contain contact details. Keep them private in the Data API.
+grant select, insert, update, delete on public.suggestions to service_role;
+grant select, insert, update, delete on public.artist_submissions to service_role;
+grant select, insert, update, delete on public.stamp_rally_submissions to service_role;
+grant select, insert, update, delete on public.fan_cafe_submissions to service_role;
 
 insert into fan_cafes (name, fandom, location, start_date, instagram_post_url, start_time, end_time)
 select 'Alien Stage CSE: The Grand Birthday Banquet', 'Alien Stage', 'Doutor Coffee, LaLaport BBCC', '2026-11-22', 'https://www.instagram.com/p/DdgiZpEJsSo/', '11:00 AM', '5:00 PM'
