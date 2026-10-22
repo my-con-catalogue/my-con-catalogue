@@ -18,8 +18,8 @@ function sortedTags(values: readonly unknown[] | null | undefined): string[] {
   return cleanTextArray(values).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }))
 }
 
-function uniqueInstagramHandles(handles: string[]) {
-  return [...new Set(handles.map((handle) => handle.trim().replace(/^@/, '')).filter(Boolean))]
+function uniqueInstagramHandles(handles: readonly string[] | null | undefined) {
+  return [...new Set((handles ?? []).map((handle) => handle.trim().replace(/^@/, '')).filter(Boolean))]
 }
 
 export async function getEvents() {
@@ -89,6 +89,7 @@ export async function getEventCatalogues(eventSlug: string) {
   // Keep malformed tag values from reaching the UI's text sorting and rendering.
   return rows.map((entry) => ({
     ...entry,
+    artistInstagrams: uniqueInstagramHandles(entry.artistInstagrams),
     fandoms: sortedTags(entry.fandoms),
     merchTypes: sortedTags(entry.merchTypes),
   }))
@@ -146,6 +147,7 @@ export async function getEventCatalogueById(eventSlug: string, catalogueId: numb
     .limit(1)
   return entry ? {
     ...entry,
+    artistInstagrams: uniqueInstagramHandles(entry.artistInstagrams),
     fandoms: sortedTags(entry.fandoms),
     merchTypes: sortedTags(entry.merchTypes),
   } : null
@@ -206,12 +208,12 @@ export async function getArtistsWithAppearances() {
         id: entry.id,
         slug: key.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
         name: entry.artistName,
-        artistInstagrams: uniqueInstagramHandles([...entry.artistInstagrams]),
+        artistInstagrams: uniqueInstagramHandles(entry.artistInstagrams),
         artistSocialLinks: [...entry.artistSocialLinks],
         bio: null,
         appearances: [],
       }
-      artist.artistInstagrams = uniqueInstagramHandles([...artist.artistInstagrams, ...entry.artistInstagrams])
+      artist.artistInstagrams = uniqueInstagramHandles([...artist.artistInstagrams, ...(entry.artistInstagrams ?? [])])
       artist.artistSocialLinks = [...new Set([...artist.artistSocialLinks, ...entry.artistSocialLinks])]
       if (!artist.appearances.some((appearance) => appearance.slug === event.slug)) {
         artist.appearances.push({ slug: event.slug, name: event.name, year: event.year })
@@ -261,7 +263,7 @@ export async function getArtistsWithAppearances() {
       }
       map.set(key, artist)
     }
-    artist.artistInstagrams = uniqueInstagramHandles([...artist.artistInstagrams, ...row.artistInstagrams])
+    artist.artistInstagrams = uniqueInstagramHandles([...artist.artistInstagrams, ...(row.artistInstagrams ?? [])])
     artist.artistSocialLinks = [...new Set([...artist.artistSocialLinks, ...row.artistSocialLinks])]
     if (row.eventSlug && row.eventName && row.eventYear && !artist.appearances.some((a) => a.slug === row.eventSlug)) {
       artist.appearances.push({ slug: row.eventSlug, name: row.eventName, year: row.eventYear })
