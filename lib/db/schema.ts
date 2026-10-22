@@ -48,7 +48,7 @@ export const catalogueEntries = pgTable('catalogue_entries', {
   pickupNote: text('pickup_note'),
   orderCutoff: text('order_cutoff'),
   artistName: text('artist_name').notNull(),
-  artistInstagrams: text('artist_instagrams').array().notNull().default([]),
+  artistInstagrams: text('artist_instagrams').array().default([]),
   artistSocialLinks: text('artist_social_links').array().notNull().default([]),
   fandoms: text('fandom_tags').array().notNull().default([]),
   merchTypes: text('merch_tags').array().notNull().default([]),
