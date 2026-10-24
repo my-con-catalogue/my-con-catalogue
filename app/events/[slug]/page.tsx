@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft, CalendarDays, MapPin } from 'lucide-react'
 import { CatalogueBrowser } from '@/components/catalogue-browser'
 import { AnimeFestFloorplan } from '@/components/anime-fest-floorplan'
@@ -17,6 +17,11 @@ export const revalidate = 300
 
 type Props = { params: Promise<{ slug: string }> }
 
+const legacyEventSlugs: Record<string, string> = {
+  'visual-arts-expo-2026': 'vax-2026',
+  'comic-art-festival-kuala-lumpur-caf-kl-2027': 'caf-kl-2027',
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const event = await getEventBySlug(slug)
@@ -29,6 +34,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EventPage({ params }: Props) {
   const { slug } = await params
+  const canonicalSlug = legacyEventSlugs[slug]
+  if (canonicalSlug) redirect(`/events/${canonicalSlug}`)
+
   const event = await getEventBySlug(slug)
   if (!event) notFound()
 
