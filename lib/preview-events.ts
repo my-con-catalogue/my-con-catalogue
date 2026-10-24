@@ -38,7 +38,7 @@ const eventInputs: PreviewEventInput[] = [
   { name: 'Anime Fest! (2027)', slug: 'anime-fest-2027', year: 2027, displayOrder: 1, isUpcoming: true, entryStatus: 'TBA', instagram: 'comic_fiesta', logoUrl: '/events/anime-fest.png' },
   { name: 'Anime Fest! Plus (2027)', slug: 'anime-fest-plus-2027', year: 2027, displayOrder: 2, isUpcoming: true, entryStatus: 'TBA', instagram: 'comic_fiesta', logoUrl: '/events/anime-fest-plus.png' },
   { name: 'Cos-Mic (2027)', slug: 'cos-mic-2027', year: 2027, displayOrder: 3, isUpcoming: true, entryStatus: 'TBA', instagram: 'cosmic_asia', logoUrl: '/events/cos-mic.jpg' },
-  { name: 'Comic Art Festival Kuala Lumpur (caf_kl) (2027)', slug: 'comic-art-festival-kuala-lumpur-caf-kl-2027', year: 2027, displayOrder: 4, isUpcoming: true, entryStatus: 'TBA', instagram: 'caf_kl', logoUrl: '/events/caf-kl.png' },
+  { name: 'Comic Art Festival Kuala Lumpur (caf_kl) (2027)', slug: 'caf-kl-2027', year: 2027, displayOrder: 4, isUpcoming: true, entryStatus: 'TBA', instagram: 'caf_kl', logoUrl: '/events/caf-kl.png' },
   { name: 'AniManGaki (2027)', slug: 'animangaki-2027', year: 2027, displayOrder: 5, isUpcoming: true, entryStatus: 'TBA', instagram: 'animangaki', logoUrl: '/events/animangaki.png' },
   { name: 'ACG Base Market (2027)', slug: 'acg-base-market-2027', year: 2027, displayOrder: 6, isUpcoming: true, entryStatus: 'TBA', instagram: 'acgbase.lalaport', logoUrl: '/events/acg-base.jpg' },
   { name: 'CosTime (2027)', slug: 'costime-2027', year: 2027, displayOrder: 7, isUpcoming: true, entryStatus: 'TBA', instagram: 'jcosclub', logoUrl: '/events/costime.png' },
