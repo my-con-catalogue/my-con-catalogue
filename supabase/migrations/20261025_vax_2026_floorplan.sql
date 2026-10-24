@@ -1,5 +1,28 @@
 -- Add VAX 2026 if it is not already in the event list, then register all
 -- yellow Standard Artist Alley and Rahmah table booths for the booth index.
+-- Keep serial IDs aligned with existing rows. A prior manual import can leave
+-- the sequence behind the table and make the next insert fail on its primary key.
+do $$
+declare
+  target record;
+  sequence_name text;
+  highest_id bigint;
+  sequence_value bigint;
+begin
+  for target in
+    select table_name from (values ('events'), ('event_booths')) as tables(table_name)
+  loop
+    sequence_name := pg_get_serial_sequence(format('public.%I', target.table_name), 'id');
+    if sequence_name is not null then
+      execute format('select coalesce(max(id), 0) from public.%I', target.table_name)
+        into highest_id;
+      execute format('select last_value from %s', sequence_name::regclass)
+        into sequence_value;
+      perform setval(sequence_name::regclass, greatest(highest_id, sequence_value), true);
+    end if;
+  end loop;
+end $$;
+
 insert into public.events (
   slug, name, year, display_order, is_upcoming, start_date, end_date,
   location, entry_status, logo_url
