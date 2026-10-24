@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { InstagramIcon } from '@/components/social-icons'
 import { Mail, Globe2 } from 'lucide-react'
 
@@ -23,6 +24,13 @@ export function SiteFooter() {
     <footer className="mt-16 bg-foreground text-background">
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-12 md:flex-row md:justify-between">
         <div className="max-w-sm">
+          <Image
+            src="/branding/mycc-logo-dark.png"
+            alt="myCC logo"
+            width={118}
+            height={92}
+            className="mb-4 h-[68px] w-[88px] object-contain"
+          />
           <p className="font-heading text-xl font-bold">Malaysia Convention Catalogue</p>
           <p className="mt-2 text-sm leading-relaxed text-background/70">
             A community archive of artist alley catalogues from anime conventions across Malaysia. Run by
