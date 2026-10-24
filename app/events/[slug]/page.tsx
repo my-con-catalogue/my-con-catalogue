@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft, CalendarDays, MapPin } from 'lucide-react'
 import { CatalogueBrowser } from '@/components/catalogue-browser'
 import { AnimeFestFloorplan } from '@/components/anime-fest-floorplan'
 import { OtakyunFloorplan } from '@/components/otakyun-floorplan'
+import { Vax2026Floorplan } from '@/components/vax-2026-floorplan'
 import { EventEntryBadge } from '@/components/event-entry-badge'
 import { EventStatusBadge } from '@/components/event-status-badge'
 import { InstagramIcon } from '@/components/social-icons'
@@ -15,6 +16,11 @@ import { getEventBoothNumbers, getEventBySlug, getEventCatalogues } from '@/lib/
 export const revalidate = 300
 
 type Props = { params: Promise<{ slug: string }> }
+
+const legacyEventSlugs: Record<string, string> = {
+  'visual-arts-expo-2026': 'vax-2026',
+  'comic-art-festival-kuala-lumpur-caf-kl-2027': 'caf-kl-2027',
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
@@ -28,6 +34,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EventPage({ params }: Props) {
   const { slug } = await params
+  const canonicalSlug = legacyEventSlugs[slug]
+  if (canonicalSlug) redirect(`/events/${canonicalSlug}`)
+
   const event = await getEventBySlug(slug)
   if (!event) notFound()
 
@@ -101,6 +110,11 @@ export default async function EventPage({ params }: Props) {
                 Interactive map
               </a>
             )}
+            {event.slug === 'vax-2026' && (
+              <a href="#interactive-map" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
+                Interactive map
+              </a>
+            )}
             <a href="#catalogue" className="rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background">
               Catalogue ({catalogues.length})
             </a>
@@ -127,6 +141,16 @@ export default async function EventPage({ params }: Props) {
             <p className="mt-1 text-sm text-muted-foreground">CR booths open their catalogue when one is listed. EX (Exhibitor) and CO (Community) booths are outside this catalogue and shown in gray.</p>
           </div>
           <OtakyunFloorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
+        </section>
+      )}
+
+      {event.slug === 'vax-2026' && (
+        <section id="interactive-map" aria-labelledby="interactive-map-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-10">
+          <div className="mb-4">
+            <h2 id="interactive-map-heading" className="text-3xl font-extrabold tracking-tight">VAX 2026 floor plan</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Select a highlighted yellow booth to open its catalogue. Purple C booths are Cosplayer booths and are shown in gray.</p>
+          </div>
+          <Vax2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
         </section>
       )}
 
