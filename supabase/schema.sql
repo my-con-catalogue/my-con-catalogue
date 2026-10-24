@@ -28,7 +28,7 @@ insert into events (slug, name, year, display_order, is_upcoming, start_date, en
   ('anime-fest-2027', 'Anime Fest! (2027)', 2027, 1, true, null, null, null, 'comic_fiesta', '/events/anime-fest.png', 'TBA'),
   ('anime-fest-plus-2027', 'Anime Fest! Plus (2027)', 2027, 2, true, null, null, null, 'comic_fiesta', '/events/anime-fest-plus.png', 'TBA'),
   ('cos-mic-2027', 'Cos-Mic (2027)', 2027, 3, true, null, null, null, 'cosmic_asia', '/events/cos-mic.jpg', 'TBA'),
-  ('comic-art-festival-kuala-lumpur-caf-kl-2027', 'Comic Art Festival Kuala Lumpur (caf_kl) (2027)', 2027, 4, true, null, null, null, 'caf_kl', '/events/caf-kl.png', 'TBA'),
+  ('caf-kl-2027', 'Comic Art Festival Kuala Lumpur (caf_kl) (2027)', 2027, 4, true, null, null, null, 'caf_kl', '/events/caf-kl.png', 'TBA'),
   ('animangaki-2027', 'AniManGaki (2027)', 2027, 5, true, null, null, null, 'animangaki', '/events/animangaki.png', 'TBA'),
   ('acg-base-market-2027', 'ACG Base Market (2027)', 2027, 6, true, null, null, null, 'acgbase.lalaport', '/events/acg-base.jpg', 'TBA'),
   ('costime-2027', 'CosTime (2027)', 2027, 7, true, null, null, null, 'jcosclub', '/events/costime.png', 'TBA'),
