@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { Menu, X } from 'lucide-react'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
 export const NAV_LINKS = [
@@ -27,12 +28,14 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
         <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
-          <span
-            aria-hidden="true"
-            className="flex size-9 items-center justify-center rounded-lg bg-primary font-heading text-sm font-bold text-primary-foreground"
-          >
-            MCC
-          </span>
+          <Image
+            src="/branding/mycc-logo-light.png"
+            alt="myCC logo"
+            width={58}
+            height={45}
+            priority
+            className="h-10 w-[52px] shrink-0 object-contain sm:h-11 sm:w-[58px]"
+          />
           <span className="font-heading text-base font-bold leading-tight">
             Malaysia Convention
             <span className="block text-xs font-medium text-muted-foreground">Catalogue</span>
