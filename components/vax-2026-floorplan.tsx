@@ -23,7 +23,9 @@ const standardXs = [151, 217, 284, 350, 416, 482, 601, 667, 733, 799, 865]
 const standardBooths: BoothSpot[] = standardRows.flatMap(({ prefix, y, numbers }) =>
   Array.from({ length: numbers }, (_, index) => {
     const booth = `${prefix}${String(index + 1).padStart(2, '0')}`
-    return { booth, x: standardXs[index], y, width: 64, height: 43 }
+    // SF01–SF05 sit in the right-hand section of the floor plan, not over C01–C06.
+    const xIndex = prefix === 'SF' ? index + 6 : index
+    return { booth, x: standardXs[xIndex], y, width: 64, height: 43 }
   }),
 )
 
