@@ -455,6 +455,9 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
                 <p className={cn('inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold', entry.stampRally ? 'border-emerald-800 bg-emerald-700 text-white' : 'border-border bg-muted text-foreground')}>
                   <span aria-hidden="true">{entry.stampRally ? '✦' : '♡'}</span>Stamp Rally · {entry.stampRally ? 'Yes' : 'No'}
                 </p>
+                {entry.stampRally && entry.stampRallyNote?.trim() && (
+                  <p className="text-xs leading-relaxed text-emerald-900">{entry.stampRallyNote}</p>
+                )}
               </div>
             </li>
             )
