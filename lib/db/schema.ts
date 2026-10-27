@@ -53,6 +53,7 @@ export const catalogueEntries = pgTable('catalogue_entries', {
   fandoms: text('fandom_tags').array().notNull().default([]),
   merchTypes: text('merch_tags').array().notNull().default([]),
   stampRally: boolean('stamp_rally').notNull().default(false),
+  stampRallyNote: text('stamp_rally_note'),
   instagramPosts: text('instagram_post_urls').array().notNull().default([]),
   catalogueLinks: text('catalogue_links').array().notNull().default([]),
   catalogueFileUrls: text('catalogue_file_urls').array().notNull().default([]),
