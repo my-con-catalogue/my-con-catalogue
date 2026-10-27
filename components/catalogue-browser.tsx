@@ -465,7 +465,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
                   <span aria-hidden="true">{entry.stampRally ? '✦' : '♡'}</span>Stamp Rally · {entry.stampRally ? 'Yes' : 'No'}
                 </p>
                 {entry.stampRally && entry.stampRallyNote?.trim() && (
-                  <p className="text-xs leading-relaxed text-emerald-900">{entry.stampRallyNote}</p>
+                  <p className="whitespace-pre-line break-words text-xs leading-relaxed text-emerald-900">{entry.stampRallyNote}</p>
                 )}
               </div>
             </li>

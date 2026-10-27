@@ -23,6 +23,13 @@ const booths: BoothSpot[] = boothRows.flatMap(({ first, count, y }) =>
   }),
 )
 
+const outOfScopeBooths = [
+  { booth: 'G1', x: 656, y: 11, width: 40, height: 56 },
+  { booth: 'D10', x: 717, y: 158, width: 54, height: 41 },
+  { booth: 'D9', x: 782, y: 158, width: 54, height: 41 },
+  { booth: 'D8', x: 850, y: 158, width: 53, height: 41 },
+]
+
 function boothCodes(value: string) {
   return [...value.matchAll(/\bA\s*[-–—]?\s*0*(\d{1,2})/gi)]
     .map((match) => `A${String(Number(match[1])).padStart(2, '0')}`)
@@ -48,6 +55,12 @@ export function YumeAcg2026Floorplan({ entries }: { entries: readonly CatalogueE
           className="object-fill"
         />
         <svg viewBox="0 0 927 451" preserveAspectRatio="none" className="absolute inset-0 size-full" role="group" aria-label="Yume ACG Fest 2026 booth map">
+          {outOfScopeBooths.map((spot) => (
+            <g key={spot.booth} aria-label={`${spot.booth}: outside the Artist Alley catalogue`}>
+              <title>{`${spot.booth} · not included in the Artist Alley catalogue`}</title>
+              <rect x={spot.x} y={spot.y} width={spot.width} height={spot.height} rx="2" fill="#6b7280" fillOpacity="0.82" stroke="#e5e7eb" strokeOpacity="0.9" strokeWidth="2" />
+            </g>
+          ))}
           {booths.map((spot) => {
             const entry = findCatalogue(spot.booth, entries)
             const rect = { x: spot.x, y: spot.y, width: spot.width, height: spot.height }
@@ -66,7 +79,7 @@ export function YumeAcg2026Floorplan({ entries }: { entries: readonly CatalogueE
         </svg>
       </div>
       <div className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
-        Blue A01–A28 Artist Alley booths become clickable when a catalogue is listed. A05 and A06 both open a combined A05–A06 catalogue.
+        Blue A01–A28 Artist Alley booths become clickable when a catalogue is listed. A05 and A06 both open a combined A05–A06 catalogue. Gray G1 and D8–D10 booths are outside the Artist Alley catalogue.
       </div>
     </div>
   )
