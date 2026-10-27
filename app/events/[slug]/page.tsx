@@ -164,7 +164,7 @@ export default async function EventPage({ params }: Props) {
         <section id="interactive-map" aria-labelledby="interactive-map-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-10">
           <div className="mb-4">
             <h2 id="interactive-map-heading" className="text-3xl font-extrabold tracking-tight">Yume ACG Fest 2026 floor plan</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Select a blue Artist Alley booth to open its catalogue. A05 and A06 share a booth listing when entered as A05–A06.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Select a blue Artist Alley booth to open its catalogue.</p>
           </div>
           <YumeAcg2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
         </section>
