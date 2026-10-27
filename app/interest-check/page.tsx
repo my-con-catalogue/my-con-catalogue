@@ -46,6 +46,20 @@ export default async function InterestCheckPage({ searchParams }: Props) {
   const visibleItems = selectedYear ? items.filter((item) => item.year === selectedYear) : items
   const grouped = new Map<number, typeof items>()
   for (const item of visibleItems) grouped.set(item.year, [...(grouped.get(item.year) ?? []), item])
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+  const isPastItem = (item: (typeof items)[number]) => {
+    const status = item.status?.trim().toLocaleLowerCase()
+    return status === 'past' || status === 'closed' || Boolean(item.cutoffDate && item.cutoffDate < today)
+  }
+  for (const yearItems of grouped.values()) {
+    yearItems.sort((a, b) => {
+      const aPast = isPastItem(a)
+      const bPast = isPastItem(b)
+      if (aPast !== bPast) return aPast ? 1 : -1
+      if (aPast) return (b.cutoffDate ?? '').localeCompare(a.cutoffDate ?? '') || a.title.localeCompare(b.title)
+      return (a.cutoffDate ?? '9999-12-31').localeCompare(b.cutoffDate ?? '9999-12-31') || a.title.localeCompare(b.title)
+    })
+  }
 
   return (
     <>
@@ -84,10 +98,10 @@ export default async function InterestCheckPage({ searchParams }: Props) {
                 <h2 id={`interest-year-${year}`} className="border-b-2 border-foreground pb-3 text-3xl font-extrabold">{year}</h2>
                 <ul className="mt-6 grid gap-6 md:grid-cols-2">
                   {yearItems.map((item) => {
-                    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
-                    const automaticStatus = item.cutoffDate && item.cutoffDate < today ? 'Past' : 'Ongoing'
-                    // A non-empty status entered in Supabase takes precedence over date-based status.
-                    const status = item.status?.trim() || automaticStatus
+                    const deadlinePassed = Boolean(item.cutoffDate && item.cutoffDate < today)
+                    const automaticStatus = deadlinePassed ? 'Past' : 'Ongoing'
+                    // An expired cutoff is always past; otherwise use the status entered in Supabase.
+                    const status = deadlinePassed ? 'Past' : item.status?.trim() || automaticStatus
                     const postUrl = item.socialPostUrl ? validHttpUrl(item.socialPostUrl) : null
                     return (
                       <li key={item.id} className="flex flex-col rounded-xl border border-border bg-card p-5">
