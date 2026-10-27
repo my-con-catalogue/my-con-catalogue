@@ -67,7 +67,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
         </div>
       </header>
       {catalogue.stampRally && catalogue.stampRallyNote?.trim() && (
-        <p className="mt-4 rounded-xl border border-emerald-800/25 bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-950">
+        <p className="mt-4 whitespace-pre-line break-words rounded-xl border border-emerald-800/25 bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-950">
           <span className="font-bold">Stamp Rally: </span>{catalogue.stampRallyNote}
         </p>
       )}
