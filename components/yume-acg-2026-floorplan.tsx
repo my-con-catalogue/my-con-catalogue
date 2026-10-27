@@ -79,7 +79,7 @@ export function YumeAcg2026Floorplan({ entries }: { entries: readonly CatalogueE
         </svg>
       </div>
       <div className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
-        Blue A01–A28 Artist Alley booths become clickable when a catalogue is listed. A05 and A06 both open a combined A05–A06 catalogue. Gray G1 and D8–D10 booths are outside the Artist Alley catalogue.
+        Blue A01–A28 Artist Alley booths become clickable when a catalogue is listed.
       </div>
     </div>
   )
