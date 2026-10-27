@@ -88,20 +88,19 @@ export default async function FanCafesPage({ searchParams }: Props) {
                 <ul className="mt-6 grid gap-6 md:grid-cols-2">
                   {cafesByYear.get(year)!.map((cafe) => (
                     <li key={cafe.id} className="flex flex-col rounded-xl border border-border bg-card p-5">
-                      <h3 className="text-xl font-bold leading-tight">{cafe.name}</h3>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <h3 className="text-xl font-bold leading-tight">{cafe.name}</h3>
+                        {(() => {
+                          const status = getEventStatus(cafe.startDate, cafe.endDate)
+                          const style = status === 'ongoing' ? 'bg-emerald-700 text-white' : status === 'upcoming' ? 'bg-sky-100 text-sky-900' : 'bg-muted text-muted-foreground'
+                          return <span className={`inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${style}`}>{cafe.startDate ? status : 'Date TBA'}</span>
+                        })()}
+                      </div>
                       {(cafe.socialPostUrl || cafe.instagramPostUrl) && (
                         <div className="mt-4">
                           <SocialPostEmbed postUrl={cafe.socialPostUrl || cafe.instagramPostUrl!} title={`${cafe.name} social media post`} />
                         </div>
                       )}
-                      {(() => {
-                        const status = getEventStatus(cafe.startDate, cafe.endDate)
-                        return (
-                          <p className={`mt-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${status === 'ongoing' ? 'bg-emerald-700 text-white' : status === 'upcoming' ? 'bg-blue-100 text-blue-900' : 'bg-muted text-muted-foreground'}`}>
-                            {cafe.startDate ? status : 'Date TBA'}
-                          </p>
-                        )
-                      })()}
                       {cafe.fandom && (
                         <div className="mt-4">
                           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fandom</p>

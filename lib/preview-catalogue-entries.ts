@@ -11,6 +11,7 @@ export const previewCatalogueEntries = [
     fandoms: ['Genshin Impact', 'The Amazing Digital Circus', 'Dungeon Meshi', 'Undertale', 'Witch Hat Atelier'],
     merchTypes: ['Plush keychains', 'keychains', 'chocolate keychains', 'tote bags'],
     stampRally: false,
+    stampRallyNote: null,
     instagramPosts: [
       'https://www.instagram.com/p/Dd6WaEYmCnA/',
       'https://www.instagram.com/p/DeHNmU6mMFM/',
@@ -30,6 +31,7 @@ export const previewCatalogueEntries = [
     fandoms: ['LADS', 'Hololive', 'Shugo Chara', 'Others'],
     merchTypes: ['Commission', 'Stickers', 'photocards (poca)', 'badges', 'art prints', 'doujin', 'tapestry', 'shirts', 'standee', 'fridge magnet'],
     stampRally: false,
+    stampRallyNote: null,
     instagramPosts: [
       'https://www.instagram.com/p/DeGk4EBgWXZ/',
       'https://www.instagram.com/p/DeI3wBnAdu3/',

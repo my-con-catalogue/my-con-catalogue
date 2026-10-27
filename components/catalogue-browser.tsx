@@ -33,22 +33,31 @@ function storedStringSet(value: unknown) {
 function BoothNumberText({ value }: { value: string }) {
   const viewportRef = useRef<HTMLSpanElement>(null)
   const textRef = useRef<HTMLSpanElement>(null)
-  const [overflows, setOverflows] = useState(false)
+  const [scale, setScale] = useState(1)
 
   useEffect(() => {
     const viewport = viewportRef.current
     const text = textRef.current
     if (!viewport || !text) return
-    const measure = () => setOverflows(text.getBoundingClientRect().width > viewport.clientWidth + 1)
+    const measure = () => {
+      const textWidth = text.scrollWidth
+      const availableWidth = viewport.clientWidth
+      setScale(textWidth > availableWidth && textWidth > 0 ? availableWidth / textWidth : 1)
+    }
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(viewport)
+    observer.observe(text)
     return () => observer.disconnect()
   }, [value])
 
   return (
     <span ref={viewportRef} title={value} className="block min-w-0 max-w-full overflow-hidden text-center">
-      <span ref={textRef} className={cn('inline-block w-max whitespace-nowrap text-[10px] sm:text-xs', overflows && 'invisible')}>
+      <span
+        ref={textRef}
+        style={{ transform: `scaleX(${scale})`, transformOrigin: 'center' }}
+        className="inline-block w-max whitespace-nowrap text-[10px] sm:text-xs"
+      >
         {value}
       </span>
     </span>
@@ -455,6 +464,9 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
                 <p className={cn('inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold', entry.stampRally ? 'border-emerald-800 bg-emerald-700 text-white' : 'border-border bg-muted text-foreground')}>
                   <span aria-hidden="true">{entry.stampRally ? '✦' : '♡'}</span>Stamp Rally · {entry.stampRally ? 'Yes' : 'No'}
                 </p>
+                {entry.stampRally && entry.stampRallyNote?.trim() && (
+                  <p className="text-xs leading-relaxed text-emerald-900">{entry.stampRallyNote}</p>
+                )}
               </div>
             </li>
             )

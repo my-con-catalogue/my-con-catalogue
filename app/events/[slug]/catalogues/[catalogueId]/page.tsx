@@ -66,6 +66,11 @@ export default async function CatalogueDetailPage({ params }: Props) {
           </span>
         </div>
       </header>
+      {catalogue.stampRally && catalogue.stampRallyNote?.trim() && (
+        <p className="mt-4 rounded-xl border border-emerald-800/25 bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-950">
+          <span className="font-bold">Stamp Rally: </span>{catalogue.stampRallyNote}
+        </p>
+      )}
       {catalogue.catalogueType === 'pickup_only' && (catalogue.orderCutoff?.trim() || catalogue.pickupNote?.trim()) && (
         <div className="mt-6 rounded-xl border border-primary/30 bg-accent/60 p-4 text-sm leading-relaxed text-foreground">
           {catalogue.orderCutoff?.trim() && <p><span className="font-bold">Order cutoff: </span>{catalogue.orderCutoff}</p>}

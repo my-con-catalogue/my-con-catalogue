@@ -17,6 +17,7 @@ To add a booth, open **Supabase → Table Editor → catalogue_entries → Inser
 | `fandom_tags` | Array of fandom tags |
 | `merch_tags` | Array of merchandise types |
 | `stamp_rally` | `true` or `false` |
+| `stamp_rally_note` | Optional public note shown when `stamp_rally` is `true`, e.g. `1. Miku Stamp Rally  2. Valko Stamp Rally`. |
 | `instagram_post_urls` | One to three public Instagram post URLs. Leave empty when using file URLs instead. |
 | `catalogue_file_urls` | Public URLs to catalogue PDF/image files (for example, in a public Supabase Storage bucket). Use this when there are no Instagram catalogue posts. |
 

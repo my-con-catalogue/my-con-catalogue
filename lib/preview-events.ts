@@ -35,6 +35,7 @@ const eventInputs: PreviewEventInput[] = [
   { name: 'Comic Fiesta 2026', slug: 'comic-fiesta-2026', year: 2026, displayOrder: 2, isUpcoming: true, entryStatus: 'Ticketed', startDate: '2026-12-19', endDate: '2026-12-20', location: 'Kuala Lumpur Convention Centre', instagram: 'comic_fiesta', logoUrl: '/events/comic-fiesta.png' },
   { name: 'Otakyun 2026', slug: 'otakyun-2026', year: 2026, displayOrder: 3, isUpcoming: true, entryStatus: 'TBA', instagram: null, logoUrl: '/events/otakyun.png' },
   { name: 'VAX 2026', slug: 'vax-2026', year: 2026, displayOrder: 4, isUpcoming: true, entryStatus: 'TBA', startDate: '2026-10-31', endDate: '2026-11-01', location: "Taylor's University, Lakeside Campus, Selangor, Malaysia", instagram: null, logoUrl: '/events/vax.jpg' },
+  { name: 'Yume ACG Fest 2026', slug: 'yume-acg-2026', year: 2026, displayOrder: 5, isUpcoming: true, entryStatus: 'TBA', instagram: null, logoUrl: '/events/yume-acg-fest.png' },
   { name: 'Anime Fest! (2027)', slug: 'anime-fest-2027', year: 2027, displayOrder: 1, isUpcoming: true, entryStatus: 'TBA', instagram: 'comic_fiesta', logoUrl: '/events/anime-fest.png' },
   { name: 'Anime Fest! Plus (2027)', slug: 'anime-fest-plus-2027', year: 2027, displayOrder: 2, isUpcoming: true, entryStatus: 'TBA', instagram: 'comic_fiesta', logoUrl: '/events/anime-fest-plus.png' },
   { name: 'Cos-Mic (2027)', slug: 'cos-mic-2027', year: 2027, displayOrder: 3, isUpcoming: true, entryStatus: 'TBA', instagram: 'cosmic_asia', logoUrl: '/events/cos-mic.jpg' },

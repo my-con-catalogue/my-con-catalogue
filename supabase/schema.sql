@@ -25,6 +25,7 @@ insert into events (slug, name, year, display_order, is_upcoming, start_date, en
   ('anime-fest-2026', 'Anime Fest! 2026 / 3', 2026, 1, true, '2026-10-17', '2026-10-18', 'Lalaport Bukit Bintang City Centre', 'comic_fiesta', '/events/anime-fest.png', 'Free entry'),
   ('comic-fiesta-2026', 'Comic Fiesta 2026', 2026, 2, true, '2026-12-19', '2026-12-20', 'Kuala Lumpur Convention Centre', 'comic_fiesta', '/events/comic-fiesta.png', 'Ticketed'),
   ('otakyun-2026', 'Otakyun 2026', 2026, 3, true, null, null, null, null, '/events/otakyun.png', 'TBA'),
+  ('yume-acg-2026', 'Yume ACG Fest 2026', 2026, 5, true, null, null, null, null, '/events/yume-acg-fest.png', 'TBA'),
   ('anime-fest-2027', 'Anime Fest! (2027)', 2027, 1, true, null, null, null, 'comic_fiesta', '/events/anime-fest.png', 'TBA'),
   ('anime-fest-plus-2027', 'Anime Fest! Plus (2027)', 2027, 2, true, null, null, null, 'comic_fiesta', '/events/anime-fest-plus.png', 'TBA'),
   ('cos-mic-2027', 'Cos-Mic (2027)', 2027, 3, true, null, null, null, 'cosmic_asia', '/events/cos-mic.jpg', 'TBA'),
@@ -86,6 +87,7 @@ create table if not exists catalogue_entries (
   fandom_tags text[] not null default '{}',
   merch_tags text[] not null default '{}',
   stamp_rally boolean not null default false,
+  stamp_rally_note text,
   instagram_post_urls text[] not null default '{}',
   catalogue_links text[] not null default '{}',
   catalogue_file_urls text[] not null default '{}',
@@ -96,6 +98,7 @@ create table if not exists catalogue_entries (
 alter table catalogue_entries add column if not exists catalogue_type text not null default 'booth_catalogue';
 alter table catalogue_entries add column if not exists pickup_note text;
 alter table catalogue_entries add column if not exists order_cutoff text;
+alter table catalogue_entries add column if not exists stamp_rally_note text;
 alter table catalogue_entries drop constraint if exists catalogue_entries_catalogue_type_check;
 alter table catalogue_entries add constraint catalogue_entries_catalogue_type_check
   check (catalogue_type in ('booth_catalogue', 'pickup_only'));
@@ -142,6 +145,11 @@ create table if not exists event_booths (
 
 create unique index if not exists event_booths_event_booth_idx on event_booths(event_slug, booth_number);
 create index if not exists event_booths_event_order_idx on event_booths(event_slug, display_order, id);
+
+insert into event_booths (event_slug, booth_number, display_order)
+select 'yume-acg-2026', 'A' || lpad(number::text, 2, '0'), number
+from generate_series(1, 28) as booth(number)
+on conflict (event_slug, booth_number) do nothing;
 
 create table if not exists stamp_rallies (
   id serial primary key,
