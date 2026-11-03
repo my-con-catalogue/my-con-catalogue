@@ -8,6 +8,7 @@ import { AnimeFestFloorplan } from '@/components/anime-fest-floorplan'
 import { OtakyunFloorplan } from '@/components/otakyun-floorplan'
 import { Vax2026Floorplan } from '@/components/vax-2026-floorplan'
 import { YumeAcg2026Floorplan } from '@/components/yume-acg-2026-floorplan'
+import { AcgMatsuri2026Floorplan } from '@/components/acg-matsuri-2026-floorplan'
 import { EventEntryBadge } from '@/components/event-entry-badge'
 import { EventStatusBadge } from '@/components/event-status-badge'
 import { InstagramIcon } from '@/components/social-icons'
@@ -121,6 +122,11 @@ export default async function EventPage({ params }: Props) {
                 Interactive map
               </a>
             )}
+            {event.slug === 'acg-matsuri-2026' && (
+              <a href="#interactive-map" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
+                Interactive map
+              </a>
+            )}
             <a href="#catalogue" className="rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background">
               Catalogue ({catalogues.length})
             </a>
@@ -167,6 +173,16 @@ export default async function EventPage({ params }: Props) {
             <p className="mt-1 text-sm text-muted-foreground">Select a blue Artist Alley booth to open its catalogue.</p>
           </div>
           <YumeAcg2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
+        </section>
+      )}
+
+      {event.slug === 'acg-matsuri-2026' && (
+        <section id="interactive-map" aria-labelledby="interactive-map-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-10">
+          <div className="mb-4">
+            <h2 id="interactive-map-heading" className="text-3xl font-extrabold tracking-tight">ACG Matsuri 2026 floor plan</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Select a booth to open its catalogue when one has been added.</p>
+          </div>
+          <AcgMatsuri2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
         </section>
       )}
 
