@@ -1,46 +1,58 @@
 import Image from 'next/image'
 import type { CatalogueEntry } from '@/lib/queries'
 
-type BoothSpot = {
-  booth: number
-  x: number
-  y: number
-  width: number
-  height: number
-  angle?: number
+type BoothSpot = { booth: number; points: string }
+
+function rectangle(booth: number, x: number, y: number, width: number, height: number): BoothSpot {
+  return { booth, points: `${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height}` }
 }
 
-function makeRow(numbers: number[], centers: Array<[number, number]>, angle = 0): BoothSpot[] {
-  return numbers.flatMap((booth, index) => {
-    const center = centers[index]
-    return center ? [{ booth, x: center[0], y: center[1], width: 37, height: 35, angle }] : []
-  })
-}
-
-// Coordinates follow the 875 × 733 source image. Booths on the diagonal runs
-// use rotated hit areas so each clickable shape follows its printed tile.
-const booths: BoothSpot[] = [
-  // A01–A18, in the navigation key at the upper right.
+// Coordinates trace the green booth tiles in the 875 × 733 source artwork.
+// The angled booths have individual corner points because their slant and
+// position vary slightly along each row.
+const boothSpots: BoothSpot[] = [
+  // A01–A18 navigation key.
   ...Array.from({ length: 18 }, (_, index) => {
     const column = index < 9 ? 0 : 1
     const row = index % 9
-    const rowCenters = [72, 108, 159, 195, 244, 280, 329, 365, 414]
-    return { booth: index + 1, x: 756 + column * 38, y: rowCenters[row], width: 37, height: 35 }
+    const y = [55, 92, 142, 179, 227, 265, 312, 350, 398][row]
+    return rectangle(index + 1, 738 + column * 38, y, 37, 34)
   }),
-  // A19–A34, the central grid in the lower navigation panel.
+  // A19–A34 central grid.
   ...Array.from({ length: 16 }, (_, index) => {
     const column = Math.floor(index / 4)
     const row = index % 4
-    const columnCenters = [306, 378, 415, 484]
-    const rowCenters = [566, 607, 652, 690]
-    return { booth: index + 19, x: columnCenters[column], y: rowCenters[row], width: 36, height: 37 }
+    const xs = [287, 359, 397, 465]
+    const ys = [548, 585, 635, 672]
+    return rectangle(index + 19, xs[column], ys[row], 37, 34)
   }),
-  // Slightly slanted upper rows in the lower navigation panel.
-  ...makeRow([42, 41, 40, 39, 56, 55], [[48, 513], [87, 518], [126, 523], [165, 528], [205, 532], [245, 537]], 7),
-  ...makeRow([35, 36, 37, 38, 54, 57], [[533, 532], [573, 527], [614, 522], [654, 517], [695, 512], [735, 507]], -7),
-  // Slanted left and right aisles.
-  ...makeRow([46, 45, 44, 43], [[49, 615], [88, 636], [126, 657], [164, 678]], 25),
-  ...makeRow([47, 48, 49, 50, 51, 52, 53], [[610, 669], [649, 650], [689, 631], [729, 612], [769, 593], [809, 574], [849, 555]], -25),
+  // Upper left slanted row: A42, A41, A40, A39, A56, A55.
+  { booth: 42, points: '27.5,528.5 30.6,494.8 67.2,498.1 64.1,531.8' },
+  { booth: 41, points: '105.5,501.7 102.8,535.5 66.2,532.6 68.9,498.8' },
+  { booth: 40, points: '107.2,502.5 143.9,505.6 141.1,539.3 104.4,536.3' },
+  { booth: 39, points: '179.3,542.6 142.6,539.6 145.4,506 182.1,509' },
+  { booth: 56, points: '188.4,510.1 225,513.3 222.1,546.9 185.5,543.7' },
+  { booth: 55, points: '226.6,513.5 263.3,516.5 260.5,550.2 223.8,547.2' },
+  // Upper right slanted row: A35, A36, A37, A38, A54, A57.
+  { booth: 35, points: '550.6,513.3 553.6,547 517.1,550.4 514.1,516.6' },
+  { booth: 36, points: '555.2,546.9 552.3,513.1 589,510.1 591.8,543.8' },
+  { booth: 37, points: '631.9,505.8 634.9,539.4 598.3,542.7 595.3,509.2' },
+  { booth: 38, points: '633.2,505.7 670.1,502.4 673.2,536.2 636.3,539.5' },
+  { booth: 54, points: '712.6,533 676.1,536.4 673.1,502.7 709.6,499.4' },
+  { booth: 57, points: '749.8,495.9 752.9,529.6 716.2,533 713.1,499.3' },
+  // Lower left diagonal: A46–A43.
+  { booth: 46, points: '29,622 44,592 76.8,608.4 61.8,638.4' },
+  { booth: 45, points: '63.4,639.2 78.4,609.2 111.2,625.6 96.2,655.6' },
+  { booth: 44, points: '115.6,628.3 149.2,643.2 135.5,674.1 101.9,659.2' },
+  { booth: 43, points: '137,674.8 150.8,643.7 184.4,658.6 170.6,689.7' },
+  // Lower right diagonal: A47–A53.
+  { booth: 47, points: '632.1,674.7 598.5,689.7 584.8,658.8 618.4,643.8' },
+  { booth: 48, points: '619.8,643.2 653.4,628.3 667.1,659.2 633.5,674.1' },
+  { booth: 49, points: '690.6,609.2 705.6,639.2 672.8,655.6 657.8,625.6' },
+  { booth: 50, points: '692.2,608.4 725,592 740,622 707.2,638.4' },
+  { booth: 51, points: '732.8,588.6 765.6,572.2 780.8,602.6 748,619' },
+  { booth: 52, points: '815.2,585.4 782.4,601.8 767.4,571.8 800.2,555.4' },
+  { booth: 53, points: '851.8,566.6 819,583 804,553 836.8,536.6' },
 ]
 
 function boothNumbers(value: string): number[] {
@@ -54,24 +66,9 @@ function findCatalogue(booth: number, entries: readonly CatalogueEntry[]) {
   })
   if (exact) return exact
 
-  // A combined range such as A23-A24 is available from either booth tile.
+  // A combined booth range links each of its booth tiles to the same listing.
   const matches = entries.filter((entry) => boothNumbers(entry.booth).includes(booth))
   return matches.length === 1 ? matches[0] : undefined
-}
-
-function polygon(spot: BoothSpot) {
-  const radians = ((spot.angle ?? 0) * Math.PI) / 180
-  const cos = Math.cos(radians)
-  const sin = Math.sin(radians)
-  const halfWidth = spot.width / 2
-  const halfHeight = spot.height / 2
-  const corners: Array<[number, number]> = [
-    [-halfWidth, -halfHeight],
-    [halfWidth, -halfHeight],
-    [halfWidth, halfHeight],
-    [-halfWidth, halfHeight],
-  ]
-  return corners.map(([x, y]) => `${spot.x + x * cos - y * sin},${spot.y + x * sin + y * cos}`).join(' ')
 }
 
 export function AcgMatsuri2026Floorplan({ entries }: { entries: readonly CatalogueEntry[] }) {
@@ -87,20 +84,19 @@ export function AcgMatsuri2026Floorplan({ entries }: { entries: readonly Catalog
           className="object-fill"
         />
         <svg viewBox="0 0 875 733" preserveAspectRatio="none" className="absolute inset-0 size-full" role="group" aria-label="ACG Matsuri 2026 interactive booth map">
-          {booths.map((spot) => {
+          {boothSpots.map((spot) => {
             const boothCode = `A${String(spot.booth).padStart(2, '0')}`
             const entry = findCatalogue(spot.booth, entries)
-            const points = polygon(spot)
 
             return entry ? (
               <a key={boothCode} href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} aria-label={`${boothCode}: ${entry.artistName}, open catalogue`}>
                 <title>{`${boothCode} · ${entry.artistName} — open catalogue`}</title>
-                <polygon points={points} className="fill-amber-300/20 stroke-amber-100 transition-colors hover:fill-amber-200/55 focus:fill-amber-200/55" strokeWidth="2.5" />
+                <polygon points={spot.points} className="fill-amber-300/20 stroke-amber-100 transition-colors hover:fill-amber-200/55 focus:fill-amber-200/55" strokeWidth="1.5" />
               </a>
             ) : (
               <g key={boothCode} aria-label={`${boothCode}: catalogue not listed yet`}>
                 <title>{`${boothCode} · no catalogue listed yet`}</title>
-                <polygon points={points} fill="transparent" />
+                <polygon points={spot.points} fill="transparent" />
               </g>
             )
           })}
