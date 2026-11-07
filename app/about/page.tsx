@@ -12,7 +12,7 @@ const siteSections = [
   ['01 — HOME', 'A quick look at the latest additions and what’s happening in the archive.'],
   ['02 — ABOUT', 'Learn more about MYConCatalogue and why this archive was created.'],
   ['03 — EVENTS', 'Browse conventions, Artist Alley catalogues, and Stamp Rally information.'],
-  ['04 — FAN CAFES', 'Find and browse Fan Cafe information collected from Malaysian conventions.'],
+  ['04 — FAN EVENTS', 'Find and browse fan-organised event information collected from across Malaysia.'],
   ['05 — ARTISTS', 'Discover artists and find their social media or convention appearances.'],
   ['06 — CONTACT', 'Submit missing information, corrections, catalogues, or other suggestions.'],
 ]
@@ -73,7 +73,7 @@ export default function AboutPage() {
               <CollectionCard title="Artist Alley" items={['Artist catalogues', 'Booth numbers and layouts', 'Artist information and social links']} />
               <CollectionCard title="Conventions" items={['Convention information', 'Event editions and dates', 'Useful links and references']} />
               <CollectionCard title="Stamp Rally" items={['Stamp Rally information and participating locations']} />
-              <CollectionCard title="Fan Cafes" items={['Fan Cafe listings and available event information']} />
+              <CollectionCard title="Fan Events" items={['Fan event listings and available event information']} />
             </div>
             <p className="mt-5 leading-relaxed text-muted-foreground">The archive will continue to grow as more conventions take place and more information becomes available.</p>
           </section>
@@ -87,17 +87,17 @@ export default function AboutPage() {
               <p>When browsing a catalogue, please support the artist by liking or resharing their post and following their account.</p>
               <p>The information is collected and organised for archival and informational purposes only.</p>
               <p>If you are an artist, organiser, or information owner and notice something that needs to be corrected, updated, credited, or removed, please contact us on <a href="https://www.instagram.com/my_concatalogue/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Instagram</a> or submit a suggestion through the <Link href="/contact" className="underline underline-offset-4">contact form</Link>.</p>
-              <p>And if you have a catalogue, event, Stamp Rally, or Fan Cafe that isn&apos;t here yet — please feel free to submit it too!</p>
+              <p>And if you have a catalogue, event, Stamp Rally, or fan event that isn&apos;t here yet — please feel free to submit it too!</p>
               <p><Link href="/contact" className="font-bold text-primary underline underline-offset-4">Contact us or send a submission ♡</Link></p>
             </div>
           </section>
 
           <SectionDivider />
-          <section aria-labelledby="fan-cafes-ps">
-            <SectionHeading id="fan-cafes-ps">A Small Note About Fan Cafes</SectionHeading>
+          <section aria-labelledby="fan-events-ps">
+            <SectionHeading id="fan-events-ps">A Small Note About Fan Events</SectionHeading>
             <div className="mt-5 flex flex-col gap-4 leading-relaxed text-muted-foreground">
-              <p>P.S. The admin doesn&apos;t attend Fan Cafes as often as Artist Alleys, so this is one area where community help would be especially appreciated!</p>
-              <p>If you attend a Fan Cafe and have information, catalogues, updates, or corrections that could help the archive, please consider using the <Link href="/fan-cafes#submit-fan-cafe" className="font-semibold text-primary underline underline-offset-4">Fan Cafe submission form</Link>. I&apos;ll do my best to keep everything updated on time.</p>
+              <p>P.S. The admin doesn&apos;t attend fan events as often as Artist Alleys, so this is one area where community help would be especially appreciated!</p>
+              <p>If you attend a fan event and have information, catalogues, updates, or corrections that could help the archive, please consider using the <Link href="/fan-events#submit-fan-cafe" className="font-semibold text-primary underline underline-offset-4">fan event submission form</Link>. I&apos;ll do my best to keep everything updated on time.</p>
               <p>Meanwhile, I promise I&apos;m still trying my best to stalk convention catalogues religiously. ♡</p>
             </div>
           </section>
@@ -106,11 +106,11 @@ export default function AboutPage() {
           <section aria-labelledby="credits-disclaimer">
             <SectionHeading id="credits-disclaimer">Credits &amp; Disclaimer</SectionHeading>
             <div className="mt-5 flex flex-col gap-4 leading-relaxed text-muted-foreground">
-              <p>MYConCatalogue is an independent, non-official archive and is not affiliated with, sponsored by, endorsed by, or officially associated with any convention, organiser, artist, Fan Cafe, or other organisation unless explicitly stated.</p>
+              <p>MYConCatalogue is an independent, non-official archive and is not affiliated with, sponsored by, endorsed by, or officially associated with any convention, organiser, artist, fan event, or other organisation unless explicitly stated.</p>
               <p>All event names, logos, artwork, catalogues, photographs, artist information, and other materials belong to their respective artists, creators, organisers, and copyright holders.</p>
               <p>MYConCatalogue <strong className="text-foreground">does not claim ownership</strong> of any of these materials.</p>
               <p>The website is provided <strong className="text-foreground">free of charge</strong> and is created solely to compile and organise publicly available and community-submitted information for the convenience of convention-goers and fans.</p>
-              <p>Information on the website may be incomplete, outdated, or inaccurate. For current event information, please always refer to the official channels of the relevant convention, organiser, artist, or Fan Cafe.</p>
+              <p>Information on the website may be incomplete, outdated, or inaccurate. For current event information, please always refer to the official channels of the relevant convention, organiser, artist, or fan event.</p>
               <p>If anything needs to be taken down or corrected, please contact us through <a href="https://www.instagram.com/my_concatalogue/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-4">Instagram</a> or <Link href="/contact" className="font-semibold text-primary underline underline-offset-4">submit a suggestion</Link>. We will review the request and update or remove the material where appropriate.</p>
               <p>For the full details, please see our <Link href="/disclaimer" className="font-semibold text-primary underline underline-offset-4">Disclaimer</Link> page.</p>
             </div>
@@ -122,7 +122,7 @@ export default function AboutPage() {
             <div className="mt-5 flex flex-col gap-4 leading-relaxed text-primary-foreground/90">
               <p>This started because I wanted an easier way to browse convention catalogues for myself.</p>
               <p>Now, hopefully, it can be useful to someone else too.</p>
-              <p>Whether you&apos;re looking for an artist you remember from a previous convention, casually browsing an upcoming Artist Alley, checking a Stamp Rally, or trying to find a Fan Cafe you heard about —</p>
+              <p>Whether you&apos;re looking for an artist you remember from a previous convention, casually browsing an upcoming Artist Alley, checking a Stamp Rally, or trying to find a fan event you heard about —</p>
               <p>I hope MYConCatalogue makes it just a little easier.</p>
               <p>Thank you for visiting, and happy browsing! ♡</p>
               <p className="font-bold">— Fois D Ciel</p>
