@@ -58,10 +58,10 @@ export function FanCafeSubmissionForm() {
       <FormField id="fc-notes" label="Extra details">
         <textarea id="fc-notes" name="notes" rows={3} maxLength={2000} placeholder="Theme, booking info, or anything else fans should know" className={inputClass} />
       </FormField>
-      <p className="text-xs leading-relaxed text-muted-foreground">Submissions are reviewed before being added to the public fan cafe directory.</p>
+      <p className="text-xs leading-relaxed text-muted-foreground">Submissions are reviewed before being added to the public fan events directory.</p>
       <FormStatus status={state.status} message={state.message} />
       <button type="submit" disabled={pending} className="self-start rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground transition-opacity disabled:opacity-60">
-        {pending ? 'Submitting...' : 'Submit fan cafe'}
+        {pending ? 'Submitting...' : 'Submit fan event'}
       </button>
     </form>
   )

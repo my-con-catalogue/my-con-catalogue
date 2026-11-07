@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, ChevronDown, Search, X } from 'lucide-react'
+import { Bookmark, Check, ChevronDown, Search, X } from 'lucide-react'
 import { ArtistSocialLinks } from '@/components/artist-social-links'
+import { SocialPostEmbed } from '@/components/social-post-embed'
 import { getArtistSocialAccounts } from '@/lib/artist-socials'
 import type { CatalogueEntry, CatalogueType } from '@/lib/queries'
 import { cn } from '@/lib/utils'
@@ -12,18 +13,32 @@ function displayTag(tag: string) {
   return tag.toLocaleLowerCase().replace(/\b\p{L}/gu, (letter) => letter.toLocaleUpperCase())
 }
 
+function normalizeBooth(value: string) {
+  return value.toLocaleLowerCase().replace(/[–—]/g, '-').replace(/\s+/g, '')
+}
+
 function uniqueSorted(values: readonly (readonly string[])[]) {
   return [...new Set(values.flat())].sort((a, b) => a.localeCompare(b))
 }
 
 const CATALOGUES_PER_PAGE = 20
 type SavedCatalogueFilters = {
-  catalogueType?: CatalogueType
+  catalogueType?: CatalogueType | 'stamp_rally'
   query?: string
   fandoms?: unknown
   merch?: unknown
   stampRally?: unknown
   page?: number
+}
+
+type StampRallyEntry = {
+  id: number
+  title: string
+  socialPostUrl: string | null
+  fandom: string | null
+  participants: string[]
+  description: string | null
+  prizes: string | null
 }
 
 function storedStringSet(value: unknown) {
@@ -200,15 +215,41 @@ function TagList({ tags, label, maxRows = 3, outlined = false }: { tags: readonl
   )
 }
 
-export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: readonly CatalogueEntry[]; boothNumbers?: readonly string[] }) {
-  const [catalogueType, setCatalogueType] = useState<CatalogueType>('booth_catalogue')
+export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = [] }: { entries: readonly CatalogueEntry[]; boothNumbers?: readonly string[]; stampRallies?: readonly StampRallyEntry[] }) {
+  const [catalogueType, setCatalogueType] = useState<CatalogueType | 'stamp_rally'>('booth_catalogue')
   const [query, setQuery] = useState('')
   const [fandoms, setFandoms] = useState<Set<string>>(new Set())
   const [merch, setMerch] = useState<Set<string>>(new Set())
   const [stampRally, setStampRally] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(1)
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set())
+  const [bookmarksLoaded, setBookmarksLoaded] = useState(false)
+  const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false)
   const storageKey = entries[0]?.eventSlug ? `mcc:catalogue-filters:${entries[0].eventSlug}` : null
+  const bookmarkStorageKey = 'mcc:bookmarked-catalogues'
   const [restoredStorageKey, setRestoredStorageKey] = useState<string | null>(null)
+  const resultsRef = useRef<HTMLDivElement>(null)
+  const previousPage = useRef<number | null>(null)
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(bookmarkStorageKey) ?? '[]')
+      if (Array.isArray(saved)) setBookmarks(new Set(saved.filter((item): item is string => typeof item === 'string')))
+    } catch {
+      // Bookmarks are an enhancement; catalogue browsing remains available without storage.
+    } finally {
+      setBookmarksLoaded(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!bookmarksLoaded) return
+    try {
+      window.localStorage.setItem(bookmarkStorageKey, JSON.stringify([...bookmarks]))
+    } catch {
+      // The current page still reflects bookmark changes if local storage is unavailable.
+    }
+  }, [bookmarks, bookmarksLoaded])
 
   useEffect(() => {
     if (!storageKey) return
@@ -226,7 +267,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
       const savedValue = window.sessionStorage.getItem(storageKey)
       if (savedValue) {
         const saved = JSON.parse(savedValue) as SavedCatalogueFilters
-        if (saved.catalogueType === 'booth_catalogue' || saved.catalogueType === 'pickup_only') setCatalogueType(saved.catalogueType)
+        if (saved.catalogueType === 'booth_catalogue' || saved.catalogueType === 'pickup_only' || saved.catalogueType === 'stamp_rally') setCatalogueType(saved.catalogueType)
         if (typeof saved.query === 'string') setQuery(saved.query)
         setFandoms(storedStringSet(saved.fandoms))
         setMerch(storedStringSet(saved.merch))
@@ -255,7 +296,8 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
     }
   }, [catalogueType, query, fandoms, merch, stampRally, page, restoredStorageKey, storageKey])
 
-  const typeEntries = entries.filter((entry) => entry.catalogueType === catalogueType)
+  const dataType: CatalogueType = catalogueType === 'stamp_rally' ? 'booth_catalogue' : catalogueType
+  const typeEntries = entries.filter((entry) => entry.catalogueType === dataType)
   const boothCatalogueEntries = entries.filter((entry) => entry.catalogueType === 'booth_catalogue')
   const pickupEntries = entries.filter((entry) => entry.catalogueType === 'pickup_only')
   const fandomOptions = useMemo(() => uniqueSorted(typeEntries.map((e) => e.fandoms)), [typeEntries])
@@ -272,6 +314,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
   }
 
   const filtered = typeEntries.filter((e) => {
+    if (showBookmarkedOnly && !bookmarks.has(`${e.eventSlug}:${e.id}`)) return false
     const q = query.trim().toLowerCase()
     if (q && !e.artistName.toLowerCase().includes(q) && !(e.booth ?? '').toLowerCase().includes(q)) return false
     if (fandoms.size > 0 && !e.fandoms.some((f) => fandoms.has(f))) return false
@@ -280,7 +323,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
     return true
   })
 
-  const hasFilters = query !== '' || fandoms.size > 0 || merch.size > 0 || stampRally.size > 0
+  const hasFilters = query !== '' || fandoms.size > 0 || merch.size > 0 || stampRally.size > 0 || showBookmarkedOnly
   const pageCount = Math.max(1, Math.ceil(filtered.length / CATALOGUES_PER_PAGE))
   const currentPage = Math.min(page, pageCount)
   const firstVisible = filtered.length === 0 ? 0 : (currentPage - 1) * CATALOGUES_PER_PAGE + 1
@@ -300,6 +343,29 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
   const allBoothNumbers = [...configuredBooths, ...unconfiguredCatalogueBooths]
 
+  useEffect(() => {
+    if (previousPage.current !== null && previousPage.current !== currentPage) {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    previousPage.current = currentPage
+  }, [currentPage])
+
+  const toggleBookmark = (entry: CatalogueEntry) => {
+    const key = `${entry.eventSlug}:${entry.id}`
+    setBookmarks((current) => {
+      const next = new Set(current)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  const savedCount = entries.filter((entry) => bookmarks.has(`${entry.eventSlug}:${entry.id}`)).length
+  const catalogueByBoothLower = new Map<string, CatalogueEntry>()
+  for (const entry of boothCatalogueEntries) {
+    if (entry.booth?.trim()) catalogueByBoothLower.set(normalizeBooth(entry.booth), entry)
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:p-5">
@@ -307,6 +373,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
           {([
             { value: 'booth_catalogue', label: 'Booth Catalogue', count: boothCatalogueEntries.length },
             { value: 'pickup_only', label: 'Pick-Up Only', count: pickupEntries.length },
+            { value: 'stamp_rally', label: 'Stamp Rally', count: stampRallies.length },
           ] as const).map((option) => (
             <button
               key={option.value}
@@ -314,10 +381,13 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
               aria-pressed={catalogueType === option.value}
               onClick={() => {
                 setCatalogueType(option.value)
-                setQuery('')
-                setFandoms(new Set())
-                setMerch(new Set())
-                setStampRally(new Set())
+                if (option.value !== 'stamp_rally' || catalogueType !== 'stamp_rally') {
+                  setQuery('')
+                  setFandoms(new Set())
+                  setMerch(new Set())
+                  setStampRally(new Set())
+                }
+                if (option.value !== 'booth_catalogue') setShowBookmarkedOnly(false)
                 setPage(1)
               }}
               className={cn(
@@ -329,7 +399,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
             </button>
           ))}
         </div>
-        <div className="relative">
+        {catalogueType !== 'stamp_rally' && <div className="relative">
           <label htmlFor="catalogue-search" className="sr-only">
             Search artists or booth numbers
           </label>
@@ -345,7 +415,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
             placeholder="Search artist or booth..."
             className="h-11 w-full rounded-lg border border-input bg-background pl-10 pr-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
-        </div>
+        </div>}
         {catalogueType === 'booth_catalogue' && allBoothNumbers.length > 0 && (
           <section aria-label="Jump to a booth" className="rounded-lg border border-border bg-background p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -372,6 +442,12 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
             </ul>
           </section>
         )}
+        {catalogueType !== 'stamp_rally' && <>
+        {catalogueType === 'booth_catalogue' && (
+          <button type="button" aria-pressed={showBookmarkedOnly} onClick={() => { setShowBookmarkedOnly((value) => !value); setPage(1) }} className={cn('inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold', showBookmarkedOnly ? 'border-foreground bg-foreground text-background' : 'border-input bg-background hover:bg-secondary')}>
+            <Bookmark className="size-4" aria-hidden="true" /> {showBookmarkedOnly ? 'Showing saved booths' : 'Show saved booths'} ({savedCount})
+          </button>
+        )}
         <div className="flex flex-wrap gap-2">
           <FilterDropdown label="Fandom" options={fandomOptions} selected={fandoms} onToggle={toggle(setFandoms)} searchable={fandomOptions.length > 8} />
           <FilterDropdown label="Merch type" options={merchOptions} selected={merch} onToggle={toggle(setMerch)} searchable={merchOptions.length > 8} />
@@ -389,6 +465,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
                 setFandoms(new Set())
                 setMerch(new Set())
                 setStampRally(new Set())
+                setShowBookmarkedOnly(false)
                 setPage(1)
               }}
               className="inline-flex items-center gap-1 font-semibold text-primary"
@@ -397,15 +474,48 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
             </button>
           )}
         </div>
+        </>}
       </div>
 
-      {filtered.length === 0 ? (
+      {catalogueType === 'stamp_rally' ? (
+        stampRallies.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">No stamp rallies have been added for this event yet.</p>
+        ) : (
+          <ul className="grid gap-6 sm:grid-cols-2">
+            {stampRallies.map((rally) => (
+              <li key={rally.id} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
+                <h3 className="text-xl font-bold leading-tight">{rally.title}</h3>
+                {rally.socialPostUrl?.trim() && <SocialPostEmbed postUrl={rally.socialPostUrl} title={`${rally.title} stamp rally post`} />}
+                {rally.fandom?.trim() && <p className="text-sm"><span className="font-bold">Fandom: </span>{rally.fandom}</p>}
+                {rally.participants.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-bold">Participating booths</h4>
+                    <ul className="mt-2 flex flex-wrap gap-2">
+                      {rally.participants.map((participant) => {
+                        const [boothValue, submittedArtistName] = participant.split('|').map((part) => part.trim())
+                        const booth = boothValue || participant.trim()
+                        const entry = catalogueByBoothLower.get(normalizeBooth(booth))
+                        const artistName = entry?.artistName ?? submittedArtistName
+                        const label = artistName ? `${booth} · ${artistName}` : participant
+                        return <li key={participant}>{entry ? <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="inline-flex rounded-full border border-primary/30 bg-accent px-3 py-1.5 text-sm font-semibold text-primary hover:border-primary">{label}</Link> : <span className="inline-flex rounded-full border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground">{label}</span>}</li>
+                      })}
+                    </ul>
+                  </div>
+                )}
+                {rally.description?.trim() && <p className="whitespace-pre-line text-sm leading-relaxed"><span className="font-bold">Description: </span>{rally.description}</p>}
+                {rally.prizes?.trim() && <p className="whitespace-pre-line text-sm leading-relaxed"><span className="font-bold">Prizes: </span>{rally.prizes}</p>}
+              </li>
+            ))}
+          </ul>
+        )
+      ) : filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
           {typeEntries.length === 0
             ? catalogueType === 'pickup_only' ? 'No pick-up catalogues archived for this event yet.' : 'No booth catalogues archived for this event yet.'
             : 'No catalogues match these filters.'}
         </p>
       ) : (
+        <div ref={resultsRef} id="catalogue-results" className="scroll-mt-24">
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {visibleEntries.map((entry) => {
             const hasCatalogueMaterial = entry.instagramPosts.length > 0 || entry.catalogueLinks.length > 0 || entry.catalogueFileUrls.length > 0
@@ -413,7 +523,12 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
             <li key={entry.id} className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
               <div className="flex items-center justify-between bg-foreground px-4 py-3 text-background">
                 <span className="text-xs font-bold uppercase tracking-wider">Booth number</span>
-                <span className="rounded-md bg-accent px-3 py-1 font-heading text-lg font-extrabold text-accent-foreground">{entry.booth}</span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-md bg-accent px-3 py-1 font-heading text-lg font-extrabold text-accent-foreground">{entry.booth}</span>
+                  <button type="button" onClick={() => toggleBookmark(entry)} aria-pressed={bookmarks.has(`${entry.eventSlug}:${entry.id}`)} aria-label={`${bookmarks.has(`${entry.eventSlug}:${entry.id}`) ? 'Remove' : 'Save'} booth ${entry.booth}`} title={bookmarks.has(`${entry.eventSlug}:${entry.id}`) ? 'Remove saved booth' : 'Save booth'} className="rounded-md p-2 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                    <Bookmark className={cn('size-5', bookmarks.has(`${entry.eventSlug}:${entry.id}`) && 'fill-current text-accent')} aria-hidden="true" />
+                  </button>
+                </div>
               </div>
               <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="flex items-center justify-center gap-2 border-b border-border bg-muted px-4 py-3 text-center text-sm font-semibold text-primary transition-colors hover:bg-accent/50">
                 <span aria-hidden="true">›</span><span>{hasCatalogueMaterial ? 'Check catalogue material here' : 'View artist details'}</span><span aria-hidden="true">‹</span>
@@ -472,8 +587,9 @@ export function CatalogueBrowser({ entries, boothNumbers = [] }: { entries: read
             )
           })}
         </ul>
+        </div>
       )}
-      {filtered.length > CATALOGUES_PER_PAGE && (
+      {catalogueType !== 'stamp_rally' && filtered.length > CATALOGUES_PER_PAGE && (
         <nav aria-label="Catalogue pages" className="flex flex-wrap items-center justify-center gap-2">
           <button
             type="button"
