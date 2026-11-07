@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     template: '%s | Malaysia Convention Catalogue',
   },
   description:
-    'my.concatalogue — an archive of Artist Alleys, catalogues, stamp rallies and fan cafes from conventions across Malaysia.',
+    'my.concatalogue — an archive of Artist Alleys, catalogues, stamp rallies and fan events from conventions across Malaysia.',
   icons: {
     icon: [
       { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
