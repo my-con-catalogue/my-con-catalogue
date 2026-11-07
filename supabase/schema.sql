@@ -157,7 +157,7 @@ create table if not exists stamp_rallies (
   title text not null,
   description text,
   social_post_url text,
-  fandom text,
+  fandom text[] not null default '{}',
   prizes text,
   image_url text,
   participants text[] not null default '{}',
