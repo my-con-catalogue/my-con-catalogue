@@ -21,8 +21,8 @@ function uniqueSorted(values: readonly (readonly string[])[]) {
   return [...new Set(values.flat())].sort((a, b) => a.localeCompare(b))
 }
 
-function splitFandomTags(value: string | null) {
-  return (value ?? '').split(/[\n,]/).map((tag) => tag.trim()).filter(Boolean).sort((a, b) => a.localeCompare(b))
+function cleanFandomTags(values: readonly string[] | null) {
+  return [...new Set((values ?? []).map((tag) => tag.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
 }
 
 const CATALOGUES_PER_PAGE = 20
@@ -40,7 +40,7 @@ type StampRallyEntry = {
   id: number
   title: string
   socialPostUrl: string | null
-  fandom: string | null
+  fandom: readonly string[] | null
   participants: string[]
   description: string | null
   prizes: string | null
@@ -312,7 +312,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
   const fandomOptions = useMemo(() => uniqueSorted(typeEntries.map((e) => e.fandoms)), [typeEntries])
   const merchOptions = useMemo(() => uniqueSorted(typeEntries.map((e) => e.merchTypes)), [typeEntries])
   const stampRallyFandomOptions = useMemo(
-    () => uniqueSorted(stampRallies.map((rally) => splitFandomTags(rally.fandom))),
+    () => uniqueSorted(stampRallies.map((rally) => cleanFandomTags(rally.fandom))),
     [stampRallies],
   )
 
@@ -336,7 +336,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     return true
   })
   const filteredStampRallies = stampRallies.filter((rally) =>
-    stampRallyFandoms.size === 0 || splitFandomTags(rally.fandom).some((fandom) => stampRallyFandoms.has(fandom)),
+    stampRallyFandoms.size === 0 || cleanFandomTags(rally.fandom).some((fandom) => stampRallyFandoms.has(fandom)),
   )
 
   const hasFilters = query !== '' || fandoms.size > 0 || merch.size > 0 || stampRally.size > 0 || stampRallyFandoms.size > 0 || showBookmarkedOnly
@@ -376,7 +376,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     })
   }
 
-  const savedCount = entries.filter((entry) => bookmarks.has(`${entry.eventSlug}:${entry.id}`)).length
+  const savedCount = typeEntries.filter((entry) => bookmarks.has(`${entry.eventSlug}:${entry.id}`)).length
   const catalogueByBoothLower = new Map<string, CatalogueEntry>()
   for (const entry of boothCatalogueEntries) {
     if (entry.booth?.trim()) catalogueByBoothLower.set(normalizeBooth(entry.booth), entry)
@@ -403,7 +403,6 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                   setMerch(new Set())
                   setStampRally(new Set())
                 }
-                if (option.value !== 'booth_catalogue') setShowBookmarkedOnly(false)
                 setPage(1)
               }}
               className={cn(
@@ -473,10 +472,15 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
             </div>
           </>
         ) : <>
-        {catalogueType === 'booth_catalogue' && (
-          <button type="button" aria-pressed={showBookmarkedOnly} onClick={() => { setShowBookmarkedOnly((value) => !value); setPage(1) }} className={cn('inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold', showBookmarkedOnly ? 'border-foreground bg-foreground text-background' : 'border-input bg-background hover:bg-secondary')}>
-            <Bookmark className="size-4" aria-hidden="true" /> {showBookmarkedOnly ? 'Showing saved booths' : 'Show saved booths'} ({savedCount})
-          </button>
+        {catalogueType !== 'stamp_rally' && (
+          <div className="flex flex-col items-start gap-1.5">
+            <button type="button" aria-pressed={showBookmarkedOnly} onClick={() => { setShowBookmarkedOnly((value) => !value); setPage(1) }} className={cn('inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold', showBookmarkedOnly ? 'border-foreground bg-foreground text-background' : 'border-input bg-background hover:bg-secondary')}>
+              <Bookmark className="size-4" aria-hidden="true" /> {showBookmarkedOnly ? 'Showing saved catalogues' : 'Show saved catalogues'} ({savedCount})
+            </button>
+            <p className="max-w-3xl text-xs leading-relaxed text-muted-foreground">
+              Bookmarks are saved in this browser on this device. They won’t sync to another device or browser, and may be removed if site data is cleared or private browsing ends.
+            </p>
+          </div>
         )}
         <div className="flex flex-wrap gap-2">
           <FilterDropdown label="Fandom" options={fandomOptions} selected={fandoms} onToggle={toggle(setFandoms)} searchable={fandomOptions.length > 8} />
@@ -518,10 +522,10 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
               <li key={rally.id} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
                 <h3 className="text-xl font-bold leading-tight">{rally.title}</h3>
                 {rally.socialPostUrl?.trim() && <SocialPostEmbed postUrl={rally.socialPostUrl} title={`${rally.title} stamp rally post`} />}
-                {splitFandomTags(rally.fandom).length > 0 && (
+                {cleanFandomTags(rally.fandom).length > 0 && (
                   <div>
                     <p className="text-xs font-bold">Fandom:</p>
-                    <TagList tags={splitFandomTags(rally.fandom)} label={`${rally.title} fandoms`} maxRows={3} />
+                    <TagList tags={cleanFandomTags(rally.fandom)} label={`${rally.title} fandoms`} maxRows={3} />
                   </div>
                 )}
                 {rally.participants.length > 0 && (
