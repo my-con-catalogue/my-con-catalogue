@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { EventCard } from '@/components/event-card'
 import { PageHeader } from '@/components/page-header'
 import { getEvents, type EventWithCount } from '@/lib/queries'
+import { getEventStatus } from '@/lib/event-status'
 
 export const revalidate = 300
 
@@ -26,6 +27,13 @@ export default async function EventsPage({ searchParams }: Props) {
     const list = byYear.get(event.year) ?? []
     list.push(event)
     byYear.set(event.year, list)
+  }
+  for (const yearEvents of byYear.values()) {
+    yearEvents.sort((a, b) => {
+      const statusOrder = { upcoming: 0, ongoing: 1, past: 2 }
+      const statusDifference = statusOrder[getEventStatus(a.startDate, a.endDate)] - statusOrder[getEventStatus(b.startDate, b.endDate)]
+      return statusDifference || a.displayOrder - b.displayOrder || a.name.localeCompare(b.name)
+    })
   }
   const visibleYears = [...byYear.keys()].sort((a, b) => a - b)
 
