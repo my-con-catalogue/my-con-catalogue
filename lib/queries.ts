@@ -158,7 +158,17 @@ export async function getEventCatalogueById(eventSlug: string, catalogueId: numb
 export async function getEventStampRallies(eventId: number) {
   if (!databaseConfigured) return []
   return db
-    .select()
+    .select({
+      id: stampRallies.id,
+      eventId: stampRallies.eventId,
+      title: stampRallies.title,
+      description: stampRallies.description,
+      socialPostUrl: stampRallies.socialPostUrl,
+      fandom: stampRallies.fandom,
+      prizes: stampRallies.prizes,
+      imageUrl: stampRallies.imageUrl,
+      participants: stampRallies.participants,
+    })
     .from(stampRallies)
     .where(eq(stampRallies.eventId, eventId))
     .orderBy(asc(stampRallies.title))
