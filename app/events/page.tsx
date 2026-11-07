@@ -30,7 +30,7 @@ export default async function EventsPage({ searchParams }: Props) {
   }
   for (const yearEvents of byYear.values()) {
     yearEvents.sort((a, b) => {
-      const statusOrder = { upcoming: 0, ongoing: 1, past: 2 }
+      const statusOrder = { ongoing: 0, upcoming: 1, past: 2 }
       const statusDifference = statusOrder[getEventStatus(a.startDate, a.endDate)] - statusOrder[getEventStatus(b.startDate, b.endDate)]
       return statusDifference || a.displayOrder - b.displayOrder || a.name.localeCompare(b.name)
     })
