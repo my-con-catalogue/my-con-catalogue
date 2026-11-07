@@ -56,7 +56,7 @@ The Fan Events page creates year filters automatically from each listing&apos;s 
 
 ### Adding stamp rallies to an event page
 
-For an existing Supabase project, first run `supabase/migrations/20261108_stamp_rally_display_fields.sql` in **SQL Editor**. Paste the SQL contents into the editor; do not paste the filename. New projects get these fields from `supabase/schema.sql`.
+For an existing Supabase project, run `supabase/migrations/20261108_stamp_rally_display_fields.sql` if it has not been run already, then run `supabase/migrations/20261109_stamp_rally_fandom_array.sql` in **SQL Editor**. Paste each SQL file's contents into the editor; do not paste its filename. New projects get the array column from `supabase/schema.sql`, and the migration is safe to run on that schema too.
 
 Then open **Table Editor → `stamp_rallies` → Insert row** and enter:
 
@@ -65,12 +65,14 @@ Then open **Table Editor → `stamp_rallies` → Insert row** and enter:
 | `event_id` | The numeric `id` of the matching row in the `events` table |
 | `title` | The Stamp Rally name |
 | `social_post_url` | The source post URL (Instagram, X/Twitter, or Facebook); optional |
-| `fandom` | The fandom name; optional |
+| `fandom` | Fandom tags as a PostgreSQL text array; optional. Add each fandom as a separate value. |
 | `participants` | Booth numbers from that event, such as `{CR03,CR08,CR25}` |
 | `description` | Optional description; leave blank to hide it |
 | `prizes` | Optional prize details; leave blank to hide them |
 
 For `participants`, enter booth numbers only. When a matching booth catalogue exists, the page displays its booth number and artist name as a link to that catalogue. If no catalogue is listed yet, it shows the booth number without a link. Add one row per Stamp Rally. The event page gets its own Stamp Rally tab automatically.
+
+For `fandom`, enter an array such as `{"Genshin Impact","Some, Fandom"}`. Keep each fandom as its own array item; commas inside a fandom name are preserved and do not split the tag. Leave it empty if the rally has no fandom tags.
 
 Useful value formats:
 
