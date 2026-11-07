@@ -476,8 +476,8 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
           <button type="button" aria-pressed={showBookmarkedOnly} onClick={() => { setShowBookmarkedOnly((value) => !value); setPage(1) }} className={cn('inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold', showBookmarkedOnly ? 'border-foreground bg-foreground text-background' : 'border-input bg-background hover:bg-secondary')}>
             <Bookmark className="size-4" aria-hidden="true" /> {showBookmarkedOnly ? 'Showing saved catalogues' : 'Show saved catalogues'} ({savedCount})
           </button>
-          <p className="max-w-3xl text-xs leading-relaxed text-muted-foreground">
-            Bookmarks are saved in this browser on this device. They won’t sync to another device or browser, and may be removed if site data is cleared or private browsing ends.
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Saved to this browser and device only; bookmarks don’t sync across browsers or devices. Clearing site data or ending a private session may remove them.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
