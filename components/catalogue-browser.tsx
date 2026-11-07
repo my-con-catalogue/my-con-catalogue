@@ -21,6 +21,10 @@ function uniqueSorted(values: readonly (readonly string[])[]) {
   return [...new Set(values.flat())].sort((a, b) => a.localeCompare(b))
 }
 
+function splitFandomTags(value: string | null) {
+  return (value ?? '').split(/[\n,]/).map((tag) => tag.trim()).filter(Boolean).sort((a, b) => a.localeCompare(b))
+}
+
 const CATALOGUES_PER_PAGE = 20
 type SavedCatalogueFilters = {
   catalogueType?: CatalogueType | 'stamp_rally'
@@ -28,6 +32,7 @@ type SavedCatalogueFilters = {
   fandoms?: unknown
   merch?: unknown
   stampRally?: unknown
+  stampRallyFandoms?: unknown
   page?: number
 }
 
@@ -221,6 +226,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
   const [fandoms, setFandoms] = useState<Set<string>>(new Set())
   const [merch, setMerch] = useState<Set<string>>(new Set())
   const [stampRally, setStampRally] = useState<Set<string>>(new Set())
+  const [stampRallyFandoms, setStampRallyFandoms] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(1)
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set())
   const [bookmarksLoaded, setBookmarksLoaded] = useState(false)
@@ -261,6 +267,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     setFandoms(new Set())
     setMerch(new Set())
     setStampRally(new Set())
+    setStampRallyFandoms(new Set())
     setPage(1)
 
     try {
@@ -272,6 +279,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
         setFandoms(storedStringSet(saved.fandoms))
         setMerch(storedStringSet(saved.merch))
         setStampRally(storedStringSet(saved.stampRally))
+        setStampRallyFandoms(storedStringSet(saved.stampRallyFandoms))
         if (typeof saved.page === 'number' && Number.isInteger(saved.page) && saved.page > 0) setPage(saved.page)
       }
     } catch {
@@ -289,12 +297,13 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
         fandoms: [...fandoms],
         merch: [...merch],
         stampRally: [...stampRally],
+        stampRallyFandoms: [...stampRallyFandoms],
         page,
       } satisfies SavedCatalogueFilters))
     } catch {
       // The catalogue still works normally if session storage is unavailable.
     }
-  }, [catalogueType, query, fandoms, merch, stampRally, page, restoredStorageKey, storageKey])
+  }, [catalogueType, query, fandoms, merch, stampRally, stampRallyFandoms, page, restoredStorageKey, storageKey])
 
   const dataType: CatalogueType = catalogueType === 'stamp_rally' ? 'booth_catalogue' : catalogueType
   const typeEntries = entries.filter((entry) => entry.catalogueType === dataType)
@@ -302,6 +311,10 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
   const pickupEntries = entries.filter((entry) => entry.catalogueType === 'pickup_only')
   const fandomOptions = useMemo(() => uniqueSorted(typeEntries.map((e) => e.fandoms)), [typeEntries])
   const merchOptions = useMemo(() => uniqueSorted(typeEntries.map((e) => e.merchTypes)), [typeEntries])
+  const stampRallyFandomOptions = useMemo(
+    () => uniqueSorted(stampRallies.map((rally) => splitFandomTags(rally.fandom))),
+    [stampRallies],
+  )
 
   const toggle = (setter: typeof setFandoms) => (value: string) => {
     setPage(1)
@@ -322,8 +335,11 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     if (stampRally.size > 0 && !stampRally.has(e.stampRally ? 'Yes' : 'No')) return false
     return true
   })
+  const filteredStampRallies = stampRallies.filter((rally) =>
+    stampRallyFandoms.size === 0 || splitFandomTags(rally.fandom).some((fandom) => stampRallyFandoms.has(fandom)),
+  )
 
-  const hasFilters = query !== '' || fandoms.size > 0 || merch.size > 0 || stampRally.size > 0 || showBookmarkedOnly
+  const hasFilters = query !== '' || fandoms.size > 0 || merch.size > 0 || stampRally.size > 0 || stampRallyFandoms.size > 0 || showBookmarkedOnly
   const pageCount = Math.max(1, Math.ceil(filtered.length / CATALOGUES_PER_PAGE))
   const currentPage = Math.min(page, pageCount)
   const firstVisible = filtered.length === 0 ? 0 : (currentPage - 1) * CATALOGUES_PER_PAGE + 1
@@ -442,7 +458,21 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
             </ul>
           </section>
         )}
-        {catalogueType !== 'stamp_rally' && <>
+        {catalogueType === 'stamp_rally' ? (
+          <>
+            <div className="flex flex-wrap gap-2">
+              <FilterDropdown label="Fandom" options={stampRallyFandomOptions} selected={stampRallyFandoms} onToggle={toggle(setStampRallyFandoms)} searchable={stampRallyFandomOptions.length > 8} />
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-border pt-4 text-sm">
+              <p aria-live="polite">Showing <strong>{filteredStampRallies.length}</strong> of {stampRallies.length} stamp rallies</p>
+              {stampRallyFandoms.size > 0 && (
+                <button type="button" onClick={() => setStampRallyFandoms(new Set())} className="inline-flex items-center gap-1 font-semibold text-primary">
+                  <X className="size-4" aria-hidden="true" /> Clear filter
+                </button>
+              )}
+            </div>
+          </>
+        ) : <>
         {catalogueType === 'booth_catalogue' && (
           <button type="button" aria-pressed={showBookmarkedOnly} onClick={() => { setShowBookmarkedOnly((value) => !value); setPage(1) }} className={cn('inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold', showBookmarkedOnly ? 'border-foreground bg-foreground text-background' : 'border-input bg-background hover:bg-secondary')}>
             <Bookmark className="size-4" aria-hidden="true" /> {showBookmarkedOnly ? 'Showing saved booths' : 'Show saved booths'} ({savedCount})
@@ -480,13 +510,20 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
       {catalogueType === 'stamp_rally' ? (
         stampRallies.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">No stamp rallies have been added for this event yet.</p>
+        ) : filteredStampRallies.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">No stamp rallies match this fandom filter.</p>
         ) : (
           <ul className="grid gap-6 sm:grid-cols-2">
-            {stampRallies.map((rally) => (
+            {filteredStampRallies.map((rally) => (
               <li key={rally.id} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
                 <h3 className="text-xl font-bold leading-tight">{rally.title}</h3>
                 {rally.socialPostUrl?.trim() && <SocialPostEmbed postUrl={rally.socialPostUrl} title={`${rally.title} stamp rally post`} />}
-                {rally.fandom?.trim() && <p className="text-sm"><span className="font-bold">Fandom: </span>{rally.fandom}</p>}
+                {splitFandomTags(rally.fandom).length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold">Fandom:</p>
+                    <TagList tags={splitFandomTags(rally.fandom)} label={`${rally.title} fandoms`} maxRows={3} />
+                  </div>
+                )}
                 {rally.participants.length > 0 && (
                   <div>
                     <h4 className="text-sm font-bold">Participating booths</h4>
