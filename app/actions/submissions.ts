@@ -193,7 +193,7 @@ export async function submitFanCafe(_prev: FormState, formData: FormData): Promi
       fandom,
       notes: notes || null,
     })
-    return { status: 'success', message: 'Thanks! Your fan cafe submission is in the review queue.' }
+    return { status: 'success', message: 'Thanks! Your fan event submission is in the review queue.' }
   } catch {
     return { status: 'error', message: 'We could not save your submission. Please try again later.' }
   }
