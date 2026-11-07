@@ -1,4 +1,12 @@
-import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
+
+type Props = { searchParams: Promise<{ year?: string | string[] }> }
+
+export default async function LegacyFanCafesPage({ searchParams }: Props) {
+  const { year } = await searchParams
+  const yearValue = typeof year === 'string' ? year : null
+  redirect(yearValue ? `/fan-events?year=${encodeURIComponent(yearValue)}` : '/fan-events')
+}
 import Link from 'next/link'
 import { CalendarDays, Clock3, MapPin } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
@@ -20,8 +28,8 @@ function formatCafeTime(value: string) {
 }
 
 export const metadata: Metadata = {
-  title: 'Fan Cafes',
-  description: 'Birthday cafes, collab cafes and fan-run events around Malaysia.',
+  title: 'Fan Events',
+  description: 'Cup sleeve events, collabs, character birthday events, and other fan-run events around Malaysia.',
 }
 
 type Props = { searchParams: Promise<{ year?: string | string[] }> }
@@ -46,11 +54,11 @@ export default async function FanCafesPage({ searchParams }: Props) {
   return (
     <>
       <PageHeader
-        eyebrow="Fan cafes"
-        title="Cup Sleeve Events, Fan Cafes, Collabs, & Character Birthday Events"
+        eyebrow="Fan events"
+        title="Cup Sleeve Events, Fan Events, Collabs, & Character Birthday Events"
         description="Fan-organised events celebrating characters and series — with cup sleeves, freebies and plenty of photo spots."
       >
-        <nav aria-label="Filter fan cafes by year" className="mt-6">
+        <nav aria-label="Filter fan events by year" className="mt-6">
           <ul className="flex flex-wrap gap-2">
             <li>
               <Link
@@ -58,7 +66,7 @@ export default async function FanCafesPage({ searchParams }: Props) {
                 aria-current={selectedYear === null ? 'page' : undefined}
                 className={`inline-flex rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${selectedYear === null ? 'border-foreground bg-foreground text-background' : 'border-foreground bg-card hover:bg-foreground hover:text-background'}`}
               >
-                All Fan Cafes
+                All Fan Events
               </Link>
             </li>
             {availableYears.map((year) => (
@@ -77,9 +85,9 @@ export default async function FanCafesPage({ searchParams }: Props) {
       </PageHeader>
       <div className="mx-auto max-w-6xl px-4 py-14">
         {cafes.length === 0 ? (
-          <p className="text-muted-foreground">No fan cafes archived yet.</p>
+          <p className="text-muted-foreground">No fan events archived yet.</p>
         ) : visibleCafes.length === 0 ? (
-          <p className="text-muted-foreground">No fan cafes are listed for {selectedYear} yet.</p>
+          <p className="text-muted-foreground">No fan events are listed for {selectedYear} yet.</p>
         ) : (
           <div className="flex flex-col gap-12">
             {displayYears.map((year) => (
@@ -136,7 +144,7 @@ export default async function FanCafesPage({ searchParams }: Props) {
           </div>
         )}
         <section aria-labelledby="submit-fan-cafe" className="mt-14 rounded-2xl border-2 border-foreground bg-card p-6 shadow-[6px_6px_0_0_var(--color-foreground)] md:p-8">
-          <h2 id="submit-fan-cafe" className="text-2xl font-extrabold">Know a fan cafe or collab event?</h2>
+          <h2 id="submit-fan-cafe" className="text-2xl font-extrabold">Know a fan event or collab?</h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             Share its details with us and we&apos;ll review it for the directory. Please use the organiser&apos;s public social account.
           </p>
