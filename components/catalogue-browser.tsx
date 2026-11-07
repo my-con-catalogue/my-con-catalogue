@@ -472,16 +472,14 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
             </div>
           </>
         ) : <>
-        {catalogueType !== 'stamp_rally' && (
-          <div className="flex flex-col items-start gap-1.5">
-            <button type="button" aria-pressed={showBookmarkedOnly} onClick={() => { setShowBookmarkedOnly((value) => !value); setPage(1) }} className={cn('inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold', showBookmarkedOnly ? 'border-foreground bg-foreground text-background' : 'border-input bg-background hover:bg-secondary')}>
-              <Bookmark className="size-4" aria-hidden="true" /> {showBookmarkedOnly ? 'Showing saved catalogues' : 'Show saved catalogues'} ({savedCount})
-            </button>
-            <p className="max-w-3xl text-xs leading-relaxed text-muted-foreground">
-              Bookmarks are saved in this browser on this device. They won’t sync to another device or browser, and may be removed if site data is cleared or private browsing ends.
-            </p>
-          </div>
-        )}
+        <div className="flex flex-col items-start gap-1.5">
+          <button type="button" aria-pressed={showBookmarkedOnly} onClick={() => { setShowBookmarkedOnly((value) => !value); setPage(1) }} className={cn('inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold', showBookmarkedOnly ? 'border-foreground bg-foreground text-background' : 'border-input bg-background hover:bg-secondary')}>
+            <Bookmark className="size-4" aria-hidden="true" /> {showBookmarkedOnly ? 'Showing saved catalogues' : 'Show saved catalogues'} ({savedCount})
+          </button>
+          <p className="max-w-3xl text-xs leading-relaxed text-muted-foreground">
+            Bookmarks are saved in this browser on this device. They won’t sync to another device or browser, and may be removed if site data is cleared or private browsing ends.
+          </p>
+        </div>
         <div className="flex flex-wrap gap-2">
           <FilterDropdown label="Fandom" options={fandomOptions} selected={fandoms} onToggle={toggle(setFandoms)} searchable={fandomOptions.length > 8} />
           <FilterDropdown label="Merch type" options={merchOptions} selected={merch} onToggle={toggle(setMerch)} searchable={merchOptions.length > 8} />
