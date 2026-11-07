@@ -1,6 +1,6 @@
 # Put MYConCatalogue online
 
-This project is a Next.js website backed by Supabase Postgres. GitHub stores the source; Vercel builds and hosts the website; Supabase stores event, catalogue, fan cafe, and form data.
+This project is a Next.js website backed by Supabase Postgres. GitHub stores the source; Vercel builds and hosts the website; Supabase stores event, catalogue, fan event, stamp rally, and form data.
 
 ## 1. Put the project on GitHub
 
@@ -40,19 +40,37 @@ If Git reports that your author identity is not set, configure your name and ema
 5. If an approved artist has catalogue files without Instagram posts, create a separate **public** Storage bucket named `catalogues`. After reviewing a submission, copy its file from the private `catalogue-submissions` bucket into `catalogues`, then paste the public file URL into that entry&apos;s `catalogue_file_urls` array in **Table Editor → catalogue_entries**. Keep original submissions private; only publish files the artist has submitted for the archive.
 6. In the dashboard, click **Connect** and copy the **Transaction pooler** URI for the database. Replace its password. If the password includes reserved URL characters, URL-encode them before using the URI. This connection mode is intended for serverless deployments such as Vercel. See [Supabase database connection strings](https://supabase.com/docs/guides/database/connecting-to-postgres).
 
-### Adding future fan cafes
+### Adding future fan events
 
-The public Fan Cafes page reads directly from the Supabase `fan_cafes` table. To add an event:
+The public Fan Events page at `/fan-events` reads directly from the Supabase `fan_cafes` table. To add an event:
 
 1. Open **Table Editor → fan_cafes → Insert row**.
 2. Fill in `name`, `fandom`, `location`, `start_date`, `start_time`, and `end_time`.
 3. Put the Instagram post URL in `instagram_post_url` (for example, `https://www.instagram.com/p/POSTCODE/`). The post is embedded on the event card. Add an Instagram handle to `instagram` if you have one; it is optional.
 4. Leave `id` and `created_at` empty so Postgres fills them in. Use `end_date` only for multi-day events and `description` for optional details.
-5. Save the row. The cafe appears under its year, sorted with the closest upcoming date first. The page revalidates after 300 seconds; once that interval has elapsed, the next visit refreshes the cached page in the background, so reload after a short moment if the new row is not visible yet.
+5. Save the row. The fan event appears under its year, sorted with the closest upcoming date first. The page revalidates after 300 seconds; once that interval has elapsed, the next visit refreshes the cached page in the background, so reload after a short moment if the new row is not visible yet.
 
 The public submission form writes to `fan_cafe_submissions` for review; it does not publish submissions automatically. After checking one, copy its approved details into `fan_cafes` using Table Editor. This keeps unverified submissions out of the public archive.
 
-The Fan Cafes page creates year filters automatically from each listing&apos;s `start_date`. All Fan Cafes shows every year; choosing a year narrows the page to that year. Catalogue event pages show 20 booths per page. Search and tag filters apply to the event&apos;s complete catalogue list, and the page count updates to match the filtered results.
+The Fan Events page creates year filters automatically from each listing&apos;s `start_date`. All Fan Events shows every year; choosing a year narrows the page to that year. Catalogue event pages show 20 booths per page. Search and tag filters apply to the event&apos;s complete catalogue list, and the page count updates to match the filtered results.
+
+### Adding stamp rallies to an event page
+
+For an existing Supabase project, first run `supabase/migrations/20261108_stamp_rally_display_fields.sql` in **SQL Editor**. Paste the SQL contents into the editor; do not paste the filename. New projects get these fields from `supabase/schema.sql`.
+
+Then open **Table Editor → `stamp_rallies` → Insert row** and enter:
+
+| Column | What to enter |
+| --- | --- |
+| `event_id` | The numeric `id` of the matching row in the `events` table |
+| `title` | The Stamp Rally name |
+| `social_post_url` | The source post URL (Instagram, X/Twitter, or Facebook); optional |
+| `fandom` | The fandom name; optional |
+| `participants` | Booth numbers from that event, such as `{CR03,CR08,CR25}` |
+| `description` | Optional description; leave blank to hide it |
+| `prizes` | Optional prize details; leave blank to hide them |
+
+For `participants`, enter booth numbers only. When a matching booth catalogue exists, the page displays its booth number and artist name as a link to that catalogue. If no catalogue is listed yet, it shows the booth number without a link. Add one row per Stamp Rally. The event page gets its own Stamp Rally tab automatically.
 
 Useful value formats:
 
@@ -86,7 +104,7 @@ Vercel creates preview deployments for other branches and production deployments
 
 ## 4. Check the live site
 
-Open the Vercel URL and check the home page, `/events`, `/fan-cafes`, `/artists`, and `/contact`. Add a test cafe row in Supabase and confirm it appears on `/fan-cafes` after the route refreshes. Submit one test cafe suggestion and confirm it appears in `fan_cafe_submissions` for review. Remove test records afterward if needed.
+Open the Vercel URL and check the home page, `/events`, `/fan-events`, `/artists`, and `/contact`. Add a test fan event row in Supabase and confirm it appears on `/fan-events` after the route refreshes. Submit one test fan event suggestion and confirm it appears in `fan_cafe_submissions` for review. Remove test records afterward if needed.
 
 ## 5. Publish future changes
 
