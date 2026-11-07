@@ -74,7 +74,7 @@ export const stampRallies = pgTable('stamp_rallies', {
   title: text('title').notNull(),
   description: text('description'),
   socialPostUrl: text('social_post_url'),
-  fandom: text('fandom'),
+  fandom: text('fandom').array().notNull().default([]),
   prizes: text('prizes'),
   imageUrl: text('image_url'),
   participants: text('participants').array().notNull().default([]),
