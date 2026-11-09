@@ -46,6 +46,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
   if (!data) notFound()
   const { event, catalogue } = data
   const artistSocialAccounts = getArtistSocialAccounts(catalogue.artistInstagrams, catalogue.artistSocialLinks)
+  const eventNameWithoutRepeatedYear = event.name.replace(new RegExp(`\\s*\\b${event.year}\\b\\s*`, 'g'), ' ').replace(/\s+/g, ' ').trim()
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
@@ -54,7 +55,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
       </Link>
       <header className="mt-8 flex flex-wrap items-start justify-between gap-5 border-b border-border pb-6">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary">{event.name} · {event.year}</p>
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">{eventNameWithoutRepeatedYear} · {event.year}</p>
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">{catalogue.artistName}</h1>
           <ArtistSocialLinks name={catalogue.artistName} instagrams={catalogue.artistInstagrams} links={catalogue.artistSocialLinks} className="mt-3 flex flex-wrap gap-x-4 gap-y-2" linkClassName="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary" />
         </div>

@@ -10,7 +10,7 @@ export const revalidate = 300
 
 export const metadata: Metadata = {
   title: 'Interest Check',
-  description: 'Find ongoing and upcoming interest checks for Fan Cafes, Stamp Rallies, and other fan-organised events in Malaysia.',
+  description: 'Find ongoing and upcoming interest checks for fan events, Stamp Rallies, and other fan-organised events in Malaysia.',
 }
 
 type Props = { searchParams: Promise<{ year?: string | string[] }> }
@@ -66,7 +66,7 @@ export default async function InterestCheckPage({ searchParams }: Props) {
       <PageHeader
         eyebrow="Interest check"
         title="Interest Checks"
-        description="Browse interest checks for Stamp Rallies, Fan Cafes, collabs, and other fan-organised events. Instagram posts are embedded where possible; posts on other platforms link to the original."
+        description="Browse interest checks for Stamp Rallies, fan events, collabs, and other fan-organised events. Instagram posts are embedded where possible; posts on other platforms link to the original."
       >
         <nav aria-label="Filter interest checks by year" className="mt-6">
           <ul className="flex flex-wrap gap-2">
@@ -135,10 +135,10 @@ export default async function InterestCheckPage({ searchParams }: Props) {
 
         <section aria-labelledby="submit-interest-check" className="mt-14 rounded-2xl border-2 border-foreground bg-card p-6 shadow-[6px_6px_0_0_var(--color-foreground)] md:p-8">
           <h2 id="submit-interest-check" className="text-2xl font-extrabold">Share an event with us</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">Have a Stamp Rally or Fan Cafe interest check to add? Send it through the matching submission form.</p>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">Have a Stamp Rally or fan event interest check to add? Send it through the matching submission form.</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link href="/contact#stamp-rally-form" className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90">Submit a Stamp Rally</Link>
-            <Link href="/contact#fan-cafe-form" className="rounded-full border border-foreground px-5 py-3 text-sm font-semibold hover:bg-foreground hover:text-background">Submit a Fan Cafe</Link>
+            <Link href="/contact#fan-cafe-form" className="rounded-full border border-foreground px-5 py-3 text-sm font-semibold hover:bg-foreground hover:text-background">Submit a Fan Event</Link>
           </div>
         </section>
       </div>

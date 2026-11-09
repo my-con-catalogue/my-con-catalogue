@@ -29,7 +29,7 @@ export default function ContactPage() {
             Stamp rally
           </a>
           <a href="#fan-cafe-form" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
-            Fan Cafe
+            Fan event
           </a>
         </nav>
       </PageHeader>
@@ -37,7 +37,7 @@ export default function ContactPage() {
         <section id="suggestion-form" aria-labelledby="suggestion-heading" className="w-full scroll-mt-24 rounded-2xl border-2 border-foreground bg-card p-6 shadow-[6px_6px_0_0_var(--color-foreground)] md:p-8">
           <h2 id="suggestion-heading" className="text-2xl font-extrabold">Send a suggestion</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Missing event, fan cafe tip, correction or general feedback.
+            Missing event, fan event tip, correction or general feedback.
           </p>
           <div className="mt-6">
             <SuggestionForm />
@@ -61,7 +61,7 @@ export default function ContactPage() {
           </div>
         </section>
         <section id="fan-cafe-form" aria-labelledby="fan-cafe-heading" className="w-full scroll-mt-24 rounded-2xl border-2 border-foreground bg-card p-6 shadow-[6px_6px_0_0_var(--color-foreground)] md:p-8">
-          <h2 id="fan-cafe-heading" className="text-2xl font-extrabold">Submit a Fan Cafe or collab event</h2>
+          <h2 id="fan-cafe-heading" className="text-2xl font-extrabold">Submit a fan event or collab</h2>
           <p className="mt-1 text-sm text-muted-foreground">Share the event name, date, location, social account, and fandom for review.</p>
           <div className="mt-6">
             <FanCafeSubmissionForm />

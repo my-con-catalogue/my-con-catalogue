@@ -28,7 +28,7 @@ export function SuggestionForm() {
             Choose a topic
           </option>
           <option value="Missing event">Missing event</option>
-          <option value="Fan cafe">Fan cafe to add</option>
+          <option value="Fan cafe">Fan event to add</option>
           <option value="Correction">Correction / wrong info</option>
           <option value="Website feedback">Website feedback</option>
           <option value="Other">Other</option>

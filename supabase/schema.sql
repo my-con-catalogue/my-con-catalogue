@@ -156,6 +156,9 @@ create table if not exists stamp_rallies (
   event_id integer not null references events(id) on delete cascade,
   title text not null,
   description text,
+  social_post_url text,
+  fandom text[] not null default '{}',
+  prizes text,
   image_url text,
   participants text[] not null default '{}',
   created_at timestamptz not null default now()

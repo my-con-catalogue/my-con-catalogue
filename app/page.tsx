@@ -21,7 +21,7 @@ const features = [
   },
   {
     icon: Coffee,
-    title: 'Fan cafes',
+    title: 'Fan events',
     text: 'Keep track of birthday cafes, collab cafes and fan-run events around Malaysia.',
   },
   {
@@ -49,7 +49,7 @@ export default async function HomePage() {
   const statItems = [
     { label: 'Events', value: stats.events },
     { label: 'Artists', value: stats.artists },
-    { label: 'Fan cafes', value: stats.fanCafes },
+    { label: 'Fan events', value: stats.fanCafes },
   ]
 
   return (
@@ -62,7 +62,7 @@ export default async function HomePage() {
                 'Malaysia Convention Catalogues',
                 'Artist Alley Catalogues',
                 'Stamp Rally',
-                'Fan Cafes · Cupsleeve · Birthday Events · etc.',
+                'Fan Events · Cupsleeve · Birthday Events · etc.',
               ].map((label) => (
                 <li key={label} className="rounded-full border border-foreground bg-card px-3 py-1 text-xs font-semibold tracking-wide">
                   {label}
@@ -73,7 +73,7 @@ export default async function HomePage() {
               All the catalogues, all in one place.
             </h1>
             <p className="mt-5 max-w-lg text-pretty text-lg leading-relaxed text-muted-foreground">
-              Discover Artist Alley catalogues, Stamp Rallies, Fan Cafes, and more from conventions across Malaysia — all collected together so you can browse, discover, and find your favourites a little easier.
+              Discover Artist Alley catalogues, Stamp Rallies, Fan Events, and more from conventions across Malaysia — all collected together so you can browse, discover, and find your favourites a little easier.
             </p>
             <p className="mt-5 font-heading text-xl font-bold text-primary">୨୧ <strong>Browse. Discover. Archive.</strong></p>
             <div className="mt-8 flex flex-wrap gap-3">

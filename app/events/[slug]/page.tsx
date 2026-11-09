@@ -13,7 +13,8 @@ import { EventEntryBadge } from '@/components/event-entry-badge'
 import { EventStatusBadge } from '@/components/event-status-badge'
 import { InstagramIcon } from '@/components/social-icons'
 import { formatDateRange, instagramUrl } from '@/lib/format'
-import { getEventBoothNumbers, getEventBySlug, getEventCatalogues } from '@/lib/queries'
+import { getEventBoothNumbers, getEventBySlug, getEventCatalogues, getEventStampRallies } from '@/lib/queries'
+import { FloorplanDisclosure } from '@/components/floorplan-disclosure'
 
 export const revalidate = 300
 
@@ -42,9 +43,10 @@ export default async function EventPage({ params }: Props) {
   const event = await getEventBySlug(slug)
   if (!event) notFound()
 
-  const [catalogues, boothNumbers] = await Promise.all([
+  const [catalogues, boothNumbers, stampRallies] = await Promise.all([
     getEventCatalogues(event.slug),
     getEventBoothNumbers(event.slug),
+    getEventStampRallies(event.id),
   ])
 
   return (
@@ -135,55 +137,33 @@ export default async function EventPage({ params }: Props) {
       </section>
 
       {event.slug === 'anime-fest-2026' && (
-        <section id="interactive-map" aria-labelledby="interactive-map-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-10">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 id="interactive-map-heading" className="text-3xl font-extrabold tracking-tight">Anime Fest! 2026 floor plan</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Select a highlighted booth to open its catalogue. More booths become clickable as catalogue entries are added.</p>
-            </div>
-          </div>
+        <FloorplanDisclosure id="interactive-map" title="Anime Fest! 2026 floor plan" description="Select a highlighted booth to open its catalogue. More booths become clickable as catalogue entries are added.">
           <AnimeFestFloorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
-        </section>
+        </FloorplanDisclosure>
       )}
 
       {event.slug === 'otakyun-2026' && (
-        <section id="interactive-map" aria-labelledby="interactive-map-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-10">
-          <div className="mb-4">
-            <h2 id="interactive-map-heading" className="text-3xl font-extrabold tracking-tight">Otakyun 2026 floor plan</h2>
-            <p className="mt-1 text-sm text-muted-foreground">CR booths open their catalogue when one is listed. EX (Exhibitor) and CO (Community) booths are outside this catalogue and shown in gray.</p>
-          </div>
+        <FloorplanDisclosure id="interactive-map" title="Otakyun 2026 floor plan" description="CR booths open their catalogue when one is listed. EX (Exhibitor) and CO (Community) booths are outside this catalogue and shown in gray.">
           <OtakyunFloorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
-        </section>
+        </FloorplanDisclosure>
       )}
 
       {event.slug === 'vax-2026' && (
-        <section id="interactive-map" aria-labelledby="interactive-map-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-10">
-          <div className="mb-4">
-            <h2 id="interactive-map-heading" className="text-3xl font-extrabold tracking-tight">VAX 2026 floor plan</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Select a highlighted yellow booth to open its catalogue. Purple C booths are Cosplayer booths and are shown in gray.</p>
-          </div>
+        <FloorplanDisclosure id="interactive-map" title="VAX 2026 floor plan" description="Select a highlighted yellow booth to open its catalogue. Purple C booths are Cosplayer booths and are shown in gray.">
           <Vax2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
-        </section>
+        </FloorplanDisclosure>
       )}
 
       {event.slug === 'yume-acg-2026' && (
-        <section id="interactive-map" aria-labelledby="interactive-map-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-10">
-          <div className="mb-4">
-            <h2 id="interactive-map-heading" className="text-3xl font-extrabold tracking-tight">Yume ACG Fest 2026 floor plan</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Select a blue Artist Alley booth to open its catalogue.</p>
-          </div>
+        <FloorplanDisclosure id="interactive-map" title="Yume ACG Fest 2026 floor plan" description="Select a blue Artist Alley booth to open its catalogue.">
           <YumeAcg2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
-        </section>
+        </FloorplanDisclosure>
       )}
 
       {event.slug === 'acg-matsuri-2026' && (
-        <section id="interactive-map" aria-labelledby="interactive-map-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-10">
-          <div className="mb-4">
-            <h2 id="interactive-map-heading" className="text-3xl font-extrabold tracking-tight">ACG Matsuri 2026 floor plan</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Select a booth to open its catalogue when one has been added.</p>
-          </div>
+        <FloorplanDisclosure id="interactive-map" title="ACG Matsuri 2026 floor plan" description="Select a booth to open its catalogue when one has been added.">
           <AcgMatsuri2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
-        </section>
+        </FloorplanDisclosure>
       )}
 
       <section id="catalogue" aria-labelledby="catalogue-heading" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-12">
@@ -198,7 +178,7 @@ export default async function EventPage({ params }: Props) {
           Notice a missing booth number or catalogue? <Link href="/contact#artist-form" className="font-semibold text-primary underline underline-offset-2">Submit the catalogue here</Link>. If you are looking for fellow artists interested in a Stamp Rally, tag us on <a href="https://www.instagram.com/my_concatalogue/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2">Instagram</a> and we&apos;ll repost it. An interest check page will also be available on this website.
         </p>
         <div className="mt-6">
-          <CatalogueBrowser entries={catalogues} boothNumbers={boothNumbers} />
+          <CatalogueBrowser entries={catalogues} boothNumbers={boothNumbers} stampRallies={stampRallies} />
         </div>
       </section>
 
