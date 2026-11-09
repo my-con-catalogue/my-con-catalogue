@@ -230,14 +230,26 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
   const [page, setPage] = useState(1)
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set())
   const [bookmarksLoaded, setBookmarksLoaded] = useState(false)
+  const [bookmarkMemos, setBookmarkMemos] = useState<Record<string, string>>({})
+  const [bookmarkMemosLoaded, setBookmarkMemosLoaded] = useState(false)
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false)
   const storageKey = entries[0]?.eventSlug ? `mcc:catalogue-filters:${entries[0].eventSlug}` : null
   const bookmarkStorageKey = 'mcc:bookmarked-catalogues'
+  const bookmarkMemoStorageKey = 'mcc:bookmark-memos'
   const [restoredStorageKey, setRestoredStorageKey] = useState<string | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
   const previousPage = useRef<number | null>(null)
 
   useEffect(() => {
+    // Ask supported browsers not to evict this site's saved data automatically.
+    // This is best-effort and does not prevent a viewer from clearing site data.
+    try {
+      const persistStorage = window.navigator.storage?.persist
+      if (persistStorage) void persistStorage.call(window.navigator.storage).catch(() => false)
+    } catch {
+      // Some browsers do not expose persistent storage.
+    }
+
     try {
       const saved = JSON.parse(window.localStorage.getItem(bookmarkStorageKey) ?? '[]')
       if (Array.isArray(saved)) setBookmarks(new Set(saved.filter((item): item is string => typeof item === 'string')))
@@ -249,6 +261,21 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
   }, [])
 
   useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(bookmarkMemoStorageKey) ?? '{}')
+      if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+        setBookmarkMemos(Object.fromEntries(
+          Object.entries(saved).filter((item): item is [string, string] => typeof item[1] === 'string'),
+        ))
+      }
+    } catch {
+      // Memos are optional; bookmark browsing remains available without them.
+    } finally {
+      setBookmarkMemosLoaded(true)
+    }
+  }, [])
+
+  useEffect(() => {
     if (!bookmarksLoaded) return
     try {
       window.localStorage.setItem(bookmarkStorageKey, JSON.stringify([...bookmarks]))
@@ -256,6 +283,15 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
       // The current page still reflects bookmark changes if local storage is unavailable.
     }
   }, [bookmarks, bookmarksLoaded])
+
+  useEffect(() => {
+    if (!bookmarkMemosLoaded) return
+    try {
+      window.localStorage.setItem(bookmarkMemoStorageKey, JSON.stringify(bookmarkMemos))
+    } catch {
+      // The current page still reflects memo edits if browser storage is unavailable.
+    }
+  }, [bookmarkMemos, bookmarkMemosLoaded])
 
   useEffect(() => {
     if (!storageKey) return
@@ -368,12 +404,26 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
 
   const toggleBookmark = (entry: CatalogueEntry) => {
     const key = `${entry.eventSlug}:${entry.id}`
+    const removing = bookmarks.has(key)
     setBookmarks((current) => {
       const next = new Set(current)
       if (next.has(key)) next.delete(key)
       else next.add(key)
       return next
     })
+    if (removing) {
+      setBookmarkMemos((current) => {
+        if (!(key in current)) return current
+        const next = { ...current }
+        delete next[key]
+        return next
+      })
+    }
+  }
+
+  const updateBookmarkMemo = (entry: CatalogueEntry, memo: string) => {
+    const key = `${entry.eventSlug}:${entry.id}`
+    setBookmarkMemos((current) => ({ ...current, [key]: memo }))
   }
 
   const savedCount = typeEntries.filter((entry) => bookmarks.has(`${entry.eventSlug}:${entry.id}`)).length
@@ -572,6 +622,25 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
               <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="flex items-center justify-center gap-2 border-b border-border bg-muted px-4 py-3 text-center text-sm font-semibold text-primary transition-colors hover:bg-accent/50">
                 <span aria-hidden="true">›</span><span>{hasCatalogueMaterial ? 'Check catalogue material here' : 'View artist details'}</span><span aria-hidden="true">‹</span>
               </Link>
+              {bookmarks.has(`${entry.eventSlug}:${entry.id}`) && (
+                <details className="border-b border-border bg-accent/20 px-4 py-2.5">
+                  <summary className="cursor-pointer text-sm font-semibold text-foreground">
+                    {bookmarkMemos[`${entry.eventSlug}:${entry.id}`]?.trim() ? 'Edit visit memo' : 'Add a visit memo'}
+                  </summary>
+                  <label htmlFor={`bookmark-memo-${entry.eventSlug}-${entry.id}`} className="mt-2 block text-xs font-medium text-muted-foreground">
+                    A private note saved in this browser
+                  </label>
+                  <textarea
+                    id={`bookmark-memo-${entry.eventSlug}-${entry.id}`}
+                    value={bookmarkMemos[`${entry.eventSlug}:${entry.id}`] ?? ''}
+                    onChange={(event) => updateBookmarkMemo(entry, event.target.value)}
+                    rows={2}
+                    maxLength={500}
+                    placeholder="e.g. Visit early to buy the new keychains"
+                    className="mt-1.5 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                </details>
+              )}
               {entry.catalogueType === 'pickup_only' && (entry.pickupNote?.trim() || entry.orderCutoff?.trim()) && (
                 <div className="border-b border-border bg-accent/60 px-4 py-3 text-sm leading-relaxed text-foreground">
                   {entry.orderCutoff?.trim() && <p><span className="font-bold">Order cutoff: </span>{entry.orderCutoff}</p>}
