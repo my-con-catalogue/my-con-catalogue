@@ -77,6 +77,14 @@ function readViewedCatalogues() {
   }
 }
 
+function isBookmarkLabel(value: unknown): value is BookmarkLabel {
+  if (!value || typeof value !== 'object') return false
+  const candidate = value as Record<string, unknown>
+  return typeof candidate.name === 'string' &&
+    typeof candidate.color === 'string' &&
+    ['rose', 'blue', 'amber', 'green'].includes(candidate.color)
+}
+
 function BoothNumberText({ value }: { value: string }) {
   const viewportRef = useRef<HTMLSpanElement>(null)
   const textRef = useRef<HTMLSpanElement>(null)
@@ -296,11 +304,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
       const saved = JSON.parse(window.localStorage.getItem(bookmarkLabelsStorageKey) ?? '{}')
       if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
         const validLabels = Object.fromEntries(
-          Object.entries(saved).filter((item): item is [string, BookmarkLabel] => {
-            const value = item[1]
-            return Boolean(value && typeof value === 'object' && typeof value.name === 'string' &&
-              ['rose', 'blue', 'amber', 'green'].includes(value.color))
-          }),
+          Object.entries(saved).filter((item): item is [string, BookmarkLabel] => isBookmarkLabel(item[1])),
         )
         setBookmarkLabels(validLabels)
       }
