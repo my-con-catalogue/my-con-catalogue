@@ -57,7 +57,7 @@ export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
   }, [result, query, fandoms, merchTypes, rally, bookmarkColors])
 
   if (!result) return <p className="rounded-xl border border-border bg-card p-6 text-muted-foreground">Loading shared list…</p>
-  if (!result.ok) return <div className="rounded-xl border border-border bg-card p-6"><p>{result.message}</p><Link href="/account" className="mt-3 inline-block font-semibold text-primary underline">Go to account</Link></div>
+  if (!result.ok) return <div className="rounded-xl border border-border bg-card p-6"><p>{result.message}</p><Link href="/account/shared-lists" className="mt-3 inline-block font-semibold text-primary underline">Go to shared lists</Link></div>
 
   const { group, members } = result
   const eventHeading = group.eventName.trim().match(new RegExp(`(?:\\s*[·–—-]\\s*|\\s+)${group.year}$`)) ? group.eventName : `${group.eventName} · ${group.year}`
@@ -74,7 +74,7 @@ export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
 
   return <div className="flex flex-col gap-6">
     <header className="rounded-2xl border border-border bg-card p-5 sm:p-7">
-      <Link href="/account" className="text-sm font-semibold text-primary underline">← Account and shared lists</Link>
+      <Link href="/account/shared-lists" className="text-sm font-semibold text-primary underline">← Shared lists</Link>
       <p className="mt-5 text-sm font-semibold uppercase tracking-wider text-primary">{eventHeading}</p>
       <h1 className="mt-1 text-3xl font-extrabold">{group.name}</h1>
       <p className="mt-2 text-sm text-muted-foreground">Shared with {members.length} {members.length === 1 ? 'member' : 'members'}: {members.map((member) => `@${member.username}`).join(', ')}</p>

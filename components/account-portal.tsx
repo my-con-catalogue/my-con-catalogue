@@ -2,15 +2,11 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Check, Copy, Eye, EyeOff, LogOut, Users } from 'lucide-react'
+import { Eye, EyeOff, LogOut, Users } from 'lucide-react'
 import {
-  createBookmarkGroup,
   createRecoveryCodeForCurrentUser,
   createUsernameAccount,
-  deleteBookmarkGroup,
   getAccountOverview,
-  joinBookmarkGroup,
-  leaveBookmarkGroup,
   loginUsernameAccount,
   logoutUsernameAccount,
   resetPasswordWithRecoveryCode,
@@ -32,10 +28,6 @@ export function AccountPortal() {
   const [remember, setRemember] = useState(false)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
-  const [groupName, setGroupName] = useState('')
-  const [eventSlug, setEventSlug] = useState('')
-  const [inviteCode, setInviteCode] = useState('')
-  const [copiedGroup, setCopiedGroup] = useState('')
   const [syncedUsername, setSyncedUsername] = useState('')
 
   const refresh = useCallback(async () => {
@@ -103,39 +95,6 @@ export function AccountPortal() {
       await refresh()
     }
     setBusy(false)
-  }
-
-  const submitCreateGroup = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setBusy(true)
-    const result = await createBookmarkGroup(groupName, eventSlug)
-    setMessage(result.message)
-    if (result.ok) { setGroupName(''); await refresh() }
-    setBusy(false)
-  }
-
-  const submitJoinGroup = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setBusy(true)
-    const result = await joinBookmarkGroup(inviteCode)
-    setMessage(result.message)
-    if (result.ok) { setInviteCode(''); await refresh() }
-    setBusy(false)
-  }
-
-  const groupAction = async (groupId: string, owner: boolean) => {
-    if (owner && !window.confirm('Delete this shared list for everyone?')) return
-    setBusy(true)
-    const result = owner ? await deleteBookmarkGroup(groupId) : await leaveBookmarkGroup(groupId)
-    setMessage(result.message)
-    await refresh()
-    setBusy(false)
-  }
-
-  const copyCode = async (groupId: string, code: string) => {
-    await navigator.clipboard.writeText(code)
-    setCopiedGroup(groupId)
-    window.setTimeout(() => setCopiedGroup(''), 1800)
   }
 
   const generateRecoveryCode = async () => {
@@ -215,37 +174,18 @@ export function AccountPortal() {
           <button type="button" onClick={async () => { await logoutUsernameAccount(); setMessage('You are logged out.'); await refresh() }} className="inline-flex items-center gap-2 rounded-full border border-input px-4 py-2 text-sm font-semibold hover:bg-muted"><LogOut className="size-4" />Log out</button>
         </div>
       </section>
+      <section className="rounded-2xl border border-border bg-card p-5 sm:p-7">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div><div className="flex items-center gap-2"><Users className="size-5 text-primary" /><h2 className="text-xl font-extrabold">Shared event lists</h2></div><p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">Create a list for an event, invite friends, and manage everyone’s saved booths on a separate page.</p></div>
+          <Link href="/account/shared-lists" className="inline-flex shrink-0 items-center rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background">Open shared lists <span className="ml-2" aria-hidden="true">↗</span></Link>
+        </div>
+      </section>
       {recoveryCodeNotice}
       {!recoveryCode && <section className="rounded-2xl border border-amber-300 bg-amber-50 p-5 sm:p-6">
         <h2 className="font-extrabold">Password recovery code</h2>
         <p className="mt-1 text-sm leading-relaxed">{overview.hasRecoveryCode ? 'A recovery code is already set. If you misplaced it, you can replace it here; the old code will stop working.' : 'Generate and save a recovery code so you can reset your password without email.'}</p>
         <button type="button" disabled={busy} onClick={() => void generateRecoveryCode()} className="mt-3 rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background disabled:opacity-60">{overview.hasRecoveryCode ? 'Replace recovery code' : 'Generate recovery code'}</button>
       </section>}
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-7">
-        <div className="flex items-center gap-2"><Users className="size-5 text-primary" /><h2 className="text-xl font-extrabold">Shared event lists</h2></div>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Create one shared list for an event and invite friends with its code. Members’ saved catalogues for that event, including their labels and visit notes, are visible to everyone in the group.</p>
-        <div className="mt-5 grid gap-5 md:grid-cols-2">
-          <form onSubmit={submitCreateGroup} className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4">
-            <h3 className="font-bold">Create a shared list</h3>
-            <label className="text-sm font-medium">List name<input value={groupName} onChange={(event) => setGroupName(event.target.value)} maxLength={60} required placeholder="Saturday plans" className="mt-1 h-10 w-full rounded-md border border-input bg-card px-3" /></label>
-            <label className="text-sm font-medium">Event<select value={eventSlug} onChange={(event) => setEventSlug(event.target.value)} required className="mt-1 h-10 w-full rounded-md border border-input bg-card px-3"><option value="">Choose an event…</option>{[...new Set(overview.events.map((event) => event.year))].map((year) => <optgroup key={year} label={String(year)}>{overview.events.filter((event) => event.year === year).map((event) => <option key={event.slug} value={event.slug}>{event.name}</option>)}</optgroup>)}</select></label>
-            <button disabled={busy} className="rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background disabled:opacity-60">Create list</button>
-          </form>
-          <form onSubmit={submitJoinGroup} className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4">
-            <h3 className="font-bold">Join a shared list</h3>
-            <label className="text-sm font-medium">Invite code<input value={inviteCode} onChange={(event) => setInviteCode(event.target.value.toUpperCase())} maxLength={8} minLength={8} required placeholder="8 characters" className="mt-1 h-10 w-full rounded-md border border-input bg-card px-3 uppercase tracking-widest" /></label>
-            <p className="text-xs text-muted-foreground">Ask a group member to send you their invite code.</p>
-            <button disabled={busy} className="mt-auto rounded-full border border-foreground px-4 py-2.5 text-sm font-semibold hover:bg-muted disabled:opacity-60">Join list</button>
-          </form>
-        </div>
-        <div className="mt-6">
-          <h3 className="font-bold">Your shared lists</h3>
-          {overview.groups.length === 0 ? <p className="mt-2 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">You haven’t joined a shared list yet.</p> : <ul className="mt-3 flex flex-col gap-3">{overview.groups.map((group) => <li key={group.id} className="rounded-xl border border-border bg-background p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3"><div><Link href={`/account/groups/${group.id}`} className="font-bold text-primary underline underline-offset-2">{group.name}</Link><p className="mt-1 text-sm text-muted-foreground">{group.eventName} · {group.year} · {group.role}</p></div><button type="button" onClick={() => void groupAction(group.id, group.role === 'owner')} className="text-sm font-semibold text-rose-700 underline">{group.role === 'owner' ? 'Delete list' : 'Leave list'}</button></div>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm"><span>Invite code:</span><code className="rounded bg-muted px-2 py-1 font-bold tracking-widest">{group.inviteCode}</code><button type="button" onClick={() => void copyCode(group.id, group.inviteCode)} className="inline-flex items-center gap-1 rounded border border-input px-2 py-1 text-xs font-semibold"><Copy className="size-3.5" />{copiedGroup === group.id ? <><Check className="size-3.5" />Copied</> : 'Copy'}</button></div>
-          </li>)}</ul>}
-        </div>
-      </section>
       {message && <p aria-live="polite" className="rounded-lg border border-primary/20 bg-accent/40 p-3 text-sm font-semibold">{message}</p>}
     </div>
   )
