@@ -8,6 +8,7 @@ import { getArtistSocialAccounts } from '@/lib/artist-socials'
 import { ArtistSocialLinks } from '@/components/artist-social-links'
 import { InstagramPostEmbed } from '@/components/instagram-post-embed'
 import { CatalogueViewTracker } from '@/components/catalogue-view-tracker'
+import { CatalogueBookmarkPanel } from '@/components/catalogue-bookmark-panel'
 
 function displayTag(tag: string) {
   return tag.toLocaleLowerCase().replace(/\b\p{L}/gu, (letter) => letter.toLocaleUpperCase())
@@ -69,6 +70,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
           </span>
         </div>
       </header>
+      <CatalogueBookmarkPanel catalogueKey={`${event.slug}:${catalogue.id}`} itemName={`${catalogue.artistName} · Booth ${catalogue.booth}`} />
       {catalogue.stampRally && catalogue.stampRallyNote?.trim() && (
         <p className="mt-4 whitespace-pre-line break-words rounded-xl border border-emerald-800/25 bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-950">
           <span className="font-bold">Stamp Rally: </span>{catalogue.stampRallyNote}
