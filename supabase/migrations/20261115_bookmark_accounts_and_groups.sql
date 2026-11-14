@@ -1,6 +1,6 @@
 -- Persistent bookmark accounts and event-scoped shared bookmark groups.
 -- Account passwords are handled by Supabase Auth; this migration never stores passwords.
--- The website accesses these tables only through server-side DATABASE_URL queries after
+-- The website accesses these tables only through server-side POSTGRES_URL queries after
 -- checking the signed-in Supabase Auth user. They are intentionally not exposed through
 -- the public Data API roles.
 
