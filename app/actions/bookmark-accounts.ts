@@ -327,11 +327,27 @@ export async function logoutUsernameAccount(): Promise<void> {
   await clearSession()
 }
 
+function accountErrorDiagnostics(error: unknown) {
+  const chain: Array<{ name: string; code?: string }> = []
+  let current: unknown = error
+  for (let depth = 0; depth < 4 && current && typeof current === 'object'; depth += 1) {
+    const item = current as { name?: unknown; code?: unknown; cause?: unknown }
+    chain.push({
+      name: typeof item.name === 'string' ? item.name : 'UnknownError',
+      ...(typeof item.code === 'string' ? { code: item.code } : {}),
+    })
+    current = item.cause
+  }
+  return chain
+}
+
 export async function getAccountOverview() {
+  let stage = 'auth-session'
   try {
     const user = await currentUser()
     if (!user) return { signedIn: false as const, username: null, groups: [], events: [] }
     const username = user.user_metadata?.username ?? ''
+    stage = 'account-database-queries'
     const [groupsResult, eventsResult, recoveryResult] = await Promise.all([
     pool.query<{ id: string; name: string; event_slug: string; event_name: string; year: number; invite_code: string; role: string }>(
       `select g.id, g.name, g.event_slug, e.name as event_name, e.year, g.invite_code, m.role
@@ -342,6 +358,7 @@ export async function getAccountOverview() {
     pool.query<{ slug: string; name: string; year: number; start_date: string | null; end_date: string | null; display_order: number }>('select slug, name, year, start_date, end_date, display_order from public.events'),
     pool.query('select 1 from public.mcc_user_recovery_codes where user_id = $1::uuid', [user.id]),
     ])
+    stage = 'format-account-data'
     const eventsForGroups = eventsResult.rows.sort((a, b) => {
     if (a.year !== b.year) return a.year - b.year
     const statusOrder = { ongoing: 0, upcoming: 1, past: 2 }
@@ -363,10 +380,9 @@ export async function getAccountOverview() {
   } catch (error) {
     // Keep implementation details in Vercel's server logs rather than exposing
     // database or configuration errors to visitors.
-    const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : undefined
     console.error('[account-overview] failed to load account data', {
-      name: error instanceof Error ? error.name : 'UnknownError',
-      code,
+      stage,
+      errors: accountErrorDiagnostics(error),
       configured: {
         databaseUrl: Boolean(process.env.POSTGRES_URL ?? process.env.DATABASE_URL),
         supabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL),
