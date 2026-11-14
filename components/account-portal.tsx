@@ -171,7 +171,7 @@ export function AccountPortal() {
         <button disabled={busy} className="rounded-full bg-foreground px-5 py-3 font-semibold text-background disabled:opacity-60">{busy ? 'Please wait…' : mode === 'create' ? 'Create account' : mode === 'recover' ? 'Reset password' : 'Log in'}</button>
       </form>
       {mode === 'login' && <button type="button" onClick={() => { setMode('recover'); setMessage('') }} className="mt-3 text-sm font-semibold text-primary underline">Forgot password? Use your recovery code</button>}
-      <p className="mt-5 font-bold leading-relaxed text-red-700">Please SAVE THE ONE-TIME RECOVERY CODE shown when you create your account for future password resets</p>
+      {mode === 'create' && <p className="mt-5 font-bold leading-relaxed text-red-700">Please SAVE THE ONE-TIME RECOVERY CODE shown when you create your account for future password resets</p>}
       <p className="mt-3 text-xs leading-relaxed text-muted-foreground">When you sign in on this browser, its existing bookmarks, labels, and notes merge into your account. On shared devices, this may include bookmarks left by another browser user.</p>
       {recoveryCodeNotice}
       {message && <p aria-live="polite" className="mt-3 text-sm font-semibold text-primary">{message}</p>}
