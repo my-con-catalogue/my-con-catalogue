@@ -6,7 +6,7 @@ import { previewFanCafes } from '@/lib/preview-fan-cafes'
 import { previewCatalogueEntries } from '@/lib/preview-catalogue-entries'
 
 export type EventRow = typeof events.$inferSelect
-const databaseConfigured = Boolean(process.env.DATABASE_URL)
+const databaseConfigured = Boolean(process.env.POSTGRES_URL ?? process.env.DATABASE_URL)
 
 function cleanTextArray(values: readonly unknown[] | null | undefined): string[] {
   return (values ?? []).filter(
