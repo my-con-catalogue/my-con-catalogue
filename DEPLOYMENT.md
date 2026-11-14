@@ -93,9 +93,10 @@ Useful value formats:
 
    | Name | Value |
    | --- | --- |
-   | `DATABASE_URL` | Supabase Transaction pooler URI from **Connect** |
-   | `SUPABASE_URL` | Supabase project URL, such as `https://PROJECT_REF.supabase.co` |
-   | `SUPABASE_SERVICE_ROLE_KEY` | Server-side service role key from Supabase API settings |
+   | `POSTGRES_URL` | Vercel–Supabase integration's Postgres connection string |
+   | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL from the integration |
+   | `SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key from the integration |
+   | `SUPABASE_SECRET_KEY` | Server-only Supabase secret key from the integration |
    | `SUPABASE_STORAGE_BUCKET` | `catalogue-submissions` |
 
    Keep all four variables private. Do not prefix them with `NEXT_PUBLIC_`. The service role key grants privileged access and must only be used by the server.
@@ -129,4 +130,4 @@ pnpm install
 pnpm dev
 ```
 
-Without `DATABASE_URL`, the site uses built-in preview data and submitted forms cannot be saved. Do not upload `.env.local` to GitHub or include it in a shared ZIP.
+Without `POSTGRES_URL` (or the legacy `DATABASE_URL` fallback), the site uses built-in preview data and submissions cannot be saved. Do not upload `.env.local` to GitHub or include it in a shared ZIP. Legacy `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_ANON_KEY` values remain supported as fallbacks while migrating.
