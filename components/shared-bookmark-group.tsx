@@ -69,7 +69,7 @@ function TagList({ title, values, merch = false, maxRows = 3 }: { title: string;
   }, [expanded, maxRows, signature, values.length, visibleCount])
 
   return <div><p className="text-xs font-bold">{title}:</p>{values.length ? <ul ref={listRef} aria-label={title} className="mt-1 flex flex-wrap gap-1.5">
-    {(expanded ? values : values.slice(0, visibleCount)).map((tag, index) => <li key={`${tag}-${index}`} title={tag} className={`max-w-full truncate whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs ${merch ? 'border border-border text-muted-foreground' : 'bg-secondary'}`}>{tag}</li>)}
+    {(expanded ? values : values.slice(0, visibleCount)).map((tag, index) => <li key={`${tag}-${index}`} title={tag} className={`min-w-0 max-w-full whitespace-normal break-words rounded-full px-2.5 py-1 text-xs leading-snug ${merch ? 'border border-border text-muted-foreground' : 'bg-secondary'}`}>{tag}</li>)}
     {!expanded && visibleCount < values.length && <li><button type="button" onClick={() => setExpanded(true)} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:bg-secondary">+{values.length - visibleCount} more</button></li>}
     {expanded && <li><button type="button" onClick={() => { setExpanded(false); setVisibleCount(values.length) }} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:bg-secondary">Show less</button></li>}
   </ul> : <span className="mt-1 inline-block text-xs text-muted-foreground">None listed</span>}</div>
@@ -133,7 +133,7 @@ export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
       <p className="mt-5 text-sm font-semibold uppercase tracking-wider text-primary">{eventHeading}</p>
       <h1 className="mt-1 text-3xl font-extrabold">{group.name}</h1>
       <p className="mt-2 text-sm text-muted-foreground">Shared with {members.length} {members.length === 1 ? 'member' : 'members'}: {members.map((member) => `@${member.username}`).join(', ')}</p>
-      <p className="mt-2 text-sm text-muted-foreground">Each booth appears once. Labels and visit notes are shown by member; you can edit or remove only your own bookmark.</p>
+      <p className="mt-2 text-sm text-muted-foreground">You can edit or remove only your own bookmark.</p>
     </header>
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
       <div className="flex flex-wrap gap-2">
