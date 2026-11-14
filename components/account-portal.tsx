@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Check, Copy, LogOut, Users } from 'lucide-react'
+import { Check, Copy, Eye, EyeOff, LogOut, Users } from 'lucide-react'
 import {
   createBookmarkGroup,
   createRecoveryCodeForCurrentUser,
@@ -25,6 +25,7 @@ export function AccountPortal() {
   const [mode, setMode] = useState<'login' | 'create' | 'recover'>('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [recoveryInput, setRecoveryInput] = useState('')
   const [recoveryCode, setRecoveryCode] = useState('')
   const [remember, setRemember] = useState(false)
@@ -146,6 +147,12 @@ export function AccountPortal() {
       <button type="button" onClick={() => setRecoveryCode('')} className="rounded-full bg-foreground px-3 py-1.5 text-sm font-semibold text-background">I saved it</button>
     </div>
   </aside> : null
+  const passwordRequirements = [
+    { label: 'At least 8 characters', met: password.length >= 8 },
+    { label: 'One uppercase letter (A–Z)', met: /[A-Z]/.test(password) },
+    { label: 'One number (0–9)', met: /[0-9]/.test(password) },
+    { label: 'One special character (e.g. !, @, #)', met: /[^A-Za-z0-9]/.test(password) },
+  ]
 
   if (!overview) return <p className="rounded-xl border border-border bg-card p-6 text-muted-foreground">Loading account…</p>
 
@@ -164,8 +171,15 @@ export function AccountPortal() {
           <input value={recoveryInput} onChange={(event) => setRecoveryInput(event.target.value.toUpperCase())} autoComplete="off" placeholder="8-character groups separated by hyphens" required className="mt-1.5 h-11 w-full rounded-lg border border-input bg-background px-3 font-mono text-sm font-normal uppercase outline-none focus-visible:ring-2 focus-visible:ring-ring" />
         </label>}
         <label className="text-sm font-semibold">{mode === 'recover' ? 'New password' : 'Password'}
-          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={mode === 'login' ? undefined : 8} maxLength={128} required className="mt-1.5 h-11 w-full rounded-lg border border-input bg-background px-3 font-normal outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-          {mode !== 'login' && <span className="mt-1 block text-xs font-normal text-muted-foreground">At least 8 characters.</span>}
+          <span className="relative mt-1.5 block">
+            <input id="account-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={mode === 'login' ? undefined : 8} maxLength={128} required className="h-11 w-full rounded-lg border border-input bg-background px-3 pr-12 font-normal outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+            <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              {showPassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+            </button>
+          </span>
+          {mode !== 'login' && <ul className="mt-2 flex flex-col gap-1 text-xs" aria-label="Password requirements">
+            {passwordRequirements.map((requirement) => <li key={requirement.label} className={requirement.met ? 'font-medium text-emerald-700' : 'text-muted-foreground'}><span aria-hidden="true" className="mr-2">{requirement.met ? '✓' : '○'}</span>{requirement.label}</li>)}
+          </ul>}
         </label>
         {mode !== 'recover' && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} className="size-4 accent-primary" />Remember me on this device</label>}
         <button disabled={busy} className="rounded-full bg-foreground px-5 py-3 font-semibold text-background disabled:opacity-60">{busy ? 'Please wait…' : mode === 'create' ? 'Create account' : mode === 'recover' ? 'Reset password' : 'Log in'}</button>
