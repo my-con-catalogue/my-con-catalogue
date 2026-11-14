@@ -360,15 +360,26 @@ export async function getAccountOverview() {
       groups: groupsResult.rows.map((row) => ({ id: row.id, name: row.name, eventSlug: row.event_slug, eventName: row.event_name, year: row.year, inviteCode: row.invite_code, role: row.role })),
       events: eventsForGroups,
     }
-  } catch {
-    // Preserve a useful account screen when required server configuration or the
-    // account migration is missing. Do not leave the client on an endless spinner.
+  } catch (error) {
+    // Keep implementation details in Vercel's server logs rather than exposing
+    // database or configuration errors to visitors.
+    const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : undefined
+    console.error('[account-overview] failed to load account data', {
+      name: error instanceof Error ? error.name : 'UnknownError',
+      code,
+      configured: {
+        databaseUrl: Boolean(process.env.POSTGRES_URL ?? process.env.DATABASE_URL),
+        supabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL),
+        publishableKey: Boolean(process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY),
+        secretKey: Boolean(process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY),
+      },
+    })
     return {
       signedIn: false as const,
       username: null,
       groups: [],
       events: [],
-      error: 'Your account session is still on this device, but account data could not be loaded. Check the Vercel server environment variables and confirm the bookmark-account Supabase migration has been run, then reload.',
+      error: 'We couldn’t load your account details right now. Please try again in a moment. Your saved bookmarks have not been deleted.',
     }
   }
 }
