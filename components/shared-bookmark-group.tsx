@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BookmarkEditor, BOOKMARK_COLOR_STYLES, BOOKMARK_COLORS, type BookmarkColor } from '@/components/bookmark-editor'
 import { getSharedBookmarkGroup, removeOwnSharedBookmark, updateOwnSharedBookmark } from '@/app/actions/bookmark-accounts'
 
@@ -22,8 +22,57 @@ function SharedFilter({ label, options, selected, onToggle }: { label: string; o
   </details>
 }
 
-function TagList({ title, values, merch = false }: { title: string; values: string[]; merch?: boolean }) {
-  return <div><p className="text-xs font-bold">{title}:</p><div className="mt-1 flex flex-wrap gap-1.5">{values.length ? values.map((tag) => <span key={tag} className={`rounded-full px-2.5 py-1 text-xs ${merch ? 'border border-border text-muted-foreground' : 'bg-secondary'}`}>{tag}</span>) : <span className="text-xs text-muted-foreground">None listed</span>}</div></div>
+function TagList({ title, values, merch = false, maxRows = 3 }: { title: string; values: string[]; merch?: boolean; maxRows?: number }) {
+  const listRef = useRef<HTMLUListElement>(null)
+  const [visibleCount, setVisibleCount] = useState(values.length)
+  const [expanded, setExpanded] = useState(false)
+  const signature = values.join('\u0000')
+
+  useEffect(() => {
+    setVisibleCount(values.length)
+    setExpanded(false)
+  }, [signature, values.length])
+
+  useEffect(() => {
+    const list = listRef.current
+    if (!list || expanded) return
+
+    const measureRows = () => {
+      const items = Array.from(list.children) as HTMLElement[]
+      const rowTops = [...new Set(items.map((item) => Math.round(item.getBoundingClientRect().top)))].sort((a, b) => a - b)
+      if (rowTops.length <= maxRows) return
+      const lastVisibleRowTop = rowTops[maxRows - 1]
+      const overflowIndex = items.slice(0, visibleCount).findIndex((item) => Math.round(item.getBoundingClientRect().top) > lastVisibleRowTop)
+      if (overflowIndex >= 0) {
+        setVisibleCount((current) => Math.min(current, overflowIndex))
+        return
+      }
+      const moreButton = visibleCount < values.length ? items[visibleCount] : undefined
+      if (moreButton && Math.round(moreButton.getBoundingClientRect().top) > lastVisibleRowTop) {
+        setVisibleCount((current) => Math.max(0, current - 1))
+      }
+    }
+
+    let frame = requestAnimationFrame(measureRows)
+    let observedWidth = list.clientWidth
+    const observer = new ResizeObserver((observations) => {
+      const width = observations[0]?.contentRect.width ?? list.clientWidth
+      if (Math.round(width) !== Math.round(observedWidth)) {
+        observedWidth = width
+        setVisibleCount(values.length)
+      }
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(measureRows)
+    })
+    observer.observe(list)
+    return () => { cancelAnimationFrame(frame); observer.disconnect() }
+  }, [expanded, maxRows, signature, values.length, visibleCount])
+
+  return <div><p className="text-xs font-bold">{title}:</p>{values.length ? <ul ref={listRef} aria-label={title} className="mt-1 flex flex-wrap gap-1.5">
+    {(expanded ? values : values.slice(0, visibleCount)).map((tag, index) => <li key={`${tag}-${index}`} title={tag} className={`max-w-full truncate whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs ${merch ? 'border border-border text-muted-foreground' : 'bg-secondary'}`}>{tag}</li>)}
+    {!expanded && visibleCount < values.length && <li><button type="button" onClick={() => setExpanded(true)} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:bg-secondary">+{values.length - visibleCount} more</button></li>}
+    {expanded && <li><button type="button" onClick={() => { setExpanded(false); setVisibleCount(values.length) }} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground hover:bg-secondary">Show less</button></li>}
+  </ul> : <span className="mt-1 inline-block text-xs text-muted-foreground">None listed</span>}</div>
 }
 
 export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
@@ -33,6 +82,7 @@ export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
   const [merchTypes, setMerchTypes] = useState<Set<string>>(new Set())
   const [rally, setRally] = useState<Set<string>>(new Set())
   const [bookmarkColors, setBookmarkColors] = useState<Set<string>>(new Set())
+  const [usernames, setUsernames] = useState<Set<string>>(new Set())
   const [notice, setNotice] = useState('')
 
   const refresh = async () => setResult(await getSharedBookmarkGroup(groupId))
@@ -40,6 +90,7 @@ export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
 
   const fandomOptions = useMemo(() => result?.ok ? [...new Set(result.bookmarks.flatMap((item) => item.fandoms))].sort((a, b) => a.localeCompare(b)) : [], [result])
   const merchOptions = useMemo(() => result?.ok ? [...new Set(result.bookmarks.flatMap((item) => item.merchTypes))].sort((a, b) => a.localeCompare(b)) : [], [result])
+  const usernameOptions = useMemo(() => result?.ok ? result.members.map((member) => member.username).sort((a, b) => a.localeCompare(b)) : [], [result])
   const toggleOption = (setter: (update: (current: Set<string>) => Set<string>) => void) => (value: string) => setter((current) => {
     const next = new Set(current)
     if (next.has(value)) next.delete(value)
@@ -52,15 +103,19 @@ export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
     return result.bookmarks.filter((item) =>
       (!q || item.artistName.toLowerCase().includes(q) || item.booth.toLowerCase().includes(q) || item.annotations.some((annotation) => annotation.username.toLowerCase().includes(q))) &&
       (!fandoms.size || item.fandoms.some((tag) => fandoms.has(tag))) && (!merchTypes.size || item.merchTypes.some((tag) => merchTypes.has(tag))) &&
-      (!rally.size || rally.has(item.stampRally ? 'Yes' : 'No')) && (!bookmarkColors.size || item.annotations.some((annotation) => bookmarkColors.has(annotation.labelColor))),
+      (!rally.size || rally.has(item.stampRally ? 'Yes' : 'No')) && (!bookmarkColors.size || item.annotations.some((annotation) => bookmarkColors.has(annotation.labelColor))) &&
+      (!usernames.size || item.annotations.some((annotation) => usernames.has(annotation.username))),
     )
-  }, [result, query, fandoms, merchTypes, rally, bookmarkColors])
+  }, [result, query, fandoms, merchTypes, rally, bookmarkColors, usernames])
 
   if (!result) return <p className="rounded-xl border border-border bg-card p-6 text-muted-foreground">Loading shared list…</p>
   if (!result.ok) return <div className="rounded-xl border border-border bg-card p-6"><p>{result.message}</p><Link href="/account/shared-lists" className="mt-3 inline-block font-semibold text-primary underline">Go to shared lists</Link></div>
 
   const { group, members } = result
-  const eventHeading = group.eventName.trim().match(new RegExp(`(?:\\s*[·–—-]\\s*|\\s+)${group.year}$`)) ? group.eventName : `${group.eventName} · ${group.year}`
+  const yearSuffix = new RegExp(`(?:\\s*[·–—-]\\s*|\\s+)${group.year}$`)
+  let eventNameWithoutYear = group.eventName.trim()
+  while (yearSuffix.test(eventNameWithoutYear)) eventNameWithoutYear = eventNameWithoutYear.replace(yearSuffix, '').trim()
+  const eventHeading = eventNameWithoutYear ? `${eventNameWithoutYear} ${group.year}` : String(group.year)
   const changeBookmark = async (key: string, label: { name: string; color: BookmarkColor }, memo: string) => {
     const updated = await updateOwnSharedBookmark(groupId, { key, labelName: label.name, labelColor: label.color, memo })
     setNotice(updated.message)
@@ -87,6 +142,7 @@ export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
         <SharedFilter label="Merch type" options={merchOptions.map((value) => ({ value, label: value }))} selected={merchTypes} onToggle={toggleOption(setMerchTypes)} />
         <SharedFilter label="Stamp rally" options={[{ value: 'Yes', label: 'Yes' }, { value: 'No', label: 'No' }]} selected={rally} onToggle={toggleOption(setRally)} />
         <SharedFilter label="Bookmark color" options={BOOKMARK_COLORS.map((choice) => ({ value: choice.value, label: choice.label, swatch: choice.swatch }))} selected={bookmarkColors} onToggle={toggleOption(setBookmarkColors)} />
+        <SharedFilter label="Username" options={usernameOptions.map((value) => ({ value, label: `@${value}` }))} selected={usernames} onToggle={toggleOption(setUsernames)} />
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-sm"><p>Showing <strong>{filtered.length}</strong> of {result.bookmarks.length} saved booths</p><button type="button" onClick={() => void refresh()} className="font-semibold text-primary underline">Refresh shared list</button></div>
       {notice && <p aria-live="polite" className="mt-3 text-sm font-semibold text-primary">{notice}</p>}
