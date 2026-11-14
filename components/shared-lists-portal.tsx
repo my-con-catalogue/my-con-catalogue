@@ -30,7 +30,7 @@ export function SharedListsPortal() {
       setOverview(data)
       if ('error' in data && data.error) setLoadError(data.error)
     } catch {
-      setLoadError('Shared lists could not be reached. Check the Vercel environment variables and try again.')
+      setLoadError('We couldn’t load shared lists right now. Please try again in a moment.')
     }
   }, [])
   useEffect(() => { void refresh() }, [refresh])

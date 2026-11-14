@@ -62,18 +62,25 @@ export function SiteHeader() {
             </ul>
           </nav>
 
-          <Link
-            href="/account"
-            aria-current={isActive('/account') ? 'page' : undefined}
-            title="Account and shared bookmarks"
-            className={cn(
-              'flex size-10 shrink-0 items-center justify-center rounded-lg border border-border transition-colors hover:bg-muted',
-              isActive('/account') && 'bg-foreground text-background hover:bg-foreground',
-            )}
-          >
-            <UserRound className="size-5" aria-hidden="true" />
-            <span className="sr-only">Account and shared bookmarks</span>
-          </Link>
+          <details className="group relative">
+            <summary
+              title="Account options"
+              aria-label="Open account options"
+              className={cn(
+                'flex size-10 shrink-0 cursor-pointer list-none items-center justify-center rounded-lg border border-border transition-colors hover:bg-muted [&::-webkit-details-marker]:hidden',
+                isActive('/account') && 'bg-foreground text-background hover:bg-foreground',
+              )}
+            >
+              <UserRound className="size-5" aria-hidden="true" />
+              <span className="sr-only">Account options</span>
+            </summary>
+            <div className="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl border border-border bg-background p-2 shadow-lg">
+              <Link href="/account?mode=login" onClick={(event) => { const menu = event.currentTarget.closest('details'); if (menu) menu.open = false }} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">Log in</Link>
+              <Link href="/account?mode=create" onClick={(event) => { const menu = event.currentTarget.closest('details'); if (menu) menu.open = false }} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">Sign up</Link>
+              <div className="my-1 border-t border-border" />
+              <Link href="/account/shared-lists" onClick={(event) => { const menu = event.currentTarget.closest('details'); if (menu) menu.open = false }} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">Shared lists</Link>
+            </div>
+          </details>
 
           <button
             type="button"

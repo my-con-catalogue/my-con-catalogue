@@ -16,10 +16,10 @@ import {
 
 type Overview = Awaited<ReturnType<typeof getAccountOverview>>
 
-export function AccountPortal() {
+export function AccountPortal({ initialMode = 'login' }: { initialMode?: 'login' | 'create' }) {
   const [overview, setOverview] = useState<Overview | null>(null)
   const [loadError, setLoadError] = useState('')
-  const [mode, setMode] = useState<'login' | 'create' | 'recover'>('login')
+  const [mode, setMode] = useState<'login' | 'create' | 'recover'>(initialMode)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -37,7 +37,7 @@ export function AccountPortal() {
       setOverview(data)
       if ('error' in data && data.error) setLoadError(data.error)
     } catch {
-      setLoadError('Account data could not be reached. Check your connection and Vercel server environment settings, then try again.')
+      setLoadError('We couldn’t load your account details right now. Please try again in a moment. Your saved bookmarks have not been deleted.')
     }
   }, [])
   useEffect(() => { void refresh() }, [refresh])
