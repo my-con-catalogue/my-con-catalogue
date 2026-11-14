@@ -165,7 +165,7 @@ export function AccountPortal() {
         </label>}
         <label className="text-sm font-semibold">{mode === 'recover' ? 'New password' : 'Password'}
           <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={mode === 'login' ? undefined : 8} maxLength={128} required className="mt-1.5 h-11 w-full rounded-lg border border-input bg-background px-3 font-normal outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-          {mode !== 'login' && <span className="mt-1 block text-xs font-normal text-muted-foreground">At least 8 characters. Use a password you do not use elsewhere.</span>}
+          {mode !== 'login' && <span className="mt-1 block text-xs font-normal text-muted-foreground">At least 8 characters.</span>}
         </label>
         {mode !== 'recover' && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} className="size-4 accent-primary" />Remember me on this device</label>}
         <button disabled={busy} className="rounded-full bg-foreground px-5 py-3 font-semibold text-background disabled:opacity-60">{busy ? 'Please wait…' : mode === 'create' ? 'Create account' : mode === 'recover' ? 'Reset password' : 'Log in'}</button>
