@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { CatalogueEntry } from '@/lib/queries'
 import { SocialPostEmbed } from '@/components/social-post-embed'
 
@@ -17,6 +17,23 @@ function safeExternalUrl(value: string) {
 
 export function CataloguePreview({ entry, hasCatalogueMaterial }: { entry: CatalogueEntry; hasCatalogueMaterial: boolean }) {
   const [active, setActive] = useState(false)
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current)
+  }, [])
+
+  const schedulePreview = () => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current)
+    hoverTimer.current = setTimeout(() => {
+      setActive(true)
+      hoverTimer.current = null
+    }, 2000)
+  }
+  const cancelPreview = () => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current)
+    hoverTimer.current = null
+    setActive(false)
+  }
   const firstFile = entry.catalogueFileUrls.map(safeExternalUrl).find((url) => url !== null) ?? null
   const firstFileIsImage = firstFile ? /\.(avif|gif|jpe?g|png|webp)(?:$|[?#])/i.test(firstFile.pathname + firstFile.search) : false
   const firstFileIsPdf = firstFile ? /\.pdf(?:$|[?#])/i.test(firstFile.pathname + firstFile.search) : false
@@ -24,11 +41,15 @@ export function CataloguePreview({ entry, hasCatalogueMaterial }: { entry: Catal
   return (
     <div
       className="group/catalogue-preview relative z-0 hover:z-20 focus-within:z-20"
-      onMouseEnter={() => setActive(true)}
-      onMouseLeave={() => setActive(false)}
-      onFocusCapture={() => setActive(true)}
+      onMouseEnter={schedulePreview}
+      onMouseLeave={cancelPreview}
+      onFocusCapture={() => {
+        if (hoverTimer.current) clearTimeout(hoverTimer.current)
+        hoverTimer.current = null
+        setActive(true)
+      }}
       onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setActive(false)
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) cancelPreview()
       }}
     >
       <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="flex h-full items-center justify-center gap-1 border-b border-border bg-muted px-4 py-3 text-center text-base font-semibold tracking-wide text-primary transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" aria-label={`Click to view ${entry.artistName}'s catalogue; hover or focus for a preview`}>

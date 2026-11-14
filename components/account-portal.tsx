@@ -171,7 +171,7 @@ export function AccountPortal() {
         <button disabled={busy} className="rounded-full bg-foreground px-5 py-3 font-semibold text-background disabled:opacity-60">{busy ? 'Please wait…' : mode === 'create' ? 'Create account' : mode === 'recover' ? 'Reset password' : 'Log in'}</button>
       </form>
       {mode === 'login' && <button type="button" onClick={() => { setMode('recover'); setMessage('') }} className="mt-3 text-sm font-semibold text-primary underline">Forgot password? Use your recovery code</button>}
-      <p className="mt-5 rounded-lg border border-border bg-background p-3 text-xs leading-relaxed text-muted-foreground">No real email address is collected. Supabase Auth stores a one-way password hash; the site owner cannot read your password. Save the one-time recovery code shown when you create your account. Without that code, contact the site owner for help; they can set a temporary password without deleting your account. Account creation is limited to 5 attempts per network per hour.</p>
+      <p className="mt-5 font-bold leading-relaxed text-red-700">Save the one-time recovery code shown when you create your account. You’ll need it to reset your password without email.</p>
       <p className="mt-3 text-xs leading-relaxed text-muted-foreground">When you sign in on this browser, its existing bookmarks, labels, and notes merge into your account. On shared devices, this may include bookmarks left by another browser user.</p>
       {recoveryCodeNotice}
       {message && <p aria-live="polite" className="mt-3 text-sm font-semibold text-primary">{message}</p>}
