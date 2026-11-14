@@ -162,7 +162,7 @@ export type AccountActionResult = { ok: boolean; message: string; recoveryCode?:
 export async function createUsernameAccount(usernameRaw: string, password: string, remember: boolean): Promise<AccountActionResult> {
   const username = usernameInput(usernameRaw)
   if (!/^[a-z0-9_]{3,24}$/.test(username)) return { ok: false, message: 'Use a username of 3–24 letters, numbers, or underscores.' }
-  if (password.length < 12 || password.length > 128) return { ok: false, message: 'Choose a password between 12 and 128 characters.' }
+  if (password.length < 8 || password.length > 128) return { ok: false, message: 'Choose a password between 8 and 128 characters.' }
 
   try {
     if (!await allowAccountCreation()) return { ok: false, message: 'Too many account attempts from this network. Please try again in an hour.' }
@@ -227,7 +227,7 @@ export async function createRecoveryCodeForCurrentUser(): Promise<AccountActionR
 export async function resetPasswordWithRecoveryCode(usernameRaw: string, recoveryCodeRaw: string, newPassword: string): Promise<AccountActionResult> {
   const username = usernameInput(usernameRaw)
   const recoveryCode = recoveryCodeRaw.trim()
-  if (!/^[a-z0-9_]{3,24}$/.test(username) || !recoveryCodeInputIsValid(recoveryCode) || newPassword.length < 12 || newPassword.length > 128) {
+  if (!/^[a-z0-9_]{3,24}$/.test(username) || !recoveryCodeInputIsValid(recoveryCode) || newPassword.length < 8 || newPassword.length > 128) {
     return { ok: false, message: 'Username, recovery code, or new password is invalid.' }
   }
 
