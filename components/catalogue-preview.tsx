@@ -31,7 +31,7 @@ export function CataloguePreview({ entry, hasCatalogueMaterial }: { entry: Catal
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setActive(false)
       }}
     >
-      <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="flex h-full items-center justify-center gap-1 px-3 py-3 text-primary transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" aria-label={`Click to view ${entry.artistName}'s catalogue; hover or focus for a preview`}>
+      <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="flex h-full items-center justify-center gap-1 border-b border-border bg-muted px-4 py-3 text-center text-base font-semibold tracking-wide text-primary transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" aria-label={`Click to view ${entry.artistName}'s catalogue; hover or focus for a preview`}>
         › Click to view / hover for preview ‹
       </Link>
       {active && <div className="absolute left-1/2 top-full z-50 w-[min(88vw,34rem)] -translate-x-1/2">

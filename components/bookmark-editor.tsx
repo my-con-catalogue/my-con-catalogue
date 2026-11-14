@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useId, useRef, useState } from 'react'
-import { Bookmark } from 'lucide-react'
+import { Bookmark, Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export type BookmarkColor = 'rose' | 'blue' | 'amber' | 'green'
@@ -27,11 +27,11 @@ const BOOKMARK_ICON_STYLES: Record<BookmarkColor, string> = {
   amber: 'text-amber-300',
   green: 'text-emerald-300',
 }
-export const BOOKMARK_COLORS: { value: BookmarkColor; label: string; swatch: string; dot: string }[] = [
-  { value: 'rose', label: 'Pink', swatch: 'bg-rose-500', dot: '🩷' },
-  { value: 'blue', label: 'Blue', swatch: 'bg-sky-500', dot: '🔵' },
-  { value: 'amber', label: 'Yellow', swatch: 'bg-amber-500', dot: '🟡' },
-  { value: 'green', label: 'Green', swatch: 'bg-emerald-600', dot: '🟢' },
+export const BOOKMARK_COLORS: { value: BookmarkColor; label: string; swatch: string }[] = [
+  { value: 'rose', label: 'Rose', swatch: 'bg-rose-500' },
+  { value: 'blue', label: 'Blue', swatch: 'bg-sky-500' },
+  { value: 'amber', label: 'Amber', swatch: 'bg-amber-500' },
+  { value: 'green', label: 'Green', swatch: 'bg-emerald-600' },
 ]
 
 function rememberedColorLabel(color: BookmarkColor) {
@@ -67,6 +67,7 @@ export function BookmarkEditor({
   const [open, setOpen] = useState(false)
   const [draftLabel, setDraftLabel] = useState(label)
   const [draftMemo, setDraftMemo] = useState(memo)
+  const [colorMenuOpen, setColorMenuOpen] = useState(false)
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -123,20 +124,22 @@ export function BookmarkEditor({
           <h2 id={`bookmark-editor-title-${editorId}`} className="text-xl font-extrabold">{isBookmarked ? 'Edit saved bookmark' : 'Save this catalogue'}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{itemName}</p>
           <div className="mt-5 grid grid-cols-[7.5rem_minmax(0,1fr)] items-end gap-3">
-            <label className="block text-sm font-semibold">
+            <div className="relative text-sm font-semibold">
               <span className="mb-1.5 block">Color</span>
-              <select
-                aria-label="Bookmark color"
-                value={draftLabel.color}
-                onChange={(event) => {
-                  const color = event.target.value as BookmarkColor
-                  setDraftLabel((current) => ({ ...current, color, name: rememberedColorLabel(color) }))
-                }}
-                className="h-10 w-full rounded-md border border-input bg-card px-3 text-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {BOOKMARK_COLORS.map((choice) => <option key={choice.value} value={choice.value}>{choice.dot}</option>)}
-              </select>
-            </label>
+              <button type="button" aria-label="Choose bookmark color" aria-expanded={colorMenuOpen} onClick={() => setColorMenuOpen((value) => !value)} className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-card px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <span className={cn('size-5 rounded-full border border-black/10', BOOKMARK_COLORS.find((choice) => choice.value === draftLabel.color)?.swatch)} aria-hidden="true" />
+                <ChevronDown className={cn('size-4 transition-transform', colorMenuOpen && 'rotate-180')} aria-hidden="true" />
+              </button>
+              {colorMenuOpen && <div className="absolute left-0 top-full z-40 mt-1 flex w-full flex-col gap-1 rounded-md border border-input bg-card p-1.5 shadow-lg" role="listbox" aria-label="Bookmark colors">
+                {BOOKMARK_COLORS.map((choice) => <button key={choice.value} type="button" role="option" aria-selected={draftLabel.color === choice.value} aria-label={choice.label} title={choice.label} onClick={() => {
+                  setDraftLabel((current) => ({ ...current, color: choice.value, name: rememberedColorLabel(choice.value) }))
+                  setColorMenuOpen(false)
+                }} className="relative flex h-9 items-center justify-center rounded hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span className={cn('size-5 rounded-full border border-black/10', choice.swatch)} aria-hidden="true" />
+                  {draftLabel.color === choice.value && <Check className="absolute right-3 size-4" aria-hidden="true" />}
+                </button>)}
+              </div>}
+            </div>
             <label htmlFor={`bookmark-editor-label-${editorId}`} className="block text-sm font-semibold">
               <span className="mb-1.5 block">Label</span>
               <input
