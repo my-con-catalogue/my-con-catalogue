@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { BookmarkEditor, BOOKMARK_COLOR_STYLES, BOOKMARK_COLORS, DEFAULT_BOOKMARK_LABEL, isBookmarkLabel, type BookmarkLabel } from '@/components/bookmark-editor'
+import { getCloudBookmarks, removeCloudBookmark, saveCloudBookmark, syncCloudBookmarks } from '@/app/actions/bookmark-accounts'
 
 const BOOKMARKS_KEY = 'mcc:bookmarked-catalogues'
 const LABELS_KEY = 'mcc:bookmark-labels'
@@ -51,6 +52,33 @@ export function CatalogueBookmarkPanel({ catalogueKey, itemName }: { catalogueKe
     }
   }, [catalogueKey])
 
+  useEffect(() => {
+    let active = true
+    void getCloudBookmarks().then(async (cloud) => {
+      if (!active || !cloud) return
+      const localKeys = readArray(BOOKMARKS_KEY)
+      const localLabels = readObject<BookmarkLabel>(LABELS_KEY, isBookmarkLabel)
+      const localMemos = readObject<string>(MEMOS_KEY, isString)
+      const labels = { ...localLabels }
+      const memos = { ...localMemos }
+      for (const item of cloud.bookmarks) {
+        localKeys.add(item.key)
+        if (!Object.hasOwn(labels, item.key)) labels[item.key] = { name: item.labelName, color: item.labelColor }
+        if (!Object.hasOwn(memos, item.key)) memos[item.key] = item.memo
+      }
+      if (!active) return
+      window.localStorage.setItem(BOOKMARKS_KEY, JSON.stringify([...localKeys]))
+      window.localStorage.setItem(LABELS_KEY, JSON.stringify(labels))
+      window.localStorage.setItem(MEMOS_KEY, JSON.stringify(memos))
+      setBookmarked(localKeys.has(catalogueKey))
+      setLabel(labels[catalogueKey] ?? DEFAULT_BOOKMARK_LABEL)
+      setMemo(memos[catalogueKey] ?? '')
+      window.dispatchEvent(new Event(SYNC_EVENT))
+      await syncCloudBookmarks([...localKeys].map((key) => ({ key, labelName: labels[key]?.name ?? '', labelColor: labels[key]?.color ?? 'blue', memo: memos[key] ?? '' })))
+    }).catch(() => undefined)
+    return () => { active = false }
+  }, [catalogueKey])
+
   const save = (nextLabel: BookmarkLabel, nextMemo: string) => {
     const saved = readArray(BOOKMARKS_KEY)
     saved.add(catalogueKey)
@@ -64,6 +92,7 @@ export function CatalogueBookmarkPanel({ catalogueKey, itemName }: { catalogueKe
     setBookmarked(true)
     setLabel(nextLabel)
     setMemo(nextMemo)
+    void saveCloudBookmark({ key: catalogueKey, labelName: nextLabel.name, labelColor: nextLabel.color, memo: nextMemo })
     window.dispatchEvent(new Event(SYNC_EVENT))
   }
 
@@ -80,6 +109,7 @@ export function CatalogueBookmarkPanel({ catalogueKey, itemName }: { catalogueKe
     setBookmarked(false)
     setLabel(DEFAULT_BOOKMARK_LABEL)
     setMemo('')
+    void removeCloudBookmark(catalogueKey)
     window.dispatchEvent(new Event(SYNC_EVENT))
   }
 

@@ -10,6 +10,7 @@ import { BookmarkEditor, BOOKMARK_COLORS, DEFAULT_BOOKMARK_LABEL, isBookmarkLabe
 import { getArtistSocialAccounts } from '@/lib/artist-socials'
 import type { CatalogueEntry, CatalogueType } from '@/lib/queries'
 import { cn } from '@/lib/utils'
+import { getCloudBookmarks, removeCloudBookmark, saveCloudBookmark, syncCloudBookmarks } from '@/app/actions/bookmark-accounts'
 
 function displayTag(tag: string) {
   return tag.toLocaleLowerCase().replace(/\b\p{L}/gu, (letter) => letter.toLocaleUpperCase())
@@ -248,6 +249,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
   const [bookmarkColorFilters, setBookmarkColorFilters] = useState<Set<BookmarkColor>>(new Set())
   const [viewedCatalogues, setViewedCatalogues] = useState<Set<string>>(new Set())
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false)
+  const [accountUsername, setAccountUsername] = useState('')
   const storageKey = entries[0]?.eventSlug ? `mcc:catalogue-filters:${entries[0].eventSlug}` : null
   const bookmarkStorageKey = 'mcc:bookmarked-catalogues'
   const bookmarkLabelsStorageKey = 'mcc:bookmark-labels'
@@ -274,6 +276,43 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     } finally {
       setBookmarksLoaded(true)
     }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    void getCloudBookmarks().then(async (cloud) => {
+      if (!active || !cloud) return
+      try {
+        const localKeysValue: unknown = JSON.parse(window.localStorage.getItem(bookmarkStorageKey) ?? '[]')
+        const localKeys = Array.isArray(localKeysValue) ? localKeysValue.filter((item): item is string => typeof item === 'string') : []
+        const localLabelsValue: unknown = JSON.parse(window.localStorage.getItem(bookmarkLabelsStorageKey) ?? '{}')
+        const localLabels = localLabelsValue && typeof localLabelsValue === 'object' && !Array.isArray(localLabelsValue) ? localLabelsValue as Record<string, BookmarkLabel> : {}
+        const localMemosValue: unknown = JSON.parse(window.localStorage.getItem(bookmarkMemoStorageKey) ?? '{}')
+        const localMemos = localMemosValue && typeof localMemosValue === 'object' && !Array.isArray(localMemosValue) ? localMemosValue as Record<string, string> : {}
+        const cloudKeys = cloud.bookmarks.map((item) => item.key)
+        const keys = [...new Set([...localKeys, ...cloudKeys])]
+        const labels = { ...localLabels }
+        const memos = { ...localMemos }
+        for (const item of cloud.bookmarks) {
+          if (!Object.hasOwn(labels, item.key)) labels[item.key] = { name: item.labelName, color: item.labelColor }
+          if (!Object.hasOwn(memos, item.key)) memos[item.key] = item.memo
+        }
+        if (!active) return
+        setAccountUsername(cloud.username)
+        setBookmarks(new Set(keys))
+        setBookmarkLabels(labels)
+        setBookmarkMemos(memos)
+        await syncCloudBookmarks(keys.map((key) => ({
+          key,
+          labelName: labels[key]?.name ?? '',
+          labelColor: labels[key]?.color ?? 'blue',
+          memo: memos[key] ?? '',
+        })))
+      } catch {
+        // Keep using local bookmarks if account sync or browser storage is unavailable.
+      }
+    }).catch(() => undefined)
+    return () => { active = false }
   }, [])
 
   useEffect(() => {
@@ -494,6 +533,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     setBookmarks((current) => new Set(current).add(key))
     setBookmarkLabels((current) => ({ ...current, [key]: label }))
     setBookmarkMemos((current) => ({ ...current, [key]: memo }))
+    void saveCloudBookmark({ key, labelName: label.name, labelColor: label.color, memo })
   }
 
   const removeBookmark = (entry: CatalogueEntry) => {
@@ -505,6 +545,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     })
     setBookmarkLabels((current) => { const next = { ...current }; delete next[key]; return next })
     setBookmarkMemos((current) => { const next = { ...current }; delete next[key]; return next })
+    void removeCloudBookmark(key)
   }
 
   const savedCount = typeEntries.filter((entry) => bookmarks.has(`${entry.eventSlug}:${entry.id}`)).length
@@ -607,9 +648,9 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
           <button type="button" aria-pressed={showBookmarkedOnly} onClick={() => { setShowBookmarkedOnly((value) => !value); setPage(1) }} className={cn('inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold', showBookmarkedOnly ? 'border-foreground bg-foreground text-background' : 'border-input bg-background hover:bg-secondary')}>
             <Bookmark className="size-4" aria-hidden="true" /> {showBookmarkedOnly ? 'Showing saved catalogues' : 'Show saved catalogues'} ({savedCount})
           </button>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Saved to this browser and device only; bookmarks don’t sync across browsers or devices. Clearing site data or ending a private session may remove them.
-          </p>
+          {accountUsername ? <p className="text-xs font-semibold text-emerald-800">Signed in as @{accountUsername}; bookmarks sync to your account.</p> : <p className="text-xs leading-relaxed text-muted-foreground">
+            Saved to this browser and device only; bookmarks don’t sync across browsers or devices. Clearing site data or ending a private session may remove them. <Link href="/account" className="font-semibold text-primary underline">Create an account to sync</Link>.
+          </p>}
           {showBookmarkedOnly && <details className="group relative w-full sm:w-auto">
             <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-input bg-background px-3 py-2 text-sm font-semibold hover:border-foreground [&::-webkit-details-marker]:hidden">
               <span>Bookmark color{bookmarkColorFilters.size ? ` · ${bookmarkColorFilters.size}` : ''}</span>
