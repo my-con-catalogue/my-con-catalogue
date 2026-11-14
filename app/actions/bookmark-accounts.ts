@@ -16,9 +16,11 @@ type AuthUser = { id: string; user_metadata?: { username?: string } }
 type BookmarkValue = { key: string; labelName: string; labelColor: 'rose' | 'blue' | 'amber' | 'green'; memo: string }
 
 function config() {
-  const url = process.env.SUPABASE_URL?.replace(/\/$/, '')
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const anonKey = process.env.SUPABASE_ANON_KEY
+  // The Supabase/Vercel integration may expose only the public URL name by default.
+  // This is safe to fall back to: both variables identify the same project URL.
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL)?.replace(/\/$/, '')
+  const serviceKey = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
+  const anonKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY
   if (!url || !serviceKey || !anonKey) throw new Error('Account login is not configured on the server.')
   return { url, serviceKey, anonKey }
 }
@@ -92,13 +94,18 @@ async function clearSession() {
 async function authFetch(path: string, init: RequestInit = {}, useAdminKey = false) {
   const { url, serviceKey, anonKey } = config()
   const apiKey = useAdminKey ? serviceKey : anonKey
+  const requestHeaders = new Headers(init.headers)
+  requestHeaders.set('apikey', apiKey)
+  requestHeaders.set('content-type', 'application/json')
+  // New sb_secret keys are API keys, not JWTs. Send them only as apikey.
+  // Legacy service-role JWTs still need the Bearer header for compatibility.
+  if (useAdminKey) {
+    if (apiKey.startsWith('sb_')) requestHeaders.delete('authorization')
+    else requestHeaders.set('authorization', `Bearer ${apiKey}`)
+  }
   return fetch(`${url}/auth/v1/${path}`, {
     ...init,
-    headers: {
-      apikey: apiKey,
-      'content-type': 'application/json',
-      ...(init.headers ?? {}),
-    },
+    headers: requestHeaders,
     signal: init.signal ?? AbortSignal.timeout(12_000),
     cache: 'no-store',
   })
