@@ -99,6 +99,7 @@ async function authFetch(path: string, init: RequestInit = {}, useAdminKey = fal
       'content-type': 'application/json',
       ...(init.headers ?? {}),
     },
+    signal: init.signal ?? AbortSignal.timeout(12_000),
     cache: 'no-store',
   })
 }
@@ -320,10 +321,11 @@ export async function logoutUsernameAccount(): Promise<void> {
 }
 
 export async function getAccountOverview() {
-  const user = await currentUser()
-  if (!user) return { signedIn: false as const, username: null, groups: [], events: [] }
-  const username = user.user_metadata?.username ?? ''
-  const [groupsResult, eventsResult, recoveryResult] = await Promise.all([
+  try {
+    const user = await currentUser()
+    if (!user) return { signedIn: false as const, username: null, groups: [], events: [] }
+    const username = user.user_metadata?.username ?? ''
+    const [groupsResult, eventsResult, recoveryResult] = await Promise.all([
     pool.query<{ id: string; name: string; event_slug: string; event_name: string; year: number; invite_code: string; role: string }>(
       `select g.id, g.name, g.event_slug, e.name as event_name, e.year, g.invite_code, m.role
        from public.mcc_bookmark_group_members m
@@ -332,8 +334,8 @@ export async function getAccountOverview() {
        where m.user_id = $1::uuid order by g.created_at desc`, [user.id]),
     pool.query<{ slug: string; name: string; year: number; start_date: string | null; end_date: string | null; display_order: number }>('select slug, name, year, start_date, end_date, display_order from public.events'),
     pool.query('select 1 from public.mcc_user_recovery_codes where user_id = $1::uuid', [user.id]),
-  ])
-  const eventsForGroups = eventsResult.rows.sort((a, b) => {
+    ])
+    const eventsForGroups = eventsResult.rows.sort((a, b) => {
     if (a.year !== b.year) return a.year - b.year
     const statusOrder = { ongoing: 0, upcoming: 1, past: 2 }
     const statusA = getEventStatus(a.start_date, a.end_date)
@@ -343,13 +345,24 @@ export async function getAccountOverview() {
     if (statusA === 'upcoming') return (a.start_date ?? '').localeCompare(b.start_date ?? '') || a.display_order - b.display_order || a.name.localeCompare(b.name)
     if (statusA === 'past') return (b.end_date ?? b.start_date ?? '').localeCompare(a.end_date ?? a.start_date ?? '') || a.display_order - b.display_order || a.name.localeCompare(b.name)
     return a.display_order - b.display_order || a.name.localeCompare(b.name)
-  }).map(({ slug, name, year }) => ({ slug, name, year }))
-  return {
-    signedIn: true as const,
-    username,
-    hasRecoveryCode: Boolean(recoveryResult.rowCount),
-    groups: groupsResult.rows.map((row) => ({ id: row.id, name: row.name, eventSlug: row.event_slug, eventName: row.event_name, year: row.year, inviteCode: row.invite_code, role: row.role })),
-    events: eventsForGroups,
+    }).map(({ slug, name, year }) => ({ slug, name, year }))
+    return {
+      signedIn: true as const,
+      username,
+      hasRecoveryCode: Boolean(recoveryResult.rowCount),
+      groups: groupsResult.rows.map((row) => ({ id: row.id, name: row.name, eventSlug: row.event_slug, eventName: row.event_name, year: row.year, inviteCode: row.invite_code, role: row.role })),
+      events: eventsForGroups,
+    }
+  } catch {
+    // Preserve a useful account screen when required server configuration or the
+    // account migration is missing. Do not leave the client on an endless spinner.
+    return {
+      signedIn: false as const,
+      username: null,
+      groups: [],
+      events: [],
+      error: 'Your account session is still on this device, but account data could not be loaded. Check the Vercel server environment variables and confirm the bookmark-account Supabase migration has been run, then reload.',
+    }
   }
 }
 
