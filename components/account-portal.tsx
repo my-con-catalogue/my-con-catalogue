@@ -22,6 +22,7 @@ type Overview = Awaited<ReturnType<typeof getAccountOverview>>
 
 export function AccountPortal() {
   const [overview, setOverview] = useState<Overview | null>(null)
+  const [loadError, setLoadError] = useState('')
   const [mode, setMode] = useState<'login' | 'create' | 'recover'>('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -37,7 +38,16 @@ export function AccountPortal() {
   const [copiedGroup, setCopiedGroup] = useState('')
   const [syncedUsername, setSyncedUsername] = useState('')
 
-  const refresh = useCallback(async () => setOverview(await getAccountOverview()), [])
+  const refresh = useCallback(async () => {
+    setLoadError('')
+    try {
+      const data = await getAccountOverview()
+      setOverview(data)
+      if ('error' in data && data.error) setLoadError(data.error)
+    } catch {
+      setLoadError('Account data could not be reached. Check your connection and Vercel server environment settings, then try again.')
+    }
+  }, [])
   useEffect(() => { void refresh() }, [refresh])
 
   useEffect(() => {
@@ -154,6 +164,11 @@ export function AccountPortal() {
     { label: 'One special character (e.g. !, @, #)', met: /[^A-Za-z0-9]/.test(password) },
   ]
 
+  if (loadError) return <div role="alert" className="mx-auto max-w-xl rounded-2xl border border-amber-300 bg-amber-50 p-5 shadow-sm sm:p-7">
+    <h2 className="font-extrabold">We couldn’t load your account</h2>
+    <p className="mt-2 text-sm leading-relaxed">{loadError}</p>
+    <button type="button" onClick={() => void refresh()} className="mt-4 rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background">Try again</button>
+  </div>
   if (!overview) return <p className="rounded-xl border border-border bg-card p-6 text-muted-foreground">Loading account…</p>
 
   if (!overview.signedIn) return (
