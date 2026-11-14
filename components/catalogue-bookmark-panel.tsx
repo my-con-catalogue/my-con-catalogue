@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { BookmarkEditor, BOOKMARK_COLOR_STYLES, DEFAULT_BOOKMARK_LABEL, isBookmarkLabel, type BookmarkLabel } from '@/components/bookmark-editor'
+import { BookmarkEditor, BOOKMARK_COLOR_STYLES, BOOKMARK_COLORS, DEFAULT_BOOKMARK_LABEL, isBookmarkLabel, type BookmarkLabel } from '@/components/bookmark-editor'
 
 const BOOKMARKS_KEY = 'mcc:bookmarked-catalogues'
 const LABELS_KEY = 'mcc:bookmark-labels'
@@ -84,13 +84,23 @@ export function CatalogueBookmarkPanel({ catalogueKey, itemName }: { catalogueKe
   }
 
   return (
-    <section aria-label="Catalogue bookmark" className="mt-5 rounded-xl border border-border bg-card p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <section aria-label="Catalogue bookmark" className="mt-5 overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4">
         <BookmarkEditor isBookmarked={bookmarked} label={label} memo={memo} onSave={save} onRemove={remove} itemName={itemName} />
-        {bookmarked && <span className={`rounded-full border px-3 py-1 text-sm font-semibold ${BOOKMARK_COLOR_STYLES[label.color]}`}>{label.name || 'Saved'}</span>}
+        {bookmarked && label.name && <span className={`rounded-full border px-3 py-1 text-sm font-semibold ${BOOKMARK_COLOR_STYLES[label.color]}`}>{label.name}</span>}
       </div>
-      {bookmarked && memo.trim() && <p className="mt-3 whitespace-pre-line break-words rounded-lg border border-border bg-background px-3 py-2 text-sm leading-relaxed"><span className="font-semibold">Your note:</span> {memo}</p>}
-      <p className="mt-2 text-xs text-muted-foreground">Saved on this browser and device only.</p>
+      {bookmarked ? <details open={Boolean(memo.trim())} className="group border-t border-amber-200 bg-amber-50/80 text-foreground">
+        <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 font-semibold [&::-webkit-details-marker]:hidden">
+          <span className={`size-3.5 shrink-0 rounded-full border ${BOOKMARK_COLORS.find((color) => color.value === label.color)?.swatch}`} aria-hidden="true" />
+          <span>{label.name || 'Add a visit memo'}</span>
+          <span className="ml-auto text-lg leading-none transition-transform group-open:rotate-90" aria-hidden="true">›</span>
+        </summary>
+        <div className="border-t border-amber-200 px-4 py-3 text-sm leading-relaxed">
+          {memo.trim() ? <p className="whitespace-pre-line break-words">{memo}</p> : <p className="text-muted-foreground">No visit memo added.</p>}
+          <p className="mt-2 text-xs text-muted-foreground">Use the bookmark control above to edit this label or memo.</p>
+        </div>
+      </details> : null}
+      <p className="px-4 pb-3 text-xs text-muted-foreground">Saved on this browser and device only.</p>
     </section>
   )
 }

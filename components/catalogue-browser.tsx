@@ -6,7 +6,7 @@ import { Bookmark, Check, ChevronDown, Search, X } from 'lucide-react'
 import { ArtistSocialLinks } from '@/components/artist-social-links'
 import { SocialPostEmbed } from '@/components/social-post-embed'
 import { CataloguePreview } from '@/components/catalogue-preview'
-import { BookmarkEditor, BOOKMARK_COLOR_STYLES, DEFAULT_BOOKMARK_LABEL, isBookmarkLabel, type BookmarkLabel } from '@/components/bookmark-editor'
+import { BookmarkEditor, BOOKMARK_COLORS, DEFAULT_BOOKMARK_LABEL, isBookmarkLabel, type BookmarkLabel, type BookmarkColor } from '@/components/bookmark-editor'
 import { getArtistSocialAccounts } from '@/lib/artist-socials'
 import type { CatalogueEntry, CatalogueType } from '@/lib/queries'
 import { cn } from '@/lib/utils'
@@ -245,6 +245,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
   const [bookmarkLabelsLoaded, setBookmarkLabelsLoaded] = useState(false)
   const [bookmarkMemos, setBookmarkMemos] = useState<Record<string, string>>({})
   const [bookmarkMemosLoaded, setBookmarkMemosLoaded] = useState(false)
+  const [bookmarkColorFilters, setBookmarkColorFilters] = useState<Set<BookmarkColor>>(new Set())
   const [viewedCatalogues, setViewedCatalogues] = useState<Set<string>>(new Set())
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false)
   const storageKey = entries[0]?.eventSlug ? `mcc:catalogue-filters:${entries[0].eventSlug}` : null
@@ -447,7 +448,9 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
   }
 
   const filtered = typeEntries.filter((e) => {
-    if (showBookmarkedOnly && !bookmarks.has(`${e.eventSlug}:${e.id}`)) return false
+    const entryKey = `${e.eventSlug}:${e.id}`
+    if (showBookmarkedOnly && !bookmarks.has(entryKey)) return false
+    if (showBookmarkedOnly && bookmarkColorFilters.size > 0 && !bookmarkColorFilters.has((bookmarkLabels[entryKey] ?? DEFAULT_BOOKMARK_LABEL).color)) return false
     const q = query.trim().toLowerCase()
     if (q && !e.artistName.toLowerCase().includes(q) && !(e.booth ?? '').toLowerCase().includes(q)) return false
     if (fandoms.size > 0 && !e.fandoms.some((f) => fandoms.has(f))) return false
@@ -459,7 +462,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     stampRallyFandoms.size === 0 || cleanFandomTags(rally.fandom).some((fandom) => stampRallyFandoms.has(fandom)),
   )
 
-  const hasFilters = query !== '' || fandoms.size > 0 || merch.size > 0 || stampRally.size > 0 || stampRallyFandoms.size > 0 || showBookmarkedOnly
+  const hasFilters = query !== '' || fandoms.size > 0 || merch.size > 0 || stampRally.size > 0 || stampRallyFandoms.size > 0 || showBookmarkedOnly || bookmarkColorFilters.size > 0
   const pageCount = Math.max(1, Math.ceil(filtered.length / CATALOGUES_PER_PAGE))
   const currentPage = Math.min(page, pageCount)
   const firstVisible = filtered.length === 0 ? 0 : (currentPage - 1) * CATALOGUES_PER_PAGE + 1
@@ -607,6 +610,29 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
           <p className="text-xs leading-relaxed text-muted-foreground">
             Saved to this browser and device only; bookmarks don’t sync across browsers or devices. Clearing site data or ending a private session may remove them.
           </p>
+          {showBookmarkedOnly && <details className="group relative w-full sm:w-auto">
+            <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-input bg-background px-3 py-2 text-sm font-semibold hover:border-foreground [&::-webkit-details-marker]:hidden">
+              <span>Bookmark color{bookmarkColorFilters.size ? ` · ${bookmarkColorFilters.size}` : ''}</span>
+              <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            <div className="absolute left-0 z-30 mt-2 w-64 rounded-xl border border-border bg-card p-3 shadow-xl">
+              <p className="px-1 pb-2 text-xs text-muted-foreground">Show saved catalogues by color</p>
+              {BOOKMARK_COLORS.map((color) => <label key={color.value} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-secondary">
+                <input type="checkbox" checked={bookmarkColorFilters.has(color.value)} onChange={() => {
+                  setBookmarkColorFilters((current) => {
+                    const next = new Set(current)
+                    if (next.has(color.value)) next.delete(color.value)
+                    else next.add(color.value)
+                    return next
+                  })
+                  setPage(1)
+                }} className="size-4 accent-primary" />
+                <span className={cn('size-4 rounded-full border', color.swatch)} aria-hidden="true" />
+                <span className="sr-only">{color.label}</span>
+              </label>)}
+              {bookmarkColorFilters.size > 0 && <button type="button" onClick={() => { setBookmarkColorFilters(new Set()); setPage(1) }} className="mt-2 px-2 text-xs font-semibold text-primary">Clear color filter</button>}
+            </div>
+          </details>}
         </div>
         <div className="flex flex-wrap gap-2">
           <FilterDropdown label="Fandom" options={fandomOptions} selected={fandoms} onToggle={toggle(setFandoms)} searchable={fandomOptions.length > 8} />
@@ -625,6 +651,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 setFandoms(new Set())
                 setMerch(new Set())
                 setStampRally(new Set())
+                setBookmarkColorFilters(new Set())
                 setShowBookmarkedOnly(false)
                 setPage(1)
               }}
@@ -708,6 +735,17 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 </div>
               </div>
               <CataloguePreview entry={entry} hasCatalogueMaterial={hasCatalogueMaterial} />
+              {isBookmarked && <details className="border-b border-border bg-amber-50/80 text-foreground">
+                <summary className="group flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+                  <span className={cn('size-3.5 shrink-0 rounded-full border', BOOKMARK_COLORS.find((color) => color.value === bookmarkLabel.color)?.swatch)} aria-hidden="true" />
+                  <span className="min-w-0 truncate">{bookmarkLabel.name || 'Add a visit memo'}</span>
+                  <ChevronDown className="ml-auto size-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                <div className="border-t border-amber-200 px-4 py-3 text-sm leading-relaxed">
+                  {bookmarkMemos[entryKey]?.trim() ? <p className="whitespace-pre-line break-words">{bookmarkMemos[entryKey]}</p> : <p className="text-muted-foreground">No visit memo added.</p>}
+                  <p className="mt-2 text-xs text-muted-foreground">Click the bookmark icon above to edit the label, color, or memo.</p>
+                </div>
+              </details>}
               {entry.catalogueType === 'pickup_only' && (entry.pickupNote?.trim() || entry.orderCutoff?.trim()) && (
                 <div className="border-b border-border bg-accent/60 px-4 py-3 text-sm leading-relaxed text-foreground">
                   {entry.orderCutoff?.trim() && <p><span className="font-bold">Order cutoff: </span>{entry.orderCutoff}</p>}
@@ -721,7 +759,6 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                   </h3>
                   {isViewed && <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800"><Check className="size-3.5" aria-hidden="true" />Viewed</span>}
                 </div>
-              {isBookmarked && <div className="flex flex-col items-start gap-1"><span className={cn('rounded-full border px-2.5 py-0.5 text-xs font-semibold', BOOKMARK_COLOR_STYLES[bookmarkLabel.color])}>{bookmarkLabel.name || 'Saved'}</span>{bookmarkMemos[entryKey]?.trim() && <p className="text-xs leading-relaxed text-muted-foreground">Note: {bookmarkMemos[entryKey]}</p>}</div>}
                 {(() => {
                   const accounts = getArtistSocialAccounts(entry.artistInstagrams, entry.artistSocialLinks)
                   return (
