@@ -359,16 +359,37 @@ export async function getAccountOverview() {
     pool.query('select 1 from public.mcc_user_recovery_codes where user_id = $1::uuid', [user.id]),
     ])
     stage = 'format-account-data'
+    // The PostgreSQL driver can return `date` columns as Date objects. Normalize
+    // them before status checks and string comparisons so one unusual driver
+    // representation cannot break the entire account overview.
+    const dateKey = (value: unknown): string => {
+      if (value instanceof Date) return Number.isNaN(value.getTime()) ? '' : value.toISOString().slice(0, 10)
+      return typeof value === 'string' ? value : ''
+    }
+    const textKey = (value: unknown): string => typeof value === 'string' ? value : ''
+    const numericKey = (value: unknown): number => {
+      const number = Number(value)
+      return Number.isFinite(number) ? number : 0
+    }
     const eventsForGroups = eventsResult.rows.sort((a, b) => {
-    if (a.year !== b.year) return a.year - b.year
-    const statusOrder = { ongoing: 0, upcoming: 1, past: 2 }
-    const statusA = getEventStatus(a.start_date, a.end_date)
-    const statusB = getEventStatus(b.start_date, b.end_date)
-    const byStatus = statusOrder[statusA] - statusOrder[statusB]
-    if (byStatus) return byStatus
-    if (statusA === 'upcoming') return (a.start_date ?? '').localeCompare(b.start_date ?? '') || a.display_order - b.display_order || a.name.localeCompare(b.name)
-    if (statusA === 'past') return (b.end_date ?? b.start_date ?? '').localeCompare(a.end_date ?? a.start_date ?? '') || a.display_order - b.display_order || a.name.localeCompare(b.name)
-    return a.display_order - b.display_order || a.name.localeCompare(b.name)
+      const yearDifference = numericKey(a.year) - numericKey(b.year)
+      if (yearDifference) return yearDifference
+
+      const startA = dateKey(a.start_date)
+      const endA = dateKey(a.end_date)
+      const startB = dateKey(b.start_date)
+      const endB = dateKey(b.end_date)
+      const statusOrder = { ongoing: 0, upcoming: 1, past: 2 }
+      const statusA = getEventStatus(startA || null, endA || null)
+      const statusB = getEventStatus(startB || null, endB || null)
+      const byStatus = statusOrder[statusA] - statusOrder[statusB]
+      if (byStatus) return byStatus
+
+      const displayOrderDifference = numericKey(a.display_order) - numericKey(b.display_order)
+      const nameDifference = textKey(a.name).localeCompare(textKey(b.name))
+      if (statusA === 'upcoming') return startA.localeCompare(startB) || displayOrderDifference || nameDifference
+      if (statusA === 'past') return (endB || startB).localeCompare(endA || startA) || displayOrderDifference || nameDifference
+      return displayOrderDifference || nameDifference
     }).map(({ slug, name, year }) => ({ slug, name, year }))
     return {
       signedIn: true as const,
