@@ -3,6 +3,7 @@
 import { cookies, headers } from 'next/headers'
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
 import { pool } from '@/lib/db'
+import { getEventStatus } from '@/lib/event-status'
 
 const ACCESS_COOKIE = 'mcc_account_access'
 const REFRESH_COOKIE = 'mcc_account_refresh'
@@ -177,7 +178,13 @@ export async function createUsernameAccount(usernameRaw: string, password: strin
       headers: { authorization: `Bearer ${config().serviceKey}` },
       body: JSON.stringify({ email: accountEmail(username), password, email_confirm: true, user_metadata: { username } }),
     }, true)
-    if (!createResponse.ok) return { ok: false, message: 'We could not create that account. Check the username and password and try again.' }
+    if (!createResponse.ok) {
+      const authError = await createResponse.text().catch(() => '')
+      if (createResponse.status === 409 || /already registered|already exists|email_exists|duplicate/i.test(authError)) {
+        return { ok: false, message: 'That username is already taken. Please choose another one.' }
+      }
+      return { ok: false, message: 'We could not create that account. Check the username and password and try again.' }
+    }
     const created = await createResponse.json() as { id: string }
     const recoveryCode = createRecoveryCode()
     try {
@@ -323,15 +330,26 @@ export async function getAccountOverview() {
        join public.mcc_bookmark_groups g on g.id = m.group_id
        join public.events e on e.slug = g.event_slug
        where m.user_id = $1::uuid order by g.created_at desc`, [user.id]),
-    pool.query<{ slug: string; name: string; year: number }>('select slug, name, year from public.events order by year desc, display_order, name'),
+    pool.query<{ slug: string; name: string; year: number; start_date: string | null; end_date: string | null; display_order: number }>('select slug, name, year, start_date, end_date, display_order from public.events'),
     pool.query('select 1 from public.mcc_user_recovery_codes where user_id = $1::uuid', [user.id]),
   ])
+  const eventsForGroups = eventsResult.rows.sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year
+    const statusOrder = { ongoing: 0, upcoming: 1, past: 2 }
+    const statusA = getEventStatus(a.start_date, a.end_date)
+    const statusB = getEventStatus(b.start_date, b.end_date)
+    const byStatus = statusOrder[statusA] - statusOrder[statusB]
+    if (byStatus) return byStatus
+    if (statusA === 'upcoming') return (a.start_date ?? '').localeCompare(b.start_date ?? '') || a.display_order - b.display_order || a.name.localeCompare(b.name)
+    if (statusA === 'past') return (b.end_date ?? b.start_date ?? '').localeCompare(a.end_date ?? a.start_date ?? '') || a.display_order - b.display_order || a.name.localeCompare(b.name)
+    return a.display_order - b.display_order || a.name.localeCompare(b.name)
+  }).map(({ slug, name, year }) => ({ slug, name, year }))
   return {
     signedIn: true as const,
     username,
     hasRecoveryCode: Boolean(recoveryResult.rowCount),
     groups: groupsResult.rows.map((row) => ({ id: row.id, name: row.name, eventSlug: row.event_slug, eventName: row.event_name, year: row.year, inviteCode: row.invite_code, role: row.role })),
-    events: eventsResult.rows.map((row) => ({ slug: row.slug, name: row.name, year: row.year })),
+    events: eventsForGroups,
   }
 }
 
@@ -367,6 +385,43 @@ export async function removeCloudBookmark(key: string): Promise<void> {
   const user = await currentUser()
   if (!user) return
   await pool.query('delete from public.mcc_user_bookmarks where user_id = $1::uuid and catalogue_key = $2', [user.id, key])
+}
+
+export async function updateOwnSharedBookmark(groupId: string, value: BookmarkValue): Promise<AccountActionResult> {
+  if (!/^[0-9a-f-]{36}$/i.test(groupId) || !validateBookmark(value)) return { ok: false, message: 'Bookmark details are invalid.' }
+  const user = await currentUser()
+  if (!user) return { ok: false, message: 'Sign in to edit your bookmark.' }
+  const result = await pool.query(
+    `select 1 from public.mcc_bookmark_group_members m
+     join public.mcc_bookmark_groups g on g.id = m.group_id
+     join public.mcc_user_bookmarks b on b.user_id = m.user_id and b.catalogue_key = $3
+     join public.catalogue_entries c on c.event_slug = g.event_slug
+       and c.id::text = split_part($3, ':', 2)
+     where m.group_id = $1::uuid and m.user_id = $2::uuid
+       and split_part($3, ':', 1) = g.event_slug`,
+    [groupId, user.id, value.key],
+  )
+  if (!result.rowCount) return { ok: false, message: 'You can only edit your own bookmark in this shared list.' }
+  try {
+    await upsertBookmarks(user.id, [value])
+    return { ok: true, message: 'Your shared bookmark was updated.' }
+  } catch {
+    return { ok: false, message: 'Could not update your bookmark. Please try again.' }
+  }
+}
+
+export async function removeOwnSharedBookmark(groupId: string, key: string): Promise<AccountActionResult> {
+  if (!/^[0-9a-f-]{36}$/i.test(groupId) || !/^[a-z0-9-]+:\d+$/i.test(key)) return { ok: false, message: 'Bookmark details are invalid.' }
+  const user = await currentUser()
+  if (!user) return { ok: false, message: 'Sign in to edit your bookmark.' }
+  const result = await pool.query(
+    `delete from public.mcc_user_bookmarks b using public.mcc_bookmark_group_members m, public.mcc_bookmark_groups g
+     where b.user_id = $2::uuid and b.catalogue_key = $3
+       and m.group_id = $1::uuid and m.user_id = b.user_id and g.id = m.group_id
+       and split_part($3, ':', 1) = g.event_slug`,
+    [groupId, user.id, key],
+  )
+  return result.rowCount ? { ok: true, message: 'Your bookmark was removed from the shared list.' } : { ok: false, message: 'Could not remove your bookmark.' }
 }
 
 function newInviteCode() {
@@ -450,20 +505,22 @@ export async function getSharedBookmarkGroup(groupId: string) {
   if (!result.rowCount) return { ok: false as const, message: 'This shared list is unavailable.' }
   const first = result.rows[0]
   const members = new Map<string, { username: string; role: string }>()
-  const bookmarks: Array<{ key: string; username: string; booth: string; artistName: string; fandoms: string[]; merchTypes: string[]; stampRally: boolean; labelName: string; labelColor: BookmarkValue['labelColor']; memo: string; catalogueId: number }> = []
+  const bookmarkMap = new Map<string, { key: string; booth: string; artistName: string; fandoms: string[]; merchTypes: string[]; stampRally: boolean; catalogueId: number; annotations: Array<{ username: string; labelName: string; labelColor: BookmarkValue['labelColor']; memo: string; isViewer: boolean }> }>()
   for (const row of result.rows) {
     members.set(row.member_user_id, { username: row.username, role: row.role })
     if (row.catalogue_id === null || !row.catalogue_key || !row.booth_number || !row.artist_name) continue
-    bookmarks.push({
-      key: row.catalogue_key, username: row.username, booth: row.booth_number, artistName: row.artist_name,
-      fandoms: row.fandom_tags ?? [], merchTypes: row.merch_tags ?? [], stampRally: Boolean(row.stamp_rally),
-      labelName: row.label_name ?? '', labelColor: row.label_color ?? 'blue', memo: row.memo ?? '', catalogueId: row.catalogue_id,
-    })
+    const boothKey = row.catalogue_key
+    let item = bookmarkMap.get(boothKey)
+    if (!item) {
+      item = { key: boothKey, booth: row.booth_number, artistName: row.artist_name, fandoms: row.fandom_tags ?? [], merchTypes: row.merch_tags ?? [], stampRally: Boolean(row.stamp_rally), catalogueId: row.catalogue_id, annotations: [] }
+      bookmarkMap.set(boothKey, item)
+    }
+    item.annotations.push({ username: row.username, labelName: row.label_name ?? '', labelColor: row.label_color ?? 'blue', memo: row.memo ?? '', isViewer: row.member_user_id === user.id })
   }
   return {
     ok: true as const,
     group: { id: first.group_id, name: first.group_name, eventSlug: first.event_slug, eventName: first.event_name, year: first.year, inviteCode: first.invite_code, isOwner: first.owner_user_id === user.id },
     members: [...members.values()],
-    bookmarks,
+    bookmarks: [...bookmarkMap.values()].sort((a, b) => a.booth.localeCompare(b.booth, undefined, { numeric: true, sensitivity: 'base' })),
   }
 }
