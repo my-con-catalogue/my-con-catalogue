@@ -6,7 +6,7 @@ const globalForDb = globalThis as unknown as { pool?: Pool }
 
 export const pool =
   globalForDb.pool ?? new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.POSTGRES_URL ?? process.env.DATABASE_URL,
     // Keep each Vercel serverless instance lightweight when using Supabase's pooler.
     max: 1,
     idleTimeoutMillis: 10_000,
