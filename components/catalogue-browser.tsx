@@ -265,18 +265,46 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
 
   useEffect(() => {
     if (!scrollPositionKey) return
-    let savedPosition: string | null = null
-    try {
-      savedPosition = window.sessionStorage.getItem(scrollPositionKey)
-      if (savedPosition !== null) window.sessionStorage.removeItem(scrollPositionKey)
-    } catch { /* Ignore unavailable session storage. */ }
-    if (savedPosition === null) return
-    const position = Number(savedPosition)
-    if (!Number.isFinite(position)) return
-    const firstFrame = requestAnimationFrame(() => {
-      requestAnimationFrame(() => window.scrollTo(0, position))
-    })
-    return () => cancelAnimationFrame(firstFrame)
+    let retryTimer: ReturnType<typeof window.setTimeout> | undefined
+
+    const restoreSavedPosition = () => {
+      if (retryTimer !== undefined) window.clearTimeout(retryTimer)
+      let savedPosition: string | null = null
+      try { savedPosition = window.sessionStorage.getItem(scrollPositionKey) } catch { /* Ignore unavailable session storage. */ }
+      if (savedPosition === null) return
+      const position = Number(savedPosition)
+      if (!Number.isFinite(position)) {
+        try { window.sessionStorage.removeItem(scrollPositionKey) } catch { /* Ignore unavailable session storage. */ }
+        return
+      }
+
+      let attempts = 0
+      const restoreAfterNavigation = () => {
+        window.scrollTo(0, position)
+        attempts += 1
+        if (Math.abs(window.scrollY - position) < 4) {
+          try { window.sessionStorage.removeItem(scrollPositionKey) } catch { /* Ignore unavailable session storage. */ }
+          return
+        }
+        if (attempts < 30) retryTimer = window.setTimeout(restoreAfterNavigation, 100)
+        else {
+          try { window.sessionStorage.removeItem(scrollPositionKey) } catch { /* Ignore unavailable session storage. */ }
+        }
+      }
+
+      // Next.js may apply its own route scroll after mounting. Retry until its
+      // navigation settles and the saved location is reachable in the page.
+      retryTimer = window.setTimeout(restoreAfterNavigation, 100)
+    }
+
+    restoreSavedPosition()
+    window.addEventListener('popstate', restoreSavedPosition)
+    window.addEventListener('pageshow', restoreSavedPosition)
+    return () => {
+      if (retryTimer !== undefined) window.clearTimeout(retryTimer)
+      window.removeEventListener('popstate', restoreSavedPosition)
+      window.removeEventListener('pageshow', restoreSavedPosition)
+    }
   }, [scrollPositionKey])
 
   useEffect(() => {
