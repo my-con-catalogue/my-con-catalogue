@@ -264,50 +264,6 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
   const shouldScrollAfterPageChange = useRef(false)
 
   useEffect(() => {
-    if (!scrollPositionKey) return
-    let retryTimer: number | undefined
-
-    const restoreSavedPosition = () => {
-      if (retryTimer !== undefined) window.clearTimeout(retryTimer)
-      let savedPosition: string | null = null
-      try { savedPosition = window.sessionStorage.getItem(scrollPositionKey) } catch { /* Ignore unavailable session storage. */ }
-      if (savedPosition === null) return
-      const position = Number(savedPosition)
-      if (!Number.isFinite(position)) {
-        try { window.sessionStorage.removeItem(scrollPositionKey) } catch { /* Ignore unavailable session storage. */ }
-        return
-      }
-
-      let attempts = 0
-      const restoreAfterNavigation = () => {
-        window.scrollTo(0, position)
-        attempts += 1
-        if (Math.abs(window.scrollY - position) < 4) {
-          try { window.sessionStorage.removeItem(scrollPositionKey) } catch { /* Ignore unavailable session storage. */ }
-          return
-        }
-        if (attempts < 30) retryTimer = window.setTimeout(restoreAfterNavigation, 100)
-        else {
-          try { window.sessionStorage.removeItem(scrollPositionKey) } catch { /* Ignore unavailable session storage. */ }
-        }
-      }
-
-      // Next.js may apply its own route scroll after mounting. Retry until its
-      // navigation settles and the saved location is reachable in the page.
-      retryTimer = window.setTimeout(restoreAfterNavigation, 100)
-    }
-
-    restoreSavedPosition()
-    window.addEventListener('popstate', restoreSavedPosition)
-    window.addEventListener('pageshow', restoreSavedPosition)
-    return () => {
-      if (retryTimer !== undefined) window.clearTimeout(retryTimer)
-      window.removeEventListener('popstate', restoreSavedPosition)
-      window.removeEventListener('pageshow', restoreSavedPosition)
-    }
-  }, [scrollPositionKey])
-
-  useEffect(() => {
     // Ask supported browsers not to evict this site's saved data automatically.
     // This is best-effort and does not prevent a viewer from clearing site data.
     try {
@@ -828,7 +784,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                   />
                 </div>
               </div>
-              <CataloguePreview entry={entry} hasCatalogueMaterial={hasCatalogueMaterial} />
+              <CataloguePreview entry={entry} hasCatalogueMaterial={hasCatalogueMaterial} onNavigate={rememberCatalogueListPosition} />
               {isBookmarked && <details className="border-b border-border bg-amber-50/80 text-foreground">
                 <summary className="group flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
                   <span className={cn('size-3.5 shrink-0 rounded-full border', BOOKMARK_COLORS.find((color) => color.value === bookmarkLabel.color)?.swatch)} aria-hidden="true" />

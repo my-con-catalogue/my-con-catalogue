@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { CatalogueEntry } from '@/lib/queries'
 import { SocialPostEmbed } from '@/components/social-post-embed'
 
+const DESKTOP_HOVER_QUERY = '(hover: hover) and (pointer: fine)'
+
 function safeExternalUrl(value: string) {
   try {
     const url = new URL(value)
@@ -15,14 +17,30 @@ function safeExternalUrl(value: string) {
   }
 }
 
-export function CataloguePreview({ entry, hasCatalogueMaterial }: { entry: CatalogueEntry; hasCatalogueMaterial: boolean }) {
+export function CataloguePreview({ entry, hasCatalogueMaterial, onNavigate }: { entry: CatalogueEntry; hasCatalogueMaterial: boolean; onNavigate?: () => void }) {
   const [active, setActive] = useState(false)
+  const [desktopHover, setDesktopHover] = useState(false)
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    const media = window.matchMedia(DESKTOP_HOVER_QUERY)
+    const update = () => {
+      setDesktopHover(media.matches)
+      if (!media.matches) {
+        if (hoverTimer.current) clearTimeout(hoverTimer.current)
+        hoverTimer.current = null
+        setActive(false)
+      }
+    }
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
   useEffect(() => () => {
     if (hoverTimer.current) clearTimeout(hoverTimer.current)
   }, [])
 
   const schedulePreview = () => {
+    if (!desktopHover) return
     if (hoverTimer.current) clearTimeout(hoverTimer.current)
     hoverTimer.current = setTimeout(() => {
       setActive(true)
@@ -40,20 +58,22 @@ export function CataloguePreview({ entry, hasCatalogueMaterial }: { entry: Catal
 
   return (
     <div
-      className="group/catalogue-preview relative z-0 hover:z-20 focus-within:z-20"
+      className={`group/catalogue-preview relative z-0 ${desktopHover ? 'hover:z-20 focus-within:z-20' : ''}`}
       onMouseEnter={schedulePreview}
       onMouseLeave={cancelPreview}
       onFocusCapture={() => {
-        if (hoverTimer.current) clearTimeout(hoverTimer.current)
-        hoverTimer.current = null
-        setActive(true)
+        if (desktopHover) {
+          if (hoverTimer.current) clearTimeout(hoverTimer.current)
+          hoverTimer.current = null
+          setActive(true)
+        }
       }}
       onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) cancelPreview()
       }}
     >
-      <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="flex h-full items-center justify-center gap-1 border-b border-border bg-muted px-4 py-3 text-center text-base font-semibold tracking-wide text-primary transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" aria-label={`Click to view ${entry.artistName}'s catalogue; hover or focus for a preview`}>
-        › Click to view / hover for preview ‹
+      <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} onClick={onNavigate} className="flex h-full items-center justify-center gap-1 border-b border-border bg-muted px-4 py-3 text-center text-base font-semibold tracking-wide text-primary transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" aria-label={`Click to view ${entry.artistName}'s catalogue${desktopHover ? '; hover or focus for a preview' : ''}`}>
+        {desktopHover ? '› Click to view / hover for preview ‹' : '› Click to view ‹'}
       </Link>
       {active && <div className="absolute left-1/2 top-full z-50 w-[min(88vw,34rem)] -translate-x-1/2">
         <section aria-label={`${entry.artistName} catalogue preview`} className="max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-card p-4 text-left shadow-2xl sm:p-5">
