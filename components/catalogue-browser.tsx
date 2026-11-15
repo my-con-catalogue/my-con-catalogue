@@ -265,7 +265,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
 
   useEffect(() => {
     if (!scrollPositionKey) return
-    let retryTimer: ReturnType<typeof window.setTimeout> | undefined
+    let retryTimer: number | undefined
 
     const restoreSavedPosition = () => {
       if (retryTimer !== undefined) window.clearTimeout(retryTimer)
