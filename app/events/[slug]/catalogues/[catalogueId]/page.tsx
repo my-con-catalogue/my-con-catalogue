@@ -53,7 +53,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 md:py-14">
       <CatalogueViewTracker catalogueKey={`${event.slug}:${catalogue.id}`} />
-      <Link href={`/events/${event.slug}`} className="inline-flex items-center gap-2 font-semibold hover:text-primary">
+      <Link href={`/events/${event.slug}`} scroll={false} className="inline-flex items-center gap-2 font-semibold hover:text-primary">
         <ArrowLeft className="size-4" aria-hidden="true" /> Back to {event.name} catalogues
       </Link>
       <header className="mt-8 flex flex-wrap items-start justify-between gap-5 border-b border-border pb-6">
