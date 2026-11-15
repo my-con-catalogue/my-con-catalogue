@@ -519,15 +519,41 @@ export async function createBookmarkGroup(nameRaw: string, eventSlug: string): P
   } finally { client.release() }
 }
 
+const MAX_BOOKMARK_GROUP_MEMBERS = 20
+
 export async function joinBookmarkGroup(codeRaw: string): Promise<AccountActionResult> {
   const user = await currentUser()
   if (!user) return { ok: false, message: 'Sign in to join a shared list.' }
   const code = codeRaw.trim().toUpperCase()
   if (!/^[A-HJ-NP-Z2-9]{8}$/.test(code)) return { ok: false, message: 'Enter a valid 8-character invite code.' }
-  const group = await pool.query<{ id: string }>('select id from public.mcc_bookmark_groups where invite_code = $1', [code])
-  if (!group.rowCount) return { ok: false, message: 'That invite code was not found.' }
-  await pool.query("insert into public.mcc_bookmark_group_members (group_id, user_id, role) values ($1::uuid, $2::uuid, 'member') on conflict do nothing", [group.rows[0].id, user.id])
-  return { ok: true, message: 'You joined the shared list.' }
+
+  const client = await pool.connect()
+  try {
+    await client.query('begin')
+    // Serialize joins for this group so concurrent requests cannot exceed the cap.
+    const group = await client.query<{ id: string }>('select id from public.mcc_bookmark_groups where invite_code = $1 for update', [code])
+    if (!group.rowCount) {
+      await client.query('rollback')
+      return { ok: false, message: 'That invite code was not found.' }
+    }
+    const groupId = group.rows[0].id
+    const existingMember = await client.query('select 1 from public.mcc_bookmark_group_members where group_id = $1::uuid and user_id = $2::uuid', [groupId, user.id])
+    if (existingMember.rowCount) {
+      await client.query('commit')
+      return { ok: true, message: 'You are already a member of this shared list.' }
+    }
+    const memberCount = await client.query<{ count: number }>('select count(*)::int as count from public.mcc_bookmark_group_members where group_id = $1::uuid', [groupId])
+    if (Number(memberCount.rows[0]?.count ?? 0) >= MAX_BOOKMARK_GROUP_MEMBERS) {
+      await client.query('rollback')
+      return { ok: false, message: 'This shared list has reached its 20-person limit.' }
+    }
+    await client.query("insert into public.mcc_bookmark_group_members (group_id, user_id, role) values ($1::uuid, $2::uuid, 'member')", [groupId, user.id])
+    await client.query('commit')
+    return { ok: true, message: 'You joined the shared list.' }
+  } catch {
+    await client.query('rollback')
+    return { ok: false, message: 'Could not join that shared list. Please try again.' }
+  } finally { client.release() }
 }
 
 export async function leaveBookmarkGroup(groupId: string): Promise<AccountActionResult> {
