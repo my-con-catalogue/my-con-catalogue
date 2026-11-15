@@ -251,12 +251,33 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false)
   const [accountUsername, setAccountUsername] = useState('')
   const storageKey = entries[0]?.eventSlug ? `mcc:catalogue-filters:${entries[0].eventSlug}` : null
+  const scrollPositionKey = storageKey ? `${storageKey}:return-scroll` : null
+  const rememberCatalogueListPosition = () => {
+    if (!scrollPositionKey) return
+    try { window.sessionStorage.setItem(scrollPositionKey, String(window.scrollY)) } catch { /* Scroll restoration is best-effort. */ }
+  }
   const bookmarkStorageKey = 'mcc:bookmarked-catalogues'
   const bookmarkLabelsStorageKey = 'mcc:bookmark-labels'
   const bookmarkMemoStorageKey = 'mcc:bookmark-memos'
   const [restoredStorageKey, setRestoredStorageKey] = useState<string | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
-  const previousPage = useRef<number | null>(null)
+  const shouldScrollAfterPageChange = useRef(false)
+
+  useEffect(() => {
+    if (!scrollPositionKey) return
+    let savedPosition: string | null = null
+    try {
+      savedPosition = window.sessionStorage.getItem(scrollPositionKey)
+      if (savedPosition !== null) window.sessionStorage.removeItem(scrollPositionKey)
+    } catch { /* Ignore unavailable session storage. */ }
+    if (savedPosition === null) return
+    const position = Number(savedPosition)
+    if (!Number.isFinite(position)) return
+    const firstFrame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => window.scrollTo(0, position))
+    })
+    return () => cancelAnimationFrame(firstFrame)
+  }, [scrollPositionKey])
 
   useEffect(() => {
     // Ask supported browsers not to evict this site's saved data automatically.
@@ -521,11 +542,15 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
   const allBoothNumbers = [...configuredBooths, ...unconfiguredCatalogueBooths]
 
+  const goToPage = (nextPage: number) => {
+    shouldScrollAfterPageChange.current = nextPage !== currentPage
+    setPage(nextPage)
+  }
+
   useEffect(() => {
-    if (previousPage.current !== null && previousPage.current !== currentPage) {
-      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-    previousPage.current = currentPage
+    if (!shouldScrollAfterPageChange.current) return
+    shouldScrollAfterPageChange.current = false
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [currentPage])
 
   const saveBookmark = (entry: CatalogueEntry, label: BookmarkLabel, memo: string) => {
@@ -615,7 +640,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 return (
                   <li key={booth} className="min-w-0">
                     {catalogue ? (
-                      <Link aria-label={`View catalogue for booth ${booth}`} href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} className="flex h-9 w-full min-w-0 items-center justify-center overflow-hidden rounded-md border border-primary/30 bg-accent px-1.5 py-1 text-xs font-semibold leading-tight text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-2 sm:text-sm">
+                      <Link aria-label={`View catalogue for booth ${booth}`} href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} onClick={rememberCatalogueListPosition} className="flex h-9 w-full min-w-0 items-center justify-center overflow-hidden rounded-md border border-primary/30 bg-accent px-1.5 py-1 text-xs font-semibold leading-tight text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-2 sm:text-sm">
                         <BoothNumberText value={booth} />
                       </Link>
                     ) : (
@@ -732,7 +757,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                         const entry = catalogueByBoothLower.get(normalizeBooth(booth))
                         const artistName = entry?.artistName ?? submittedArtistName
                         const label = artistName ? `${booth} · ${artistName}` : participant
-                        return <li key={participant}>{entry ? <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="inline-flex rounded-full border border-primary/30 bg-accent px-3 py-1.5 text-sm font-semibold text-primary hover:border-primary">{label}</Link> : <span className="inline-flex rounded-full border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground">{label}</span>}</li>
+                        return <li key={participant}>{entry ? <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} onClick={rememberCatalogueListPosition} className="inline-flex rounded-full border border-primary/30 bg-accent px-3 py-1.5 text-sm font-semibold text-primary hover:border-primary">{label}</Link> : <span className="inline-flex rounded-full border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground">{label}</span>}</li>
                       })}
                     </ul>
                   </div>
@@ -796,7 +821,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
               <div className="flex flex-1 flex-col gap-3 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-lg font-bold leading-tight">
-                    <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="hover:text-primary">{entry.artistName}</Link>
+                    <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} onClick={rememberCatalogueListPosition} className="hover:text-primary">{entry.artistName}</Link>
                   </h3>
                   {isViewed && <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800"><Check className="size-3.5" aria-hidden="true" />Viewed</span>}
                 </div>
@@ -850,7 +875,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
         <nav aria-label="Catalogue pages" className="flex flex-wrap items-center justify-center gap-2">
           <button
             type="button"
-            onClick={() => setPage(Math.max(1, currentPage - 1))}
+            onClick={() => goToPage(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
             className="rounded-lg border border-input px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
           >
@@ -861,7 +886,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
               {index > 0 && pageNumbers[index - 1] < number - 1 && <span className="px-1 text-muted-foreground" aria-hidden="true">…</span>}
               <button
                 type="button"
-                onClick={() => setPage(number)}
+                onClick={() => goToPage(number)}
                 aria-current={currentPage === number ? 'page' : undefined}
                 aria-label={`Page ${number}`}
                 className={cn(
@@ -875,7 +900,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
           ))}
           <button
             type="button"
-            onClick={() => setPage(Math.min(pageCount, currentPage + 1))}
+            onClick={() => goToPage(Math.min(pageCount, currentPage + 1))}
             disabled={currentPage === pageCount}
             className="rounded-lg border border-input px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
           >
