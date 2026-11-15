@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { Menu, X } from 'lucide-react'
+import { Menu, UserRound, X } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
@@ -42,35 +42,57 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav aria-label="Main" className="hidden lg:block">
-          <ul className="flex items-center gap-1">
-            {NAV_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  aria-current={isActive(link.href) ? 'page' : undefined}
-                  className={cn(
-                    'rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted',
-                    isActive(link.href) && 'bg-foreground text-background hover:bg-foreground',
-                  )}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <div className="flex items-center gap-2">
+          <nav aria-label="Main" className="hidden lg:block">
+            <ul className="flex items-center gap-1">
+              {NAV_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    aria-current={isActive(link.href) ? 'page' : undefined}
+                    className={cn(
+                      'rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted',
+                      isActive(link.href) && 'bg-foreground text-background hover:bg-foreground',
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-        <button
-          type="button"
-          className="flex size-10 items-center justify-center rounded-lg border border-border lg:hidden"
-          aria-expanded={open}
-          aria-controls="mobile-nav"
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X className="size-5" /> : <Menu className="size-5" />}
-          <span className="sr-only">{open ? 'Close menu' : 'Open menu'}</span>
-        </button>
+          <details className="group relative">
+            <summary
+              title="Account options"
+              aria-label="Open account options"
+              className={cn(
+                'flex size-10 shrink-0 cursor-pointer list-none items-center justify-center rounded-lg border border-border transition-colors hover:bg-muted [&::-webkit-details-marker]:hidden',
+                isActive('/account') && 'bg-foreground text-background hover:bg-foreground',
+              )}
+            >
+              <UserRound className="size-5" aria-hidden="true" />
+              <span className="sr-only">Account options</span>
+            </summary>
+            <div className="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl border border-border bg-background p-2 shadow-lg">
+              <Link href="/account?mode=login" onClick={(event) => { const menu = event.currentTarget.closest('details'); if (menu) menu.open = false }} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">Log in</Link>
+              <Link href="/account?mode=create" onClick={(event) => { const menu = event.currentTarget.closest('details'); if (menu) menu.open = false }} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">Sign up</Link>
+              <div className="my-1 border-t border-border" />
+              <Link href="/account/shared-lists" onClick={(event) => { const menu = event.currentTarget.closest('details'); if (menu) menu.open = false }} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">Shared lists</Link>
+            </div>
+          </details>
+
+          <button
+            type="button"
+            className="flex size-10 items-center justify-center rounded-lg border border-border lg:hidden"
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X className="size-5" /> : <Menu className="size-5" />}
+            <span className="sr-only">{open ? 'Close menu' : 'Open menu'}</span>
+          </button>
+        </div>
       </div>
 
       {open && (

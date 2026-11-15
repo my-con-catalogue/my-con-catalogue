@@ -5,9 +5,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Bookmark, Check, ChevronDown, Search, X } from 'lucide-react'
 import { ArtistSocialLinks } from '@/components/artist-social-links'
 import { SocialPostEmbed } from '@/components/social-post-embed'
+import { CataloguePreview } from '@/components/catalogue-preview'
+import { BookmarkEditor, BOOKMARK_COLORS, DEFAULT_BOOKMARK_LABEL, isBookmarkLabel, type BookmarkLabel, type BookmarkColor } from '@/components/bookmark-editor'
 import { getArtistSocialAccounts } from '@/lib/artist-socials'
 import type { CatalogueEntry, CatalogueType } from '@/lib/queries'
 import { cn } from '@/lib/utils'
+import { getCloudBookmarks, removeCloudBookmark, saveCloudBookmark, syncCloudBookmarks } from '@/app/actions/bookmark-accounts'
 
 function displayTag(tag: string) {
   return tag.toLocaleLowerCase().replace(/\b\p{L}/gu, (letter) => letter.toLocaleUpperCase())
@@ -48,6 +51,15 @@ type StampRallyEntry = {
 
 function storedStringSet(value: unknown) {
   return new Set(Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [])
+}
+
+function readViewedCatalogues() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem('mcc:viewed-catalogues') ?? '[]')
+    return new Set(Array.isArray(stored) ? stored.filter((item): item is string => typeof item === 'string') : [])
+  } catch {
+    return new Set<string>()
+  }
 }
 
 function BoothNumberText({ value }: { value: string }) {
@@ -230,15 +242,26 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
   const [page, setPage] = useState(1)
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set())
   const [bookmarksLoaded, setBookmarksLoaded] = useState(false)
+  const [bookmarkLabels, setBookmarkLabels] = useState<Record<string, BookmarkLabel>>({})
+  const [bookmarkLabelsLoaded, setBookmarkLabelsLoaded] = useState(false)
   const [bookmarkMemos, setBookmarkMemos] = useState<Record<string, string>>({})
   const [bookmarkMemosLoaded, setBookmarkMemosLoaded] = useState(false)
+  const [bookmarkColorFilters, setBookmarkColorFilters] = useState<Set<BookmarkColor>>(new Set())
+  const [viewedCatalogues, setViewedCatalogues] = useState<Set<string>>(new Set())
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false)
+  const [accountUsername, setAccountUsername] = useState('')
   const storageKey = entries[0]?.eventSlug ? `mcc:catalogue-filters:${entries[0].eventSlug}` : null
+  const scrollPositionKey = storageKey ? `${storageKey}:return-scroll` : null
+  const rememberCatalogueListPosition = () => {
+    if (!scrollPositionKey) return
+    try { window.sessionStorage.setItem(scrollPositionKey, String(window.scrollY)) } catch { /* Scroll restoration is best-effort. */ }
+  }
   const bookmarkStorageKey = 'mcc:bookmarked-catalogues'
+  const bookmarkLabelsStorageKey = 'mcc:bookmark-labels'
   const bookmarkMemoStorageKey = 'mcc:bookmark-memos'
   const [restoredStorageKey, setRestoredStorageKey] = useState<string | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
-  const previousPage = useRef<number | null>(null)
+  const shouldScrollAfterPageChange = useRef(false)
 
   useEffect(() => {
     // Ask supported browsers not to evict this site's saved data automatically.
@@ -257,6 +280,103 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
       // Bookmarks are an enhancement; catalogue browsing remains available without storage.
     } finally {
       setBookmarksLoaded(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    void getCloudBookmarks().then(async (cloud) => {
+      if (!active || !cloud) return
+      try {
+        const localKeysValue: unknown = JSON.parse(window.localStorage.getItem(bookmarkStorageKey) ?? '[]')
+        const localKeys = Array.isArray(localKeysValue) ? localKeysValue.filter((item): item is string => typeof item === 'string') : []
+        const localLabelsValue: unknown = JSON.parse(window.localStorage.getItem(bookmarkLabelsStorageKey) ?? '{}')
+        const localLabels = localLabelsValue && typeof localLabelsValue === 'object' && !Array.isArray(localLabelsValue) ? localLabelsValue as Record<string, BookmarkLabel> : {}
+        const localMemosValue: unknown = JSON.parse(window.localStorage.getItem(bookmarkMemoStorageKey) ?? '{}')
+        const localMemos = localMemosValue && typeof localMemosValue === 'object' && !Array.isArray(localMemosValue) ? localMemosValue as Record<string, string> : {}
+        const cloudKeys = cloud.bookmarks.map((item) => item.key)
+        const keys = [...new Set([...localKeys, ...cloudKeys])]
+        const labels = { ...localLabels }
+        const memos = { ...localMemos }
+        for (const item of cloud.bookmarks) {
+          if (!Object.hasOwn(labels, item.key)) labels[item.key] = { name: item.labelName, color: item.labelColor }
+          if (!Object.hasOwn(memos, item.key)) memos[item.key] = item.memo
+        }
+        if (!active) return
+        setAccountUsername(cloud.username)
+        setBookmarks(new Set(keys))
+        setBookmarkLabels(labels)
+        setBookmarkMemos(memos)
+        await syncCloudBookmarks(keys.map((key) => ({
+          key,
+          labelName: labels[key]?.name ?? '',
+          labelColor: labels[key]?.color ?? 'blue',
+          memo: memos[key] ?? '',
+        })))
+      } catch {
+        // Keep using local bookmarks if account sync or browser storage is unavailable.
+      }
+    }).catch(() => undefined)
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(bookmarkLabelsStorageKey) ?? '{}')
+      if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+        const validLabels = Object.fromEntries(
+          Object.entries(saved).filter((item): item is [string, BookmarkLabel] => isBookmarkLabel(item[1])),
+        )
+        setBookmarkLabels(validLabels)
+      }
+    } catch {
+      // Default labels are used if stored label data is unavailable or invalid.
+    } finally {
+      setBookmarkLabelsLoaded(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    const syncViewed = () => setViewedCatalogues(readViewedCatalogues())
+    syncViewed()
+    window.addEventListener('storage', syncViewed)
+    window.addEventListener('pageshow', syncViewed)
+    window.addEventListener('focus', syncViewed)
+    window.addEventListener('mcc:viewed-catalogues-updated', syncViewed)
+    return () => {
+      window.removeEventListener('storage', syncViewed)
+      window.removeEventListener('pageshow', syncViewed)
+      window.removeEventListener('focus', syncViewed)
+      window.removeEventListener('mcc:viewed-catalogues-updated', syncViewed)
+    }
+  }, [])
+
+  useEffect(() => {
+    const syncSaved = () => {
+      try {
+        const storedBookmarks = JSON.parse(window.localStorage.getItem(bookmarkStorageKey) ?? '[]')
+        setBookmarks(new Set(Array.isArray(storedBookmarks) ? storedBookmarks.filter((item): item is string => typeof item === 'string') : []))
+        const storedLabels = JSON.parse(window.localStorage.getItem(bookmarkLabelsStorageKey) ?? '{}')
+        if (storedLabels && typeof storedLabels === 'object' && !Array.isArray(storedLabels)) {
+          setBookmarkLabels(Object.fromEntries(Object.entries(storedLabels).filter((item): item is [string, BookmarkLabel] => isBookmarkLabel(item[1]))))
+        }
+        const storedMemos = JSON.parse(window.localStorage.getItem(bookmarkMemoStorageKey) ?? '{}')
+        if (storedMemos && typeof storedMemos === 'object' && !Array.isArray(storedMemos)) {
+          setBookmarkMemos(Object.fromEntries(Object.entries(storedMemos).filter((item): item is [string, string] => typeof item[1] === 'string')))
+        }
+      } catch {
+        // Retain the current view if browser storage is unavailable or invalid.
+      }
+    }
+    window.addEventListener('storage', syncSaved)
+    window.addEventListener('pageshow', syncSaved)
+    window.addEventListener('focus', syncSaved)
+    window.addEventListener('mcc:bookmarks-updated', syncSaved)
+    return () => {
+      window.removeEventListener('storage', syncSaved)
+      window.removeEventListener('pageshow', syncSaved)
+      window.removeEventListener('focus', syncSaved)
+      window.removeEventListener('mcc:bookmarks-updated', syncSaved)
     }
   }, [])
 
@@ -283,6 +403,15 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
       // The current page still reflects bookmark changes if local storage is unavailable.
     }
   }, [bookmarks, bookmarksLoaded])
+
+  useEffect(() => {
+    if (!bookmarkLabelsLoaded) return
+    try {
+      window.localStorage.setItem(bookmarkLabelsStorageKey, JSON.stringify(bookmarkLabels))
+    } catch {
+      // Saved items keep their default label in the current page if storage is unavailable.
+    }
+  }, [bookmarkLabels, bookmarkLabelsLoaded])
 
   useEffect(() => {
     if (!bookmarkMemosLoaded) return
@@ -363,7 +492,9 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
   }
 
   const filtered = typeEntries.filter((e) => {
-    if (showBookmarkedOnly && !bookmarks.has(`${e.eventSlug}:${e.id}`)) return false
+    const entryKey = `${e.eventSlug}:${e.id}`
+    if (showBookmarkedOnly && !bookmarks.has(entryKey)) return false
+    if (showBookmarkedOnly && bookmarkColorFilters.size > 0 && !bookmarkColorFilters.has((bookmarkLabels[entryKey] ?? DEFAULT_BOOKMARK_LABEL).color)) return false
     const q = query.trim().toLowerCase()
     if (q && !e.artistName.toLowerCase().includes(q) && !(e.booth ?? '').toLowerCase().includes(q)) return false
     if (fandoms.size > 0 && !e.fandoms.some((f) => fandoms.has(f))) return false
@@ -375,7 +506,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     stampRallyFandoms.size === 0 || cleanFandomTags(rally.fandom).some((fandom) => stampRallyFandoms.has(fandom)),
   )
 
-  const hasFilters = query !== '' || fandoms.size > 0 || merch.size > 0 || stampRally.size > 0 || stampRallyFandoms.size > 0 || showBookmarkedOnly
+  const hasFilters = query !== '' || fandoms.size > 0 || merch.size > 0 || stampRally.size > 0 || stampRallyFandoms.size > 0 || showBookmarkedOnly || bookmarkColorFilters.size > 0
   const pageCount = Math.max(1, Math.ceil(filtered.length / CATALOGUES_PER_PAGE))
   const currentPage = Math.min(page, pageCount)
   const firstVisible = filtered.length === 0 ? 0 : (currentPage - 1) * CATALOGUES_PER_PAGE + 1
@@ -395,35 +526,35 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
   const allBoothNumbers = [...configuredBooths, ...unconfiguredCatalogueBooths]
 
-  useEffect(() => {
-    if (previousPage.current !== null && previousPage.current !== currentPage) {
-      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-    previousPage.current = currentPage
-  }, [currentPage])
-
-  const toggleBookmark = (entry: CatalogueEntry) => {
-    const key = `${entry.eventSlug}:${entry.id}`
-    const removing = bookmarks.has(key)
-    setBookmarks((current) => {
-      const next = new Set(current)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-    if (removing) {
-      setBookmarkMemos((current) => {
-        if (!(key in current)) return current
-        const next = { ...current }
-        delete next[key]
-        return next
-      })
-    }
+  const goToPage = (nextPage: number) => {
+    shouldScrollAfterPageChange.current = nextPage !== currentPage
+    setPage(nextPage)
   }
 
-  const updateBookmarkMemo = (entry: CatalogueEntry, memo: string) => {
+  useEffect(() => {
+    if (!shouldScrollAfterPageChange.current) return
+    shouldScrollAfterPageChange.current = false
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [currentPage])
+
+  const saveBookmark = (entry: CatalogueEntry, label: BookmarkLabel, memo: string) => {
     const key = `${entry.eventSlug}:${entry.id}`
+    setBookmarks((current) => new Set(current).add(key))
+    setBookmarkLabels((current) => ({ ...current, [key]: label }))
     setBookmarkMemos((current) => ({ ...current, [key]: memo }))
+    void saveCloudBookmark({ key, labelName: label.name, labelColor: label.color, memo })
+  }
+
+  const removeBookmark = (entry: CatalogueEntry) => {
+    const key = `${entry.eventSlug}:${entry.id}`
+    setBookmarks((current) => {
+      const next = new Set(current)
+      next.delete(key)
+      return next
+    })
+    setBookmarkLabels((current) => { const next = { ...current }; delete next[key]; return next })
+    setBookmarkMemos((current) => { const next = { ...current }; delete next[key]; return next })
+    void removeCloudBookmark(key)
   }
 
   const savedCount = typeEntries.filter((entry) => bookmarks.has(`${entry.eventSlug}:${entry.id}`)).length
@@ -493,7 +624,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 return (
                   <li key={booth} className="min-w-0">
                     {catalogue ? (
-                      <Link aria-label={`View catalogue for booth ${booth}`} href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} className="flex h-9 w-full min-w-0 items-center justify-center overflow-hidden rounded-md border border-primary/30 bg-accent px-1.5 py-1 text-xs font-semibold leading-tight text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-2 sm:text-sm">
+                      <Link aria-label={`View catalogue for booth ${booth}`} href={`/events/${catalogue.eventSlug}/catalogues/${catalogue.id}`} onClick={rememberCatalogueListPosition} className="flex h-9 w-full min-w-0 items-center justify-center overflow-hidden rounded-md border border-primary/30 bg-accent px-1.5 py-1 text-xs font-semibold leading-tight text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground sm:px-2 sm:text-sm">
                         <BoothNumberText value={booth} />
                       </Link>
                     ) : (
@@ -526,9 +657,32 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
           <button type="button" aria-pressed={showBookmarkedOnly} onClick={() => { setShowBookmarkedOnly((value) => !value); setPage(1) }} className={cn('inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold', showBookmarkedOnly ? 'border-foreground bg-foreground text-background' : 'border-input bg-background hover:bg-secondary')}>
             <Bookmark className="size-4" aria-hidden="true" /> {showBookmarkedOnly ? 'Showing saved catalogues' : 'Show saved catalogues'} ({savedCount})
           </button>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Saved to this browser and device only; bookmarks don’t sync across browsers or devices. Clearing site data or ending a private session may remove them.
-          </p>
+          {accountUsername ? <p className="text-xs font-semibold text-emerald-800">Signed in as @{accountUsername}; bookmarks sync to your account.</p> : <p className="text-xs leading-relaxed text-muted-foreground">
+            Saved to this browser and device only; bookmarks don’t sync across browsers or devices. Clearing site data or ending a private session may remove them. <Link href="/account" className="font-semibold text-primary underline">Create an account to sync</Link>.
+          </p>}
+          {showBookmarkedOnly && <details className="group relative w-full sm:w-auto">
+            <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-input bg-background px-3 py-2 text-sm font-semibold hover:border-foreground [&::-webkit-details-marker]:hidden">
+              <span>Bookmark color{bookmarkColorFilters.size ? ` · ${bookmarkColorFilters.size}` : ''}</span>
+              <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            <div className="absolute left-0 z-30 mt-2 w-64 rounded-xl border border-border bg-card p-3 shadow-xl">
+              <p className="px-1 pb-2 text-xs text-muted-foreground">Show saved catalogues by color</p>
+              {BOOKMARK_COLORS.map((color) => <label key={color.value} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-secondary">
+                <input type="checkbox" checked={bookmarkColorFilters.has(color.value)} onChange={() => {
+                  setBookmarkColorFilters((current) => {
+                    const next = new Set(current)
+                    if (next.has(color.value)) next.delete(color.value)
+                    else next.add(color.value)
+                    return next
+                  })
+                  setPage(1)
+                }} className="size-4 accent-primary" />
+                <span className={cn('size-4 rounded-full border', color.swatch)} aria-hidden="true" />
+                <span className="sr-only">{color.label}</span>
+              </label>)}
+              {bookmarkColorFilters.size > 0 && <button type="button" onClick={() => { setBookmarkColorFilters(new Set()); setPage(1) }} className="mt-2 px-2 text-xs font-semibold text-primary">Clear color filter</button>}
+            </div>
+          </details>}
         </div>
         <div className="flex flex-wrap gap-2">
           <FilterDropdown label="Fandom" options={fandomOptions} selected={fandoms} onToggle={toggle(setFandoms)} searchable={fandomOptions.length > 8} />
@@ -547,6 +701,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 setFandoms(new Set())
                 setMerch(new Set())
                 setStampRally(new Set())
+                setBookmarkColorFilters(new Set())
                 setShowBookmarkedOnly(false)
                 setPage(1)
               }}
@@ -586,7 +741,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                         const entry = catalogueByBoothLower.get(normalizeBooth(booth))
                         const artistName = entry?.artistName ?? submittedArtistName
                         const label = artistName ? `${booth} · ${artistName}` : participant
-                        return <li key={participant}>{entry ? <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="inline-flex rounded-full border border-primary/30 bg-accent px-3 py-1.5 text-sm font-semibold text-primary hover:border-primary">{label}</Link> : <span className="inline-flex rounded-full border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground">{label}</span>}</li>
+                        return <li key={participant}>{entry ? <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} onClick={rememberCatalogueListPosition} className="inline-flex rounded-full border border-primary/30 bg-accent px-3 py-1.5 text-sm font-semibold text-primary hover:border-primary">{label}</Link> : <span className="inline-flex rounded-full border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground">{label}</span>}</li>
                       })}
                     </ul>
                   </div>
@@ -608,39 +763,39 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {visibleEntries.map((entry) => {
             const hasCatalogueMaterial = entry.instagramPosts.length > 0 || entry.catalogueLinks.length > 0 || entry.catalogueFileUrls.length > 0
+            const entryKey = `${entry.eventSlug}:${entry.id}`
+            const isBookmarked = bookmarks.has(entryKey)
+            const bookmarkLabel = bookmarkLabels[entryKey] ?? DEFAULT_BOOKMARK_LABEL
+            const isViewed = viewedCatalogues.has(entryKey)
             return (
-            <li key={entry.id} className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-              <div className="flex items-center justify-between bg-foreground px-4 py-3 text-background">
+            <li key={entry.id} className="relative z-0 flex flex-col rounded-xl border border-border bg-card hover:z-10">
+              <div className="flex items-center justify-between rounded-t-xl bg-foreground px-4 py-3 text-background">
                 <span className="text-xs font-bold uppercase tracking-wider">Booth number</span>
                 <div className="flex items-center gap-2">
                   <span className="rounded-md bg-accent px-3 py-1 font-heading text-lg font-extrabold text-accent-foreground">{entry.booth}</span>
-                  <button type="button" onClick={() => toggleBookmark(entry)} aria-pressed={bookmarks.has(`${entry.eventSlug}:${entry.id}`)} aria-label={`${bookmarks.has(`${entry.eventSlug}:${entry.id}`) ? 'Remove' : 'Save'} booth ${entry.booth}`} title={bookmarks.has(`${entry.eventSlug}:${entry.id}`) ? 'Remove saved booth' : 'Save booth'} className="rounded-md p-2 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                    <Bookmark className={cn('size-5', bookmarks.has(`${entry.eventSlug}:${entry.id}`) && 'fill-current text-accent')} aria-hidden="true" />
-                  </button>
+                  <BookmarkEditor
+                    isBookmarked={isBookmarked}
+                    label={bookmarkLabel}
+                    memo={bookmarkMemos[entryKey] ?? ''}
+                    onSave={(label, memo) => saveBookmark(entry, label, memo)}
+                    onRemove={() => removeBookmark(entry)}
+                    itemName={`${entry.artistName} · Booth ${entry.booth}`}
+                    iconOnly
+                  />
                 </div>
               </div>
-              <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="flex items-center justify-center gap-2 border-b border-border bg-muted px-4 py-3 text-center text-sm font-semibold text-primary transition-colors hover:bg-accent/50">
-                <span aria-hidden="true">›</span><span>{hasCatalogueMaterial ? 'Check catalogue material here' : 'View artist details'}</span><span aria-hidden="true">‹</span>
-              </Link>
-              {bookmarks.has(`${entry.eventSlug}:${entry.id}`) && (
-                <details className="border-b border-border bg-accent/20 px-4 py-2.5">
-                  <summary className="cursor-pointer text-sm font-semibold text-foreground">
-                    {bookmarkMemos[`${entry.eventSlug}:${entry.id}`]?.trim() ? 'Edit visit memo' : 'Add a visit memo'}
-                  </summary>
-                  <label htmlFor={`bookmark-memo-${entry.eventSlug}-${entry.id}`} className="mt-2 block text-xs font-medium text-muted-foreground">
-                    A private note saved in this browser
-                  </label>
-                  <textarea
-                    id={`bookmark-memo-${entry.eventSlug}-${entry.id}`}
-                    value={bookmarkMemos[`${entry.eventSlug}:${entry.id}`] ?? ''}
-                    onChange={(event) => updateBookmarkMemo(entry, event.target.value)}
-                    rows={2}
-                    maxLength={500}
-                    placeholder="e.g. Visit early to buy the new keychains"
-                    className="mt-1.5 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
-                </details>
-              )}
+              <CataloguePreview entry={entry} hasCatalogueMaterial={hasCatalogueMaterial} onNavigate={rememberCatalogueListPosition} />
+              {isBookmarked && <details className="border-b border-border bg-amber-50/80 text-foreground">
+                <summary className="group flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+                  <span className={cn('size-3.5 shrink-0 rounded-full border', BOOKMARK_COLORS.find((color) => color.value === bookmarkLabel.color)?.swatch)} aria-hidden="true" />
+                  <span className="min-w-0 truncate">{bookmarkLabel.name || 'Add a visit memo'}</span>
+                  <ChevronDown className="ml-auto size-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                <div className="border-t border-amber-200 px-4 py-3 text-sm leading-relaxed">
+                  {bookmarkMemos[entryKey]?.trim() ? <p className="whitespace-pre-line break-words">{bookmarkMemos[entryKey]}</p> : <p className="text-muted-foreground">No visit memo added.</p>}
+                  <p className="mt-2 text-xs text-muted-foreground">Click the bookmark icon above to edit the label, color, or memo.</p>
+                </div>
+              </details>}
               {entry.catalogueType === 'pickup_only' && (entry.pickupNote?.trim() || entry.orderCutoff?.trim()) && (
                 <div className="border-b border-border bg-accent/60 px-4 py-3 text-sm leading-relaxed text-foreground">
                   {entry.orderCutoff?.trim() && <p><span className="font-bold">Order cutoff: </span>{entry.orderCutoff}</p>}
@@ -648,9 +803,12 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 </div>
               )}
               <div className="flex flex-1 flex-col gap-3 p-4">
-                <h3 className="text-lg font-bold leading-tight">
-                  <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} className="hover:text-primary">{entry.artistName}</Link>
-                </h3>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-lg font-bold leading-tight">
+                    <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} onClick={rememberCatalogueListPosition} className="hover:text-primary">{entry.artistName}</Link>
+                  </h3>
+                  {isViewed && <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800"><Check className="size-3.5" aria-hidden="true" />Viewed</span>}
+                </div>
                 {(() => {
                   const accounts = getArtistSocialAccounts(entry.artistInstagrams, entry.artistSocialLinks)
                   return (
@@ -701,7 +859,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
         <nav aria-label="Catalogue pages" className="flex flex-wrap items-center justify-center gap-2">
           <button
             type="button"
-            onClick={() => setPage(Math.max(1, currentPage - 1))}
+            onClick={() => goToPage(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
             className="rounded-lg border border-input px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
           >
@@ -712,7 +870,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
               {index > 0 && pageNumbers[index - 1] < number - 1 && <span className="px-1 text-muted-foreground" aria-hidden="true">…</span>}
               <button
                 type="button"
-                onClick={() => setPage(number)}
+                onClick={() => goToPage(number)}
                 aria-current={currentPage === number ? 'page' : undefined}
                 aria-label={`Page ${number}`}
                 className={cn(
@@ -726,7 +884,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
           ))}
           <button
             type="button"
-            onClick={() => setPage(Math.min(pageCount, currentPage + 1))}
+            onClick={() => goToPage(Math.min(pageCount, currentPage + 1))}
             disabled={currentPage === pageCount}
             className="rounded-lg border border-input px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
           >

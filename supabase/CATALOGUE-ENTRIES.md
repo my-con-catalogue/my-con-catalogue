@@ -39,4 +39,4 @@ In **Supabase → Table Editor → event_booths → Insert row**, add one row pe
 
 Repeat for each booth at that event. Leave `display_order` as `0` to keep the booths in the order you added them, or use 1, 2, 3… to set a custom order. The same booth label may be used at another event because booth numbers are unique per event. To add many booths at once, use the Table Editor's CSV import with the columns `event_slug,booth_number,display_order`. The new table is created by `schema.sql` for a fresh database; for an existing site, run `migrations/20261011_event_booths.sql` if needed, followed by `migrations/20261012_pickup_and_stamp_rally_submissions.sql`, before deploying the matching code.
 
-Keep the `DATABASE_URL` in the server-side environment only. Do not put database credentials in client-side code.
+Keep `POSTGRES_URL` (or the legacy `DATABASE_URL` fallback) in the server-side environment only. Do not put database credentials in client-side code.

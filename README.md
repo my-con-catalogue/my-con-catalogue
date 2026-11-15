@@ -10,7 +10,7 @@ MYConCatalogue is a community archive for Malaysian convention Artist Alleys, ca
 4. Create the private `catalogue-submissions` Storage bucket.
 5. Run `pnpm dev`.
 
-With `DATABASE_URL` configured, pages read event, catalogue, fan event, and stamp rally data from Supabase. Without it, the site uses local preview data and submissions cannot be saved. Fan event submissions go to `fan_cafe_submissions` for review; they do not publish automatically.
+With `POSTGRES_URL` configured (or the legacy `DATABASE_URL` fallback), pages read event, catalogue, fan event, and stamp rally data from Supabase. Without it, the site uses local preview data and submissions cannot be saved. Fan event submissions go to `fan_cafe_submissions` for review; they do not publish automatically.
 
 Before pushing changes, run `pnpm typecheck` and `pnpm build`. The production build uses Webpack and Next.js `next/font/google`; it downloads and self-hosts DM Sans and Bricolage Grotesque during the build, so the build environment needs access to Google Fonts.
 

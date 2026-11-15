@@ -98,11 +98,19 @@ export async function submitArtistCatalogue(_prev: FormState, formData: FormData
 }
 
 function storageConfig() {
-  const projectUrl = process.env.SUPABASE_URL
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
   const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'catalogue-submissions'
   if (!projectUrl || !serviceKey) throw new Error('Storage is not configured')
   return { projectUrl: projectUrl.replace(/\/$/, ''), serviceKey, bucket }
+}
+
+function storageAuthHeaders(serviceKey: string, extra: Record<string, string> = {}) {
+  return {
+    ...(serviceKey.startsWith('sb_') ? {} : { authorization: `Bearer ${serviceKey}` }),
+    apikey: serviceKey,
+    ...extra,
+  }
 }
 
 function storageObjectUrl(projectUrl: string, bucket: string, objectPath: string) {
@@ -116,12 +124,10 @@ async function uploadCatalogueSubmission(file: File, folder = 'artist-submission
   const objectPath = `${folder}/${crypto.randomUUID()}/${safeName}`
   const response = await fetch(storageObjectUrl(projectUrl, bucket, objectPath), {
     method: 'POST',
-    headers: {
-      authorization: `Bearer ${serviceKey}`,
-      apikey: serviceKey,
+    headers: storageAuthHeaders(serviceKey, {
       'content-type': file.type,
       'x-upsert': 'false',
-    },
+    }),
     body: await file.arrayBuffer(),
     cache: 'no-store',
   })
@@ -134,11 +140,9 @@ async function removeCatalogueSubmission(objectPath: string) {
     const { projectUrl, serviceKey, bucket } = storageConfig()
     await fetch(`${projectUrl}/storage/v1/object/${encodeURIComponent(bucket)}`, {
       method: 'DELETE',
-      headers: {
-        authorization: `Bearer ${serviceKey}`,
-        apikey: serviceKey,
+      headers: storageAuthHeaders(serviceKey, {
         'content-type': 'application/json',
-      },
+      }),
       body: JSON.stringify({ prefixes: [objectPath] }),
       cache: 'no-store',
     })
