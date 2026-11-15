@@ -87,6 +87,7 @@ export function SharedListsPortal() {
       <Link href="/account" className="text-sm font-semibold text-primary underline">← Account</Link>
       <div className="mt-4 flex items-center gap-2"><Users className="size-5 text-primary" /><h2 className="text-xl font-extrabold">Shared event lists</h2></div>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Create one list for an event and invite friends with its code. Members’ saved catalogues, labels, and visit notes appear together. You can edit only your own bookmarks.</p>
+      <p className="mt-2 text-sm font-semibold text-primary">Each shared list can have up to 20 people, including its creator.</p>
       <p className="mt-2 text-sm text-muted-foreground">Signed in as <strong>@{overview.username}</strong></p>
     </section>
 

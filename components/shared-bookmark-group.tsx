@@ -132,7 +132,7 @@ export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
       <Link href="/account/shared-lists" className="text-sm font-semibold text-primary underline">← Shared lists</Link>
       <p className="mt-5 text-sm font-semibold uppercase tracking-wider text-primary">{eventHeading}</p>
       <h1 className="mt-1 text-3xl font-extrabold">{group.name}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Shared with {members.length} {members.length === 1 ? 'member' : 'members'}: {members.map((member) => `@${member.username}`).join(', ')}</p>
+      <p className="mt-2 text-sm text-muted-foreground">Shared with {members.length} of 20 people: {members.map((member) => `@${member.username}`).join(', ')}</p>
       <p className="mt-2 text-sm text-muted-foreground">You can edit or remove only your own bookmark.</p>
     </header>
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
