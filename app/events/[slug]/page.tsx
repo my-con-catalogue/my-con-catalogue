@@ -173,7 +173,7 @@ export default async function EventPage({ params }: Props) {
       )}
 
       {event.slug === 'mahoumeki-2026' && (
-        <FloorplanDisclosure id="interactive-map" title="Mahoumeki 2026 Artist Alley floor plan" description="Select an Artist Alley booth to open its catalogue when one is listed. Booths 19 and 20 share one catalogue listing; sponsor booths 17 and 18 are shown in gray.">
+        <FloorplanDisclosure id="interactive-map" title="Mahoumeki 2026 Artist Alley floor plan" description="Select an Artist Alley booth to open its catalogue when one is listed. The student council booth 16, sponsor booths 17 and 18, and gaming studio booths 19 and 20 are gray and are not linked to catalogues.">
           <Mahoumeki2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
         </FloorplanDisclosure>
       )}
