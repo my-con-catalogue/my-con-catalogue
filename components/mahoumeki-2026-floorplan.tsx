@@ -10,24 +10,25 @@ const spots: BoothSpot[] = [
   { booth: 3, x: 319, y: 427, width: 68, height: 36 },
   { booth: 4, x: 471, y: 427, width: 67, height: 36 },
   { booth: 5, x: 547, y: 427, width: 67, height: 36 },
-  { booth: 19, x: 697, y: 427, width: 68, height: 36 },
   { booth: 6, x: 168, y: 473, width: 67, height: 36 },
   { booth: 7, x: 244, y: 473, width: 67, height: 36 },
   { booth: 8, x: 319, y: 473, width: 68, height: 36 },
   { booth: 9, x: 395, y: 473, width: 67, height: 36 },
   { booth: 10, x: 471, y: 473, width: 67, height: 36 },
-  { booth: 20, x: 697, y: 473, width: 68, height: 36 },
   { booth: 11, x: 168, y: 518, width: 67, height: 37 },
   { booth: 12, x: 244, y: 518, width: 67, height: 37 },
   { booth: 13, x: 319, y: 518, width: 68, height: 37 },
   { booth: 14, x: 395, y: 518, width: 67, height: 37 },
   { booth: 15, x: 471, y: 518, width: 67, height: 37 },
-  { booth: 16, x: 547, y: 518, width: 67, height: 37 },
 ]
 
-const sponsorSpots: BoothSpot[] = [
+// Student, sponsor, and gaming booths remain visible but cannot link to artist catalogues.
+const nonCatalogueSpots: BoothSpot[] = [
+  { booth: 16, x: 547, y: 518, width: 67, height: 37 },
   { booth: 17, x: 622, y: 518, width: 68, height: 37 },
   { booth: 18, x: 697, y: 518, width: 68, height: 37 },
+  { booth: 19, x: 697, y: 427, width: 68, height: 36 },
+  { booth: 20, x: 697, y: 473, width: 68, height: 36 },
 ]
 
 const boothNames: Record<number, string> = {
@@ -46,11 +47,11 @@ const boothNames: Record<number, string> = {
   13: 'Penang TriTrou Edition',
   14: 'Usagi Canvas',
   15: 'wewwha',
-  16: 'Peninsula College Student Council',
+  16: 'Peninsula College Student Council · student council',
   17: 'Ài KLINIK · sponsor',
   18: 'SuperDNA · sponsor',
-  19: 'Komodo Range Studio · combined 19–20 booth',
-  20: 'Komodo Range Studio · combined 19–20 booth',
+  19: 'Komodo Range Studio · gaming studio',
+  20: 'Komodo Range Studio · gaming studio',
 }
 
 function numbersInBooth(value: string): number[] {
@@ -96,7 +97,7 @@ export function Mahoumeki2026Floorplan({ entries }: { entries: readonly Catalogu
               </g>
             )
           })}
-          {sponsorSpots.map((spot) => (
+          {nonCatalogueSpots.map((spot) => (
             <g key={spot.booth} aria-label={`Booth ${spot.booth}: ${boothNames[spot.booth]}, not an Artist Alley catalogue booth`}>
               <title>{`Booth ${spot.booth} · ${boothNames[spot.booth]}`}</title>
               <rect x={spot.x} y={spot.y} width={spot.width} height={spot.height} rx="4" fill="#6b7280" fillOpacity="0.78" stroke="#e5e7eb" strokeWidth="2" />
@@ -107,7 +108,7 @@ export function Mahoumeki2026Floorplan({ entries }: { entries: readonly Catalogu
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border px-4 py-3 text-sm text-muted-foreground">
         <span className="inline-flex items-center gap-2"><span className="size-3 rounded-sm border-2 border-amber-200 bg-amber-300/30" aria-hidden="true" /> Catalogue listed — click the booth</span>
         <span className="inline-flex items-center gap-2"><span className="size-3 rounded-sm border border-indigo-900 bg-indigo-900" aria-hidden="true" /> Artist Alley booth — catalogue not listed yet</span>
-        <span className="inline-flex items-center gap-2"><span className="size-3 rounded-sm bg-gray-500" aria-hidden="true" /> Sponsor booth, outside catalogue</span>
+        <span className="inline-flex items-center gap-2"><span className="size-3 rounded-sm bg-gray-500" aria-hidden="true" /> Non-catalogue booth</span>
       </div>
     </div>
   )
