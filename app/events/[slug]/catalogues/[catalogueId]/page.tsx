@@ -23,7 +23,7 @@ function externalLink(value: string) {
   }
 }
 
-export const revalidate = 300
+export const revalidate = 3600
 
 type Props = { params: Promise<{ slug: string; catalogueId: string }> }
 
