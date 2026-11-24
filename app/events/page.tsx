@@ -5,7 +5,8 @@ import { PageHeader } from '@/components/page-header'
 import { getEvents, type EventWithCount } from '@/lib/queries'
 import { getEventStatus } from '@/lib/event-status'
 
-export const revalidate = 300
+// Public event data changes infrequently; a longer ISR window reduces rebuild work.
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Events',
