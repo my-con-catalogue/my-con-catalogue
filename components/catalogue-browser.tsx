@@ -569,7 +569,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
         <div role="group" aria-label="Catalogue type" className="flex flex-wrap gap-2">
           {([
             { value: 'booth_catalogue', label: 'Booth Catalogue', count: boothCatalogueEntries.length },
-            { value: 'pickup_only', label: 'Pick-Up Only', count: pickupEntries.length },
+            { value: 'pickup_only', label: 'PO & Pick-Up', count: pickupEntries.length },
             { value: 'stamp_rally', label: 'Stamp Rally', count: stampRallies.length },
           ] as const).map((option) => (
             <button
