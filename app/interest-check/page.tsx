@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header'
 import { formatDateRange } from '@/lib/format'
 import { getInterestChecks } from '@/lib/queries'
 
-export const revalidate = 300
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Interest Check',
