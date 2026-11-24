@@ -24,16 +24,25 @@ begin
 end $$;
 
 insert into public.events (
-  slug, name, year, display_order, is_upcoming, entry_status, logo_url
+  slug, name, year, display_order, is_upcoming, start_date, end_date,
+  location, entry_status, description, logo_url
 )
 values (
-  'mahoumeki-2026', 'Mahoumeki 2026', 2026, 6, true, 'TBA', '/events/mahoumeki-2026-logo.png'
+  'mahoumeki-2026', 'Mahoumeki 2026', 2026, 6, true,
+  '2026-11-27', '2026-11-28', 'The Ship Campus, Level 2, Batu Kawan, Penang',
+  'Free entry', 'Come spend the day with us, 11 AM–7 PM both days.',
+  '/events/mahoumeki-2026-logo.png'
 )
 on conflict (slug) do update set
   name = excluded.name,
   year = excluded.year,
   display_order = excluded.display_order,
+  start_date = excluded.start_date,
+  end_date = excluded.end_date,
+  location = excluded.location,
   is_upcoming = true,
+  entry_status = excluded.entry_status,
+  description = excluded.description,
   logo_url = excluded.logo_url;
 
 insert into public.event_booths (event_slug, booth_number, display_order)
