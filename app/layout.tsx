@@ -1,30 +1,13 @@
-import { Analytics, type BeforeSendEvent } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Bricolage_Grotesque, DM_Sans } from 'next/font/google'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { CatalogueScrollRestoration } from '@/components/catalogue-scroll-restoration'
+import { WeeklyVercelAnalytics } from '@/components/weekly-vercel-analytics'
 import './globals.css'
 
 const bricolage = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-bricolage' })
 const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' })
-const ANALYTICS_SAMPLE_KEY = 'mcc:vercel-analytics:last-sent'
-const ANALYTICS_SAMPLE_INTERVAL = 7 * 24 * 60 * 60 * 1000
-
-function sampleAnalyticsOncePerWeek(event: BeforeSendEvent) {
-  // Keep one page view per browser storage context each week, instead of
-  // sending every navigation. If browser storage is unavailable, fail closed.
-  if (typeof window === 'undefined') return null
-  try {
-    const previous = Number(window.localStorage.getItem(ANALYTICS_SAMPLE_KEY))
-    if (Number.isFinite(previous) && previous > 0 && Date.now() - previous < ANALYTICS_SAMPLE_INTERVAL) return null
-    window.localStorage.setItem(ANALYTICS_SAMPLE_KEY, String(Date.now()))
-    return event
-  } catch {
-    return null
-  }
-}
-
 export const metadata: Metadata = {
   title: {
     default: 'Malaysia Convention Catalogue',
@@ -57,7 +40,7 @@ export default function RootLayout({
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />
-        <Analytics beforeSend={sampleAnalyticsOncePerWeek} />
+        <WeeklyVercelAnalytics />
       </body>
     </html>
   )
