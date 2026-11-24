@@ -9,6 +9,7 @@ import { OtakyunFloorplan } from '@/components/otakyun-floorplan'
 import { Vax2026Floorplan } from '@/components/vax-2026-floorplan'
 import { YumeAcg2026Floorplan } from '@/components/yume-acg-2026-floorplan'
 import { AcgMatsuri2026Floorplan } from '@/components/acg-matsuri-2026-floorplan'
+import { Mahoumeki2026Floorplan } from '@/components/mahoumeki-2026-floorplan'
 import { EventEntryBadge } from '@/components/event-entry-badge'
 import { EventStatusBadge } from '@/components/event-status-badge'
 import { InstagramIcon } from '@/components/social-icons'
@@ -16,7 +17,7 @@ import { formatDateRange, instagramUrl } from '@/lib/format'
 import { getEventBoothNumbers, getEventBySlug, getEventCatalogues, getEventStampRallies } from '@/lib/queries'
 import { FloorplanDisclosure } from '@/components/floorplan-disclosure'
 
-export const revalidate = 300
+export const revalidate = 3600
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -129,6 +130,11 @@ export default async function EventPage({ params }: Props) {
                 Interactive map
               </a>
             )}
+            {event.slug === 'mahoumeki-2026' && (
+              <a href="#interactive-map" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
+                Interactive map
+              </a>
+            )}
             <a href="#catalogue" className="rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background">
               Catalogue ({catalogues.length})
             </a>
@@ -163,6 +169,12 @@ export default async function EventPage({ params }: Props) {
       {event.slug === 'acg-matsuri-2026' && (
         <FloorplanDisclosure id="interactive-map" title="ACG Matsuri 2026 floor plan" description="Select a booth to open its catalogue when one has been added.">
           <AcgMatsuri2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
+        </FloorplanDisclosure>
+      )}
+
+      {event.slug === 'mahoumeki-2026' && (
+        <FloorplanDisclosure id="interactive-map" title="Mahoumeki 2026 Artist Alley floor plan" description="Select an Artist Alley booth to open its catalogue when one is listed. Booths 19 and 20 share one catalogue listing; sponsor booths 17 and 18 are shown in gray.">
+          <Mahoumeki2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
         </FloorplanDisclosure>
       )}
 

@@ -6,7 +6,7 @@ import { InstagramIcon } from '@/components/social-icons'
 import { getEventStatus } from '@/lib/event-status'
 import { getEvents, getStats } from '@/lib/queries'
 
-export const revalidate = 300
+export const revalidate = 3600
 
 const features = [
   {

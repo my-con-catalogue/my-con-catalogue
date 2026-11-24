@@ -3,7 +3,7 @@ import { ArtistDirectory } from '@/components/artist-directory'
 import { PageHeader } from '@/components/page-header'
 import { getArtistsWithAppearances } from '@/lib/queries'
 
-export const revalidate = 300
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Artists',

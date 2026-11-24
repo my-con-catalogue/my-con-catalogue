@@ -9,7 +9,7 @@ import { formatDateRange, instagramUrl } from '@/lib/format'
 import { getEventStatus } from '@/lib/event-status'
 import { getFanCafes } from '@/lib/queries'
 
-export const revalidate = 300
+export const revalidate = 3600
 
 function formatCafeTime(value: string) {
   const match = value.match(/^(\d{2}):(\d{2})$/)

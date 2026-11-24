@@ -9,6 +9,7 @@ type PreviewEventInput = {
   location?: string | null
   instagram?: string | null
   logoUrl?: string | null
+  description?: string | null
   entryStatus: string
 }
 
@@ -25,7 +26,7 @@ type PreviewEvent = {
   instagram: string | null
   logoUrl: string | null
   entryStatus: string
-  description: null
+  description: string | null
   catalogueCount: number
   createdAt: Date
 }
@@ -36,6 +37,7 @@ const eventInputs: PreviewEventInput[] = [
   { name: 'Otakyun 2026', slug: 'otakyun-2026', year: 2026, displayOrder: 3, isUpcoming: true, entryStatus: 'TBA', instagram: null, logoUrl: '/events/otakyun.png' },
   { name: 'VAX 2026', slug: 'vax-2026', year: 2026, displayOrder: 4, isUpcoming: true, entryStatus: 'TBA', startDate: '2026-10-31', endDate: '2026-11-01', location: "Taylor's University, Lakeside Campus, Selangor, Malaysia", instagram: null, logoUrl: '/events/vax.jpg' },
   { name: 'Yume ACG Fest 2026', slug: 'yume-acg-2026', year: 2026, displayOrder: 5, isUpcoming: true, entryStatus: 'TBA', instagram: null, logoUrl: '/events/yume-acg-fest.png' },
+  { name: 'Mahoumeki 2026', slug: 'mahoumeki-2026', year: 2026, displayOrder: 6, isUpcoming: true, startDate: '2026-11-27', endDate: '2026-11-28', location: 'The Ship Campus, Level 2, Batu Kawan, Penang', entryStatus: 'Free entry', instagram: null, logoUrl: '/events/mahoumeki-2026-logo.png', description: 'Come spend the day with us, 11 AM–7 PM both days.' },
   { name: 'Anime Fest! (2027)', slug: 'anime-fest-2027', year: 2027, displayOrder: 1, isUpcoming: true, entryStatus: 'TBA', instagram: 'comic_fiesta', logoUrl: '/events/anime-fest.png' },
   { name: 'Anime Fest! Plus (2027)', slug: 'anime-fest-plus-2027', year: 2027, displayOrder: 2, isUpcoming: true, entryStatus: 'TBA', instagram: 'comic_fiesta', logoUrl: '/events/anime-fest-plus.png' },
   { name: 'Cos-Mic (2027)', slug: 'cos-mic-2027', year: 2027, displayOrder: 3, isUpcoming: true, entryStatus: 'TBA', instagram: 'cosmic_asia', logoUrl: '/events/cos-mic.jpg' },
@@ -55,7 +57,7 @@ export const previewEvents: PreviewEvent[] = eventInputs.map((event, index) => (
   location: event.location ?? null,
   instagram: event.instagram ?? null,
   logoUrl: event.logoUrl ?? null,
-  description: null,
+  description: event.description ?? null,
   catalogueCount: 0,
   createdAt: new Date(0),
 }))

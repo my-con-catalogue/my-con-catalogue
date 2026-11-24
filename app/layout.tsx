@@ -1,14 +1,13 @@
-import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Bricolage_Grotesque, DM_Sans } from 'next/font/google'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { CatalogueScrollRestoration } from '@/components/catalogue-scroll-restoration'
+import { WeeklyVercelAnalytics } from '@/components/weekly-vercel-analytics'
 import './globals.css'
 
 const bricolage = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-bricolage' })
 const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' })
-
 export const metadata: Metadata = {
   title: {
     default: 'Malaysia Convention Catalogue',
@@ -41,7 +40,7 @@ export default function RootLayout({
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />
-        <Analytics />
+        <WeeklyVercelAnalytics />
       </body>
     </html>
   )
