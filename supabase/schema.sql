@@ -159,6 +159,7 @@ create table if not exists stamp_rallies (
   social_post_url text,
   fandom text[] not null default '{}',
   prizes text,
+  method text,
   image_url text,
   participants text[] not null default '{}',
   created_at timestamptz not null default now()
@@ -178,6 +179,7 @@ create table if not exists fan_cafes (
   start_time text,
   end_time text,
   description text,
+  registration_deadline date,
   created_at timestamptz not null default now()
 );
 
@@ -186,6 +188,7 @@ alter table fan_cafes add column if not exists social_post_url text;
 alter table fan_cafes add column if not exists start_time text;
 alter table fan_cafes add column if not exists end_time text;
 alter table fan_cafes add column if not exists types text[] not null default '{}';
+alter table fan_cafes add column if not exists registration_deadline date;
 
 create index if not exists fan_cafes_start_date_idx on fan_cafes(start_date desc);
 
@@ -289,18 +292,22 @@ create table if not exists stamp_rally_submissions (
   social_media_handles text not null,
   event_name text not null,
   fandom text not null,
+  prizes text not null default 'Not provided',
+  method text not null default 'Not provided',
   post_link text,
   upload_file_path text,
   notes text,
   status text not null default 'pending',
   created_at timestamptz not null default now()
 );
+alter table public.stamp_rallies add column if not exists method text;
 create table if not exists fan_cafe_submissions (
   id serial primary key,
   name text not null,
   location text not null,
   start_date date not null,
   end_date date,
+  registration_deadline date,
   start_time text,
   end_time text,
   social_platform text not null,
