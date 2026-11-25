@@ -6,7 +6,8 @@ export const previewFanCafes: FanCafeRecord[] = [
   {
     id: 1,
     name: 'Twisted Wonderland CSE: A Nightmare Before Christmas',
-    fandom: 'Twisted Wonderland',
+    fandom: ['Twisted Wonderland'],
+    types: ['Cupsleeve Event (CSE)'],
     location: 'Spillstone Coffee, Jalan Pudu',
     startDate: '2026-10-31',
     endDate: null,
@@ -21,7 +22,8 @@ export const previewFanCafes: FanCafeRecord[] = [
   {
     id: 2,
     name: 'Alien Stage CSE: The Grand Birthday Banquet',
-    fandom: 'Alien Stage',
+    fandom: ['Alien Stage'],
+    types: ['Birthday Event', 'Cupsleeve Event (CSE)'],
     location: 'Doutor Coffee, LaLaport BBCC',
     startDate: '2026-11-22',
     endDate: null,
@@ -36,7 +38,8 @@ export const previewFanCafes: FanCafeRecord[] = [
   {
     id: 3,
     name: "Batman: The Wayne Family's Galaween",
-    fandom: 'Batman',
+    fandom: ['Batman'],
+    types: ['Birthday Event'],
     location: 'MM Cafe, LaLaport BBCC',
     startDate: '2026-10-17',
     endDate: null,
@@ -51,7 +54,8 @@ export const previewFanCafes: FanCafeRecord[] = [
   {
     id: 4,
     name: 'IDOLiSH7: HAPPY iN THE CUP!!',
-    fandom: 'IDOLiSH7',
+    fandom: ['IDOLiSH7'],
+    types: ['Cupsleeve Event (CSE)'],
     location: 'MM Cafe, LaLaport BBCC',
     startDate: '2026-10-18',
     endDate: null,

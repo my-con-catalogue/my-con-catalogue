@@ -4,6 +4,7 @@ import { catalogueEntries, eventBooths, events, fanCafes, interestChecks, stampR
 import { previewEvents } from '@/lib/preview-events'
 import { previewFanCafes } from '@/lib/preview-fan-cafes'
 import { previewCatalogueEntries } from '@/lib/preview-catalogue-entries'
+import { uniqueSortedTags } from '@/lib/tag-utils'
 
 export type EventRow = typeof events.$inferSelect
 const databaseConfigured = Boolean(process.env.POSTGRES_URL ?? process.env.DATABASE_URL)
@@ -15,7 +16,7 @@ function cleanTextArray(values: readonly unknown[] | null | undefined): string[]
 }
 
 function sortedTags(values: readonly unknown[] | null | undefined): string[] {
-  return cleanTextArray(values).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }))
+  return uniqueSortedTags([cleanTextArray(values)])
 }
 
 function uniqueInstagramHandles(handles: readonly string[] | null | undefined) {
@@ -178,8 +179,13 @@ export async function getFanCafes() {
   const cafes = databaseConfigured
     ? await db.select().from(fanCafes)
     : previewFanCafes
+  const normalizedCafes = cafes.map((cafe) => ({
+    ...cafe,
+    fandom: sortedTags(cafe.fandom),
+    types: sortedTags(cafe.types),
+  }))
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }).format(new Date())
-  return [...cafes].sort((a, b) => {
+  return [...normalizedCafes].sort((a, b) => {
     const aStatusDate = a.endDate ?? a.startDate
     const bStatusDate = b.endDate ?? b.startDate
     const aUpcoming = Boolean(aStatusDate && aStatusDate >= today)
@@ -195,10 +201,11 @@ export async function getFanCafes() {
 
 export async function getInterestChecks() {
   if (!databaseConfigured) return []
-  return db
+  const rows = await db
     .select()
     .from(interestChecks)
     .orderBy(asc(interestChecks.year), asc(interestChecks.cutoffDate), asc(interestChecks.title))
+  return rows.map((row) => ({ ...row, type: sortedTags(row.type), fandom: sortedTags(row.fandom) }))
 }
 
 export async function getArtistsWithAppearances() {
