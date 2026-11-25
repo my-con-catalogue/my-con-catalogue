@@ -123,7 +123,7 @@ export default async function HomePage() {
 
       <section aria-label="Archive coverage note" className="mx-auto max-w-6xl px-4 pt-8">
         <p className="rounded-xl border border-primary/30 bg-accent/40 px-5 py-4 text-sm leading-relaxed">
-          <strong>A little note:</strong> MYConCatalogue began in mid-October 2026. Due to limited manpower and time, earlier 2026 events and events from before 2026 aren&apos;t included in the archive. Thank you for understanding. If an event from our archive period is missing, <Link href="/contact#suggestion-form" className="font-semibold text-primary underline underline-offset-4">send us a suggestion</Link>.
+          <strong>A little note:</strong> MYConCatalogue began in mid-October 2026. Due to limited manpower and time, <strong>earlier 2026 events and events from before 2026 aren&apos;t included in the archive</strong>. Thank you for understanding. If an event from our archive period is missing, <Link href="/contact#suggestion-form" className="font-semibold text-primary underline underline-offset-4">send us a suggestion</Link>.
         </p>
       </section>
 
