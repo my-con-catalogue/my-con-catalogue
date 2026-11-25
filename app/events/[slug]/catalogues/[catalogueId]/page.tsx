@@ -7,6 +7,7 @@ import { getEventBySlug, getEventCatalogueById } from '@/lib/queries'
 import { getArtistSocialAccounts } from '@/lib/artist-socials'
 import { ArtistSocialLinks } from '@/components/artist-social-links'
 import { InstagramPostEmbed } from '@/components/instagram-post-embed'
+import { SocialPostEmbed, supportsSocialPostEmbed } from '@/components/social-post-embed'
 import { CatalogueViewTracker } from '@/components/catalogue-view-tracker'
 import { CatalogueBookmarkPanel } from '@/components/catalogue-bookmark-panel'
 
@@ -140,6 +141,8 @@ export default async function CatalogueDetailPage({ params }: Props) {
                     </a>
                   ) : isPdf ? (
                     <iframe src={fileUrl} title={`${catalogue.artistName} catalogue PDF ${index + 1}`} className="h-[80vh] w-full" />
+                  ) : supportsSocialPostEmbed(fileUrl) ? (
+                    <SocialPostEmbed postUrl={fileUrl} title={`${catalogue.artistName} catalogue file ${index + 1}`} />
                   ) : null}
                   <div className="border-t border-border p-3 text-right">
                     <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary underline underline-offset-4">Open catalogue file {index + 1}</a>
@@ -150,16 +153,18 @@ export default async function CatalogueDetailPage({ params }: Props) {
           </div>
         )}
         {catalogue.catalogueLinks.length > 0 && (
-          <div className="mt-6 rounded-xl border border-border bg-card p-5">
+          <div className="mx-auto mt-6 flex max-w-3xl flex-col gap-5">
             <h3 className="font-bold">Catalogue links</h3>
-            <ul className="mt-3 flex flex-wrap gap-2">
+            <ul className="flex flex-col gap-5">
               {catalogue.catalogueLinks.map((link, index) => {
                 const url = externalLink(link)
                 return url ? (
-                  <li key={link}>
-                    <a href={url.href} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-primary underline underline-offset-2 hover:bg-accent">
-                      Open catalogue link {index + 1} · {url.hostname.replace(/^www\./, '')} ↗
-                    </a>
+                  <li key={link} className="min-w-0">
+                    {supportsSocialPostEmbed(url.href) ? <SocialPostEmbed postUrl={url.href} title={`${catalogue.artistName} catalogue link ${index + 1}`} /> : (
+                      <a href={url.href} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-primary underline underline-offset-2 hover:bg-accent">
+                        Open catalogue link {index + 1} · {url.hostname.replace(/^www\./, '')} ↗
+                      </a>
+                    )}
                   </li>
                 ) : null
               })}
