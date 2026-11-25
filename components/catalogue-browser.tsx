@@ -866,7 +866,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 {(() => {
                   const accounts = getArtistSocialAccounts(entry.artistInstagrams, entry.artistSocialLinks)
                   return (
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                    <div className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-1.5">
                       {accounts.slice(0, 3).map((account) => (
                         <ArtistSocialLinks key={account.href} name={entry.artistName} instagrams={[]} links={[account.href]} />
                       ))}

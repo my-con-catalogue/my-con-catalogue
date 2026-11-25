@@ -13,7 +13,7 @@ export function ArtistSocialLinks({
   instagrams,
   links = [],
   className = '',
-  linkClassName = 'inline-flex min-w-0 items-center gap-1.5 truncate text-sm text-muted-foreground hover:text-primary',
+  linkClassName = 'flex w-full min-w-0 items-center gap-1.5 overflow-hidden text-sm text-muted-foreground hover:text-primary',
   iconClassName = 'size-4 shrink-0',
 }: {
   name: string
@@ -26,12 +26,12 @@ export function ArtistSocialLinks({
   const accounts = getArtistSocialAccounts(instagrams, links)
   if (accounts.length === 0) return null
   return (
-    <ul aria-label={`${name} social media accounts`} className={className}>
+    <ul aria-label={`${name} social media accounts`} className={`min-w-0 ${className}`}>
       {accounts.map((account) => (
         <li key={account.href} className="min-w-0">
           <a href={account.href} target="_blank" rel="noopener noreferrer" aria-label={`${name} on ${account.platform}: ${account.label}`} className={linkClassName}>
             <PlatformIcon platform={account.platform} className={iconClassName} />
-            <span className="truncate">{account.label}</span>
+            <span title={account.label} className="min-w-0 flex-1 truncate">{account.label}</span>
             <span className="sr-only">({account.platform})</span>
           </a>
         </li>
