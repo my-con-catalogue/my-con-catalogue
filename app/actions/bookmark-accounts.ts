@@ -2,6 +2,7 @@
 
 import { cookies, headers } from 'next/headers'
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
+import type { PoolClient } from 'pg'
 import { pool } from '@/lib/db'
 import { getEventStatus } from '@/lib/event-status'
 
@@ -325,7 +326,7 @@ export async function changeUsernameForCurrentUser(usernameRaw: string): Promise
   const user = await currentUser()
   if (!user) return { ok: false, message: 'Sign in to change your username.' }
 
-  let client: Awaited<ReturnType<typeof pool.connect>> | null = null
+  let client: PoolClient | null = null
   let oldUsername = ''
   let authUpdated = false
   try {
