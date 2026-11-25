@@ -37,6 +37,15 @@ function getStatusStyle(status: string) {
   return 'bg-accent text-accent-foreground'
 }
 
+function formatTags(value: unknown) {
+  const tags = Array.isArray(value) ? value : typeof value === 'string' ? [value] : []
+  return tags
+    .filter((tag): tag is string => typeof tag === 'string')
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+    .join(', ')
+}
+
 export default async function InterestCheckPage({ searchParams }: Props) {
   const items = await getInterestChecks()
   const { year: yearParam } = await searchParams
@@ -103,6 +112,8 @@ export default async function InterestCheckPage({ searchParams }: Props) {
                     // An expired cutoff is always past; otherwise use the status entered in Supabase.
                     const status = deadlinePassed ? 'Past' : item.status?.trim() || automaticStatus
                     const postUrl = item.socialPostUrl ? validHttpUrl(item.socialPostUrl) : null
+                    const typeText = formatTags(item.type)
+                    const fandomText = formatTags(item.fandom)
                     return (
                       <li key={item.id} className="flex flex-col rounded-xl border border-border bg-card p-5">
                         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -119,8 +130,8 @@ export default async function InterestCheckPage({ searchParams }: Props) {
                           </a>
                         ) : null)}
                         <dl className="mt-5 flex flex-col gap-4 border-t border-border pt-4 text-sm">
-                          <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</dt><dd className="mt-1 inline-flex rounded-full bg-accent px-3 py-1 font-semibold text-accent-foreground">{item.type}</dd></div>
-                          {item.fandom?.trim() && <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fandom</dt><dd className="mt-1">{item.fandom}</dd></div>}
+                          {typeText && <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</dt><dd className="mt-1 inline-flex rounded-full bg-accent px-3 py-1 font-semibold text-accent-foreground">{typeText}</dd></div>}
+                          {fandomText && <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fandom</dt><dd className="mt-1">{fandomText}</dd></div>}
                           <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Event</dt><dd className="mt-1">{item.eventName}</dd></div>
                           <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cutoff date</dt><dd className="mt-0.5">{item.cutoffDate ? formatDateRange(item.cutoffDate, item.cutoffDate) : 'No cutoff date'}</dd></div></div>
                         </dl>
