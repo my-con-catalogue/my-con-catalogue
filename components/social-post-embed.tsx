@@ -18,14 +18,40 @@ function getPostEmbed(postUrl: string) {
       const canonicalUrl = url.href
       return { platform: 'Facebook', embedUrl: `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(canonicalUrl)}&show_text=true&width=500`, canonicalUrl, height: 'h-[min(720px,80vh)] min-h-[450px]' }
     }
+    if (host === 'drive.google.com') {
+      const fileId = url.pathname.match(/^\/file\/d\/([^/]+)/)?.[1] ?? url.searchParams.get('id')
+      if (!fileId || !/^[A-Za-z0-9_-]+$/.test(fileId)) return null
+      const canonicalUrl = `https://drive.google.com/file/d/${fileId}/view`
+      return { platform: 'Google Drive', embedUrl: `https://drive.google.com/file/d/${fileId}/preview`, canonicalUrl, height: 'h-[min(800px,80vh)] min-h-[500px]' }
+    }
+    if (host === 'docs.google.com') {
+      const match = url.pathname.match(/^\/(document|presentation|spreadsheets|forms)\/d\/([^/]+)/)
+      if (!match || !/^[A-Za-z0-9_-]+$/.test(match[2])) return null
+      const canonicalUrl = `https://docs.google.com/${match[1]}/d/${match[2]}/edit`
+      return { platform: 'Google Drive', embedUrl: `https://docs.google.com/${match[1]}/d/${match[2]}/preview`, canonicalUrl, height: 'h-[min(800px,80vh)] min-h-[500px]' }
+    }
     return null
   } catch {
     return null
   }
 }
 
+function safeHttpUrl(value: string) {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null
+  } catch {
+    return null
+  }
+}
+
+export function supportsSocialPostEmbed(postUrl: string) {
+  return Boolean(getPostEmbed(postUrl))
+}
+
 export function SocialPostEmbed({ postUrl, title }: { postUrl: string; title: string }) {
   const embed = getPostEmbed(postUrl)
+  const originalUrl = safeHttpUrl(embed?.canonicalUrl ?? postUrl)
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-white">
       {embed ? (
@@ -41,9 +67,9 @@ export function SocialPostEmbed({ postUrl, title }: { postUrl: string; title: st
         <p className="p-5 text-sm text-muted-foreground">This social post link could not be embedded. You can still open the original link below.</p>
       )}
       <p className="border-t border-border px-4 py-3 text-center text-sm">
-        <a href={embed?.canonicalUrl ?? postUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-4">
+        {originalUrl ? <a href={originalUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-4">
           Open the original {embed?.platform ?? 'social media'} post ↗
-        </a>
+        </a> : <span className="text-muted-foreground">Original link unavailable</span>}
       </p>
     </div>
   )

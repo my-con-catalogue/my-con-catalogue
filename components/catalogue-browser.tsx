@@ -10,6 +10,7 @@ import { BookmarkEditor, BOOKMARK_COLORS, DEFAULT_BOOKMARK_LABEL, isBookmarkLabe
 import { getArtistSocialAccounts } from '@/lib/artist-socials'
 import type { CatalogueEntry, CatalogueType } from '@/lib/queries'
 import { cn } from '@/lib/utils'
+import { normalizedTag, uniqueSortedTags } from '@/lib/tag-utils'
 import { getCloudBookmarks, removeCloudBookmark, saveCloudBookmark, syncCloudBookmarks } from '@/app/actions/bookmark-accounts'
 
 function displayTag(tag: string) {
@@ -21,11 +22,11 @@ function normalizeBooth(value: string) {
 }
 
 function uniqueSorted(values: readonly (readonly string[])[]) {
-  return [...new Set(values.flat())].sort((a, b) => a.localeCompare(b))
+  return uniqueSortedTags(values)
 }
 
 function cleanFandomTags(values: readonly string[] | null) {
-  return [...new Set((values ?? []).map((tag) => tag.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
+  return uniqueSortedTags([values])
 }
 
 const CATALOGUES_PER_PAGE = 20
@@ -497,13 +498,13 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     if (showBookmarkedOnly && bookmarkColorFilters.size > 0 && !bookmarkColorFilters.has((bookmarkLabels[entryKey] ?? DEFAULT_BOOKMARK_LABEL).color)) return false
     const q = query.trim().toLowerCase()
     if (q && !e.artistName.toLowerCase().includes(q) && !(e.booth ?? '').toLowerCase().includes(q)) return false
-    if (fandoms.size > 0 && !e.fandoms.some((f) => fandoms.has(f))) return false
+    if (fandoms.size > 0 && !e.fandoms.some((f) => [...fandoms].some((selected) => normalizedTag(selected) === normalizedTag(f)))) return false
     if (merch.size > 0 && !e.merchTypes.some((m) => merch.has(m))) return false
     if (stampRally.size > 0 && !stampRally.has(e.stampRally ? 'Yes' : 'No')) return false
     return true
   })
   const filteredStampRallies = stampRallies.filter((rally) =>
-    stampRallyFandoms.size === 0 || cleanFandomTags(rally.fandom).some((fandom) => stampRallyFandoms.has(fandom)),
+    stampRallyFandoms.size === 0 || cleanFandomTags(rally.fandom).some((fandom) => [...stampRallyFandoms].some((selected) => normalizedTag(selected) === normalizedTag(fandom))),
   )
 
   const hasFilters = query !== '' || fandoms.size > 0 || merch.size > 0 || stampRally.size > 0 || stampRallyFandoms.size > 0 || showBookmarkedOnly || bookmarkColorFilters.size > 0
