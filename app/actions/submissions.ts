@@ -47,8 +47,8 @@ export async function submitArtistCatalogue(_prev: FormState, formData: FormData
   if (!['new', 'update', 'pickup-only'].includes(submissionType)) {
     return { status: 'error', message: 'Please choose whether this is a booth catalogue, pick-up catalogue, or update.' }
   }
-  if (!artistName || !eventName || !booth) {
-    return { status: 'error', message: 'Artist name, event, and booth number are required. Social media handle is optional.' }
+  if (!artistName || !socialMediaHandle || !eventName || !booth) {
+    return { status: 'error', message: 'Artist name, social media handle, event, and booth number are required.' }
   }
   if (catalogueFile) {
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
