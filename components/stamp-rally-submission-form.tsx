@@ -26,11 +26,11 @@ export function StampRallySubmissionForm() {
         </FormField>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField id="sr-prizes" label="Prizes" hint="Describe the prizes offered for participating." required>
-          <textarea id="sr-prizes" name="prizes" rows={3} required maxLength={1000} className={inputClass} />
+        <FormField id="sr-prizes" label="Prizes" required>
+          <textarea id="sr-prizes" name="prizes" rows={3} required maxLength={1000} placeholder="e.g. Photocard, keychain, etc." className={inputClass} />
         </FormField>
-        <FormField id="sr-method" label="Participation method" hint="Example: Minimum spend RMxx or entry fee RMxx." required>
-          <textarea id="sr-method" name="method" rows={3} required maxLength={1000} className={inputClass} />
+        <FormField id="sr-method" label="Participation method" required>
+          <textarea id="sr-method" name="method" rows={3} required maxLength={1000} placeholder="e.g. Min spend RM10 per booth or Entry Fee RM35" className={inputClass} />
         </FormField>
       </div>
       <FormField id="sr-link" label="Stamp rally post link" hint="Add a link to the post if one is available.">

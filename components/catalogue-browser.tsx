@@ -858,10 +858,10 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
               )}
               <div className="flex flex-1 flex-col gap-3 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-lg font-bold leading-tight">
-                    <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} onClick={rememberCatalogueListPosition} className="hover:text-primary">{entry.artistName}</Link>
+                  <h3 className="min-w-0 flex-1 text-lg font-bold leading-tight">
+                    <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} onClick={rememberCatalogueListPosition} title={entry.artistName} className="block truncate hover:text-primary">{entry.artistName}</Link>
                   </h3>
-                  {isViewed && <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800"><Check className="size-3.5" aria-hidden="true" />Viewed</span>}
+                  {isViewed && <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800"><Check className="size-3.5" aria-hidden="true" />Viewed</span>}
                 </div>
                 {(() => {
                   const accounts = getArtistSocialAccounts(entry.artistInstagrams, entry.artistSocialLinks)
