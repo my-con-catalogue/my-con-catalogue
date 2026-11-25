@@ -76,6 +76,7 @@ export const stampRallies = pgTable('stamp_rallies', {
   socialPostUrl: text('social_post_url'),
   fandom: text('fandom').array().notNull().default([]),
   prizes: text('prizes'),
+  method: text('method'),
   imageUrl: text('image_url'),
   participants: text('participants').array().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -95,6 +96,7 @@ export const fanCafes = pgTable('fan_cafes', {
   startTime: text('start_time'),
   endTime: text('end_time'),
   description: text('description'),
+  registrationDeadline: date('registration_deadline'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -145,6 +147,7 @@ export const fanCafeSubmissions = pgTable('fan_cafe_submissions', {
   location: text('location').notNull(),
   startDate: date('start_date').notNull(),
   endDate: date('end_date'),
+  registrationDeadline: date('registration_deadline'),
   startTime: text('start_time'),
   endTime: text('end_time'),
   socialPlatform: text('social_platform').notNull(),
@@ -161,6 +164,8 @@ export const stampRallySubmissions = pgTable('stamp_rally_submissions', {
   socialMediaHandles: text('social_media_handles').notNull(),
   eventName: text('event_name').notNull(),
   fandom: text('fandom').notNull(),
+  prizes: text('prizes').notNull(),
+  method: text('method').notNull(),
   postLink: text('post_link'),
   uploadFilePath: text('upload_file_path'),
   notes: text('notes'),
