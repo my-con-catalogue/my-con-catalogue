@@ -145,7 +145,7 @@ async function currentUser(): Promise<AuthUser | null> {
 }
 
 function validateBookmark(value: BookmarkValue) {
-  if (!value || typeof value.key !== 'string' || !/^[a-z0-9-]+:\d+$/i.test(value.key)) return false
+  if (!value || typeof value.key !== 'string' || !/^[a-z0-9-]+:(?:\d+|sr-\d+)$/i.test(value.key)) return false
   if (typeof value.labelName !== 'string' || value.labelName.length > 32) return false
   if (!VALID_COLORS.has(value.labelColor)) return false
   if (typeof value.memo !== 'string' || value.memo.length > 500) return false
@@ -159,9 +159,16 @@ async function upsertBookmarks(userId: string, values: BookmarkValue[]) {
     `insert into public.mcc_user_bookmarks (user_id, catalogue_key, label_name, label_color, memo)
      select $1::uuid, item.key, item.label_name, item.label_color, item.memo
      from jsonb_to_recordset($2::jsonb) as item(key text, label_name text, label_color text, memo text)
-     join public.catalogue_entries entry
-       on entry.event_slug = split_part(item.key, ':', 1)
-      and entry.id::text = split_part(item.key, ':', 2)
+     where exists (
+       select 1 from public.catalogue_entries entry
+       where entry.event_slug = split_part(item.key, ':', 1)
+         and entry.id::text = split_part(item.key, ':', 2)
+     ) or exists (
+       select 1 from public.stamp_rallies rally
+       join public.events event on event.id = rally.event_id
+       where event.slug = split_part(item.key, ':', 1)
+         and ('sr-' || rally.id::text) = split_part(item.key, ':', 2)
+     )
      on conflict (user_id, catalogue_key) do update set
        label_name = excluded.label_name,
        label_color = excluded.label_color,
@@ -532,7 +539,7 @@ export async function saveCloudBookmark(value: BookmarkValue): Promise<AccountAc
 }
 
 export async function removeCloudBookmark(key: string): Promise<void> {
-  if (!/^[a-z0-9-]+:\d+$/i.test(key)) return
+  if (!/^[a-z0-9-]+:(?:\d+|sr-\d+)$/i.test(key)) return
   const user = await currentUser()
   if (!user) return
   await pool.query('delete from public.mcc_user_bookmarks where user_id = $1::uuid and catalogue_key = $2', [user.id, key])
@@ -546,10 +553,12 @@ export async function updateOwnSharedBookmark(groupId: string, value: BookmarkVa
     `select 1 from public.mcc_bookmark_group_members m
      join public.mcc_bookmark_groups g on g.id = m.group_id
      join public.mcc_user_bookmarks b on b.user_id = m.user_id and b.catalogue_key = $3
-     join public.catalogue_entries c on c.event_slug = g.event_slug
-       and c.id::text = split_part($3, ':', 2)
      where m.group_id = $1::uuid and m.user_id = $2::uuid
-       and split_part($3, ':', 1) = g.event_slug`,
+       and split_part($3, ':', 1) = g.event_slug
+       and (
+         exists (select 1 from public.catalogue_entries c where c.event_slug = g.event_slug and c.id::text = split_part($3, ':', 2))
+         or exists (select 1 from public.stamp_rallies r join public.events e on e.id = r.event_id where e.slug = g.event_slug and ('sr-' || r.id::text) = split_part($3, ':', 2))
+       )`,
     [groupId, user.id, value.key],
   )
   if (!result.rowCount) return { ok: false, message: 'You can only edit your own bookmark in this shared list.' }
@@ -562,14 +571,18 @@ export async function updateOwnSharedBookmark(groupId: string, value: BookmarkVa
 }
 
 export async function removeOwnSharedBookmark(groupId: string, key: string): Promise<AccountActionResult> {
-  if (!/^[0-9a-f-]{36}$/i.test(groupId) || !/^[a-z0-9-]+:\d+$/i.test(key)) return { ok: false, message: 'Bookmark details are invalid.' }
+  if (!/^[0-9a-f-]{36}$/i.test(groupId) || !/^[a-z0-9-]+:(?:\d+|sr-\d+)$/i.test(key)) return { ok: false, message: 'Bookmark details are invalid.' }
   const user = await currentUser()
   if (!user) return { ok: false, message: 'Sign in to edit your bookmark.' }
   const result = await pool.query(
     `delete from public.mcc_user_bookmarks b using public.mcc_bookmark_group_members m, public.mcc_bookmark_groups g
      where b.user_id = $2::uuid and b.catalogue_key = $3
        and m.group_id = $1::uuid and m.user_id = b.user_id and g.id = m.group_id
-       and split_part($3, ':', 1) = g.event_slug`,
+       and split_part($3, ':', 1) = g.event_slug
+       and (
+         exists (select 1 from public.catalogue_entries c where c.event_slug = g.event_slug and c.id::text = split_part($3, ':', 2))
+         or exists (select 1 from public.stamp_rallies r join public.events e on e.id = r.event_id where e.slug = g.event_slug and ('sr-' || r.id::text) = split_part($3, ':', 2))
+       )`,
     [groupId, user.id, key],
   )
   return result.rowCount ? { ok: true, message: 'Your bookmark was removed from the shared list.' } : { ok: false, message: 'Could not remove your bookmark.' }
@@ -680,31 +693,40 @@ export async function getSharedBookmarkGroup(groupId: string) {
   const result = await pool.query<{
     group_id: string; group_name: string; event_slug: string; event_name: string; year: number; invite_code: string; owner_user_id: string;
     member_user_id: string; username: string; role: string; catalogue_key: string | null; label_name: string | null; label_color: BookmarkValue['labelColor'] | null; memo: string | null;
-    catalogue_id: number | null; booth_number: string | null; artist_name: string | null; fandom_tags: string[] | null; merch_tags: string[] | null; stamp_rally: boolean | null;
+    catalogue_id: number | null; catalogue_type: string | null; booth_number: string | null; artist_name: string | null; fandom_tags: string[] | null; merch_tags: string[] | null; stamp_rally: boolean | null;
+    rally_description: string | null; rally_prizes: string | null; rally_method: string | null; rally_participants: string[] | null;
   }>(
     `select g.id as group_id, g.name as group_name, g.event_slug, e.name as event_name, e.year, g.invite_code, g.owner_user_id,
             m.user_id as member_user_id, u.username, m.role,
             b.catalogue_key, b.label_name, b.label_color, b.memo,
-            c.id as catalogue_id, c.booth_number, c.artist_name, c.fandom_tags, c.merch_tags, c.stamp_rally
+            coalesce(c.id, r.id) as catalogue_id,
+            case when r.id is not null then 'stamp_rally' else c.catalogue_type end as catalogue_type,
+            coalesce(c.booth_number, 'Stamp Rally') as booth_number,
+            coalesce(c.artist_name, r.title) as artist_name,
+            coalesce(c.fandom_tags, r.fandom, '{}'::text[]) as fandom_tags,
+            coalesce(c.merch_tags, '{}'::text[]) as merch_tags,
+            coalesce(c.stamp_rally, false) as stamp_rally,
+            r.description as rally_description, r.prizes as rally_prizes, r.method as rally_method, r.participants as rally_participants
      from public.mcc_bookmark_groups g
      join public.events e on e.slug = g.event_slug
      join public.mcc_bookmark_group_members m on m.group_id = g.id
      join public.mcc_usernames u on u.user_id = m.user_id
      left join public.mcc_user_bookmarks b on b.user_id = m.user_id and b.catalogue_key like g.event_slug || ':%'
-     left join public.catalogue_entries c on c.event_slug = g.event_slug and c.id::text = split_part(b.catalogue_key, ':', 2)
+     left join public.catalogue_entries c on c.event_slug = g.event_slug and c.id::text = split_part(b.catalogue_key, ':', 2) and split_part(b.catalogue_key, ':', 2) !~ '^sr-'
+     left join public.stamp_rallies r on r.event_id = e.id and ('sr-' || r.id::text) = split_part(b.catalogue_key, ':', 2)
      where g.id = $1::uuid
      order by lower(u.username), lower(c.booth_number)`, [groupId])
   if (!result.rowCount) return { ok: false as const, message: 'This shared list is unavailable.' }
   const first = result.rows[0]
   const members = new Map<string, { username: string; role: string }>()
-  const bookmarkMap = new Map<string, { key: string; booth: string; artistName: string; fandoms: string[]; merchTypes: string[]; stampRally: boolean; catalogueId: number; annotations: Array<{ username: string; labelName: string; labelColor: BookmarkValue['labelColor']; memo: string; isViewer: boolean }> }>()
+  const bookmarkMap = new Map<string, { key: string; booth: string; artistName: string; fandoms: string[]; merchTypes: string[]; stampRally: boolean; catalogueId: number; catalogueType: string; rallyDescription: string | null; rallyPrizes: string | null; rallyMethod: string | null; rallyParticipants: string[]; annotations: Array<{ username: string; labelName: string; labelColor: BookmarkValue['labelColor']; memo: string; isViewer: boolean }> }>()
   for (const row of result.rows) {
     members.set(row.member_user_id, { username: row.username, role: row.role })
     if (row.catalogue_id === null || !row.catalogue_key || !row.booth_number || !row.artist_name) continue
     const boothKey = row.catalogue_key
     let item = bookmarkMap.get(boothKey)
     if (!item) {
-      item = { key: boothKey, booth: row.booth_number, artistName: row.artist_name, fandoms: row.fandom_tags ?? [], merchTypes: row.merch_tags ?? [], stampRally: Boolean(row.stamp_rally), catalogueId: row.catalogue_id, annotations: [] }
+      item = { key: boothKey, booth: row.booth_number, artistName: row.artist_name, fandoms: row.fandom_tags ?? [], merchTypes: row.merch_tags ?? [], stampRally: Boolean(row.stamp_rally), catalogueId: row.catalogue_id, catalogueType: row.catalogue_type ?? 'booth_catalogue', rallyDescription: row.rally_description, rallyPrizes: row.rally_prizes, rallyMethod: row.rally_method, rallyParticipants: row.rally_participants ?? [], annotations: [] }
       bookmarkMap.set(boothKey, item)
     }
     item.annotations.push({ username: row.username, labelName: row.label_name ?? '', labelColor: row.label_color ?? 'blue', memo: row.memo ?? '', isViewer: row.member_user_id === user.id })

@@ -156,6 +156,7 @@ export async function submitFanCafe(_prev: FormState, formData: FormData): Promi
   const location = field(formData, 'location', 200)
   const startDate = field(formData, 'startDate', 10)
   const endDate = field(formData, 'endDate', 10)
+  const registrationDeadline = field(formData, 'registrationDeadline', 10)
   const startTime = field(formData, 'startTime', 5)
   const endTime = field(formData, 'endTime', 5)
   const socialPlatform = field(formData, 'socialPlatform', 30)
@@ -171,7 +172,7 @@ export async function submitFanCafe(_prev: FormState, formData: FormData): Promi
   if (!name || !location || !startDate || !socialPlatform || !socialAccount || !fandom) {
     return { status: 'error', message: 'Please fill in all required fields.' }
   }
-  if (!validDate(startDate) || (endDate && !validDate(endDate))) {
+  if (!validDate(startDate) || (endDate && !validDate(endDate)) || (registrationDeadline && !validDate(registrationDeadline))) {
     return { status: 'error', message: 'Please enter a valid event date.' }
   }
   if (endDate && endDate < startDate) {
@@ -190,6 +191,7 @@ export async function submitFanCafe(_prev: FormState, formData: FormData): Promi
       location,
       startDate,
       endDate: endDate || null,
+      registrationDeadline: registrationDeadline || null,
       startTime: startTime || null,
       endTime: endTime || null,
       socialPlatform,
@@ -208,13 +210,15 @@ export async function submitStampRally(_prev: FormState, formData: FormData): Pr
   const socialMediaHandles = field(formData, 'socialMediaHandles', 500)
   const eventName = field(formData, 'eventName', 150)
   const fandom = field(formData, 'fandom', 200)
+  const prizes = field(formData, 'prizes', 1000)
+  const method = field(formData, 'method', 1000)
   const postLink = field(formData, 'postLink', 500)
   const notes = field(formData, 'notes', 2000)
   const uploadedValue = formData.get('stampRallyFile')
   const stampRallyFile = uploadedValue instanceof File && uploadedValue.size > 0 ? uploadedValue : null
 
-  if (!artistNames || !socialMediaHandles || !eventName || !fandom) {
-    return { status: 'error', message: 'Artist names, social media handles, event, and fandom are required.' }
+  if (!artistNames || !socialMediaHandles || !eventName || !fandom || !prizes || !method) {
+    return { status: 'error', message: 'Artist names, social media handles, event, fandom, prizes, and method are required.' }
   }
   if (postLink) {
     try {
@@ -249,6 +253,8 @@ export async function submitStampRally(_prev: FormState, formData: FormData): Pr
       socialMediaHandles,
       eventName,
       fandom,
+      prizes,
+      method,
       postLink: postLink || null,
       uploadFilePath,
       notes: notes || null,
