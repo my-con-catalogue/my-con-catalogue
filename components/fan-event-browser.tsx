@@ -23,6 +23,7 @@ export type FanEventListing = {
   startTime: string | null
   endTime: string | null
   description: string | null
+  registrationDeadline: string | null
 }
 
 function formatTime(value: string) {
@@ -84,6 +85,7 @@ export function FanEventBrowser({ cafes, initialYear }: { cafes: FanEventListing
                     {cafe.description && <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{cafe.description}</p>}
                     <dl className="mt-5 flex flex-col gap-3 border-t border-border pt-4 text-sm">
                       <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</dt><dd className="mt-0.5">{formatDateRange(cafe.startDate, cafe.endDate)}</dd></div></div>
+                      {cafe.registrationDeadline && <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Registration deadline</dt><dd className="mt-0.5">{formatDateRange(cafe.registrationDeadline, null)}</dd></div></div>}
                       <div className="flex items-start gap-2"><Clock3 className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time</dt><dd className="mt-0.5">{time}</dd></div></div>
                       <div className="flex items-start gap-2"><MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Location</dt><dd className="mt-0.5">{cafe.location ?? 'TBA'}</dd></div></div>
                     </dl>

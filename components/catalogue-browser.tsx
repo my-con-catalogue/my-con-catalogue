@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Bookmark, Check, ChevronDown, Search, X } from 'lucide-react'
 import { ArtistSocialLinks } from '@/components/artist-social-links'
 import { SocialPostEmbed } from '@/components/social-post-embed'
@@ -42,12 +42,14 @@ type SavedCatalogueFilters = {
 
 type StampRallyEntry = {
   id: number
+  eventSlug: string
   title: string
   socialPostUrl: string | null
   fandom: readonly string[] | null
   participants: string[]
   description: string | null
   prizes: string | null
+  method: string | null
 }
 
 function storedStringSet(value: unknown) {
@@ -231,6 +233,29 @@ function TagList({ tags, label, maxRows = 3, outlined = false }: { tags: readonl
       )}
     </ul>
   )
+}
+
+function PageJump({ pageCount, onSelect }: { pageCount: number; onSelect: (page: number) => void }) {
+  const [value, setValue] = useState('')
+  const id = useId()
+  const go = (page: number) => {
+    if (Number.isInteger(page) && page >= 1 && page <= pageCount) onSelect(page)
+  }
+  return <details className="group relative">
+    <summary aria-label="Jump to page" className="flex min-w-10 cursor-pointer list-none items-center justify-center rounded-lg border border-input bg-card px-3 py-2 text-sm font-semibold hover:bg-secondary [&::-webkit-details-marker]:hidden">…</summary>
+    <div className="absolute left-1/2 z-20 mt-2 w-64 -translate-x-1/2 rounded-xl border border-border bg-card p-3 shadow-xl">
+      <label className="block text-xs font-semibold" htmlFor={`${id}-number`}>Go to page</label>
+      <form className="mt-2 flex gap-2" onSubmit={(event) => { event.preventDefault(); go(Number(value)); }}>
+        <input id={`${id}-number`} type="number" min={1} max={pageCount} value={value} onChange={(event) => setValue(event.target.value)} placeholder={`1–${pageCount}`} className="h-10 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm" />
+        <button type="submit" className="rounded-lg bg-foreground px-3 text-sm font-semibold text-background">Go</button>
+      </form>
+      <label className="mt-3 block text-xs font-semibold" htmlFor={`${id}-select`}>Or choose a page</label>
+      <select id={`${id}-select`} defaultValue="" onChange={(event) => { if (event.target.value) go(Number(event.target.value)); }} className="mt-2 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm">
+        <option value="" disabled>Select page…</option>
+        {Array.from({ length: pageCount }, (_, index) => <option key={index + 1} value={index + 1}>Page {index + 1}</option>)}
+      </select>
+    </div>
+  </details>
 }
 
 export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = [] }: { entries: readonly CatalogueEntry[]; boothNumbers?: readonly string[]; stampRallies?: readonly StampRallyEntry[] }) {
@@ -503,9 +528,12 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     if (stampRally.size > 0 && !stampRally.has(e.stampRally ? 'Yes' : 'No')) return false
     return true
   })
-  const filteredStampRallies = stampRallies.filter((rally) =>
-    stampRallyFandoms.size === 0 || cleanFandomTags(rally.fandom).some((fandom) => [...stampRallyFandoms].some((selected) => normalizedTag(selected) === normalizedTag(fandom))),
-  )
+  const filteredStampRallies = stampRallies.filter((rally) => {
+    const key = `${rally.eventSlug}:sr-${rally.id}`
+    return (!showBookmarkedOnly || bookmarks.has(key))
+      && (bookmarkColorFilters.size === 0 || bookmarkColorFilters.has((bookmarkLabels[key] ?? DEFAULT_BOOKMARK_LABEL).color))
+      && (stampRallyFandoms.size === 0 || cleanFandomTags(rally.fandom).some((fandom) => [...stampRallyFandoms].some((selected) => normalizedTag(selected) === normalizedTag(fandom))))
+  })
 
   const hasFilters = query !== '' || fandoms.size > 0 || merch.size > 0 || stampRally.size > 0 || stampRallyFandoms.size > 0 || showBookmarkedOnly || bookmarkColorFilters.size > 0
   const pageCount = Math.max(1, Math.ceil(filtered.length / CATALOGUES_PER_PAGE))
@@ -546,6 +574,22 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     void saveCloudBookmark({ key, labelName: label.name, labelColor: label.color, memo })
   }
 
+  const saveStampRallyBookmark = (rally: StampRallyEntry, label: BookmarkLabel, memo: string) => {
+    const key = `${rally.eventSlug}:sr-${rally.id}`
+    setBookmarks((current) => new Set(current).add(key))
+    setBookmarkLabels((current) => ({ ...current, [key]: label }))
+    setBookmarkMemos((current) => ({ ...current, [key]: memo }))
+    void saveCloudBookmark({ key, labelName: label.name, labelColor: label.color, memo })
+  }
+
+  const removeStampRallyBookmark = (rally: StampRallyEntry) => {
+    const key = `${rally.eventSlug}:sr-${rally.id}`
+    setBookmarks((current) => { const next = new Set(current); next.delete(key); return next })
+    setBookmarkLabels((current) => { const next = { ...current }; delete next[key]; return next })
+    setBookmarkMemos((current) => { const next = { ...current }; delete next[key]; return next })
+    void removeCloudBookmark(key)
+  }
+
   const removeBookmark = (entry: CatalogueEntry) => {
     const key = `${entry.eventSlug}:${entry.id}`
     setBookmarks((current) => {
@@ -558,7 +602,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
     void removeCloudBookmark(key)
   }
 
-  const savedCount = typeEntries.filter((entry) => bookmarks.has(`${entry.eventSlug}:${entry.id}`)).length
+  const savedCount = typeEntries.filter((entry) => bookmarks.has(`${entry.eventSlug}:${entry.id}`)).length + stampRallies.filter((rally) => bookmarks.has(`${rally.eventSlug}:sr-${rally.id}`)).length
   const catalogueByBoothLower = new Map<string, CatalogueEntry>()
   for (const entry of boothCatalogueEntries) {
     if (entry.booth?.trim()) catalogueByBoothLower.set(normalizeBooth(entry.booth), entry)
@@ -641,6 +685,10 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
         )}
         {catalogueType === 'stamp_rally' ? (
           <>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" aria-pressed={showBookmarkedOnly} onClick={() => setShowBookmarkedOnly((value) => !value)} className={cn('inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold', showBookmarkedOnly ? 'border-foreground bg-foreground text-background' : 'border-input bg-background hover:bg-secondary')}><Bookmark className="size-4" aria-hidden="true" />{showBookmarkedOnly ? 'Showing saved stamp rallies' : 'Show saved stamp rallies'} ({savedCount})</button>
+              {showBookmarkedOnly && <FilterDropdown label="Bookmark color" options={BOOKMARK_COLORS.map((color) => color.label)} selected={new Set(BOOKMARK_COLORS.filter((color) => bookmarkColorFilters.has(color.value)).map((color) => color.label))} onToggle={(label) => { const color = BOOKMARK_COLORS.find((choice) => choice.label === label); if (!color) return; setBookmarkColorFilters((current) => { const next = new Set(current); next.has(color.value) ? next.delete(color.value) : next.add(color.value); return next }) }} />}
+            </div>
             <div className="flex flex-wrap gap-2">
               <FilterDropdown label="Fandom" options={stampRallyFandomOptions} selected={stampRallyFandoms} onToggle={toggle(setStampRallyFandoms)} searchable={stampRallyFandomOptions.length > 8} />
             </div>
@@ -722,14 +770,18 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
           <p className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">No stamp rallies match this fandom filter.</p>
         ) : (
           <ul className="grid gap-6 sm:grid-cols-2">
-            {filteredStampRallies.map((rally) => (
-              <li key={rally.id} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
-                <h3 className="text-xl font-bold leading-tight">{rally.title}</h3>
+            {filteredStampRallies.map((rally) => {
+              const rallyKey = `${rally.eventSlug}:sr-${rally.id}`
+              const rallyBookmarked = bookmarks.has(rallyKey)
+              const rallyLabel = bookmarkLabels[rallyKey] ?? DEFAULT_BOOKMARK_LABEL
+              return <li key={rally.id} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
+                <div className="flex items-start justify-between gap-3"><h3 className="text-xl font-bold leading-tight">{rally.title}</h3><BookmarkEditor isBookmarked={rallyBookmarked} label={rallyLabel} memo={bookmarkMemos[rallyKey] ?? ''} onSave={(label, memo) => saveStampRallyBookmark(rally, label, memo)} onRemove={() => removeStampRallyBookmark(rally)} itemName={`${rally.title} · Stamp Rally`} iconOnly /></div>
+                {rallyBookmarked && <details className="rounded-lg border border-amber-200 bg-amber-50/80 text-foreground"><summary className="group flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm font-semibold [&::-webkit-details-marker]:hidden"><span className={cn('size-3.5 shrink-0 rounded-full border', BOOKMARK_COLORS.find((color) => color.value === rallyLabel.color)?.swatch)} aria-hidden="true" /><span className="min-w-0 truncate">{rallyLabel.name || 'Add a visit memo'}</span><ChevronDown className="ml-auto size-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" /></summary><div className="border-t border-amber-200 px-3 py-2 text-sm">{bookmarkMemos[rallyKey]?.trim() ? <p className="whitespace-pre-line break-words">{bookmarkMemos[rallyKey]}</p> : <p className="text-muted-foreground">No visit memo added.</p>}</div></details>}
                 {rally.socialPostUrl?.trim() && <SocialPostEmbed postUrl={rally.socialPostUrl} title={`${rally.title} stamp rally post`} />}
                 {cleanFandomTags(rally.fandom).length > 0 && (
                   <div>
                     <p className="text-xs font-bold">Fandom:</p>
-                    <TagList tags={cleanFandomTags(rally.fandom)} label={`${rally.title} fandoms`} maxRows={3} />
+                    <TagList tags={cleanFandomTags(rally.fandom)} label={`${rally.title} fandoms`} maxRows={2} />
                   </div>
                 )}
                 {rally.participants.length > 0 && (
@@ -749,8 +801,9 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 )}
                 {rally.description?.trim() && <p className="whitespace-pre-line text-sm leading-relaxed"><span className="font-bold">Description: </span>{rally.description}</p>}
                 {rally.prizes?.trim() && <p className="whitespace-pre-line text-sm leading-relaxed"><span className="font-bold">Prizes: </span>{rally.prizes}</p>}
+                {rally.method?.trim() && <p className="whitespace-pre-line text-sm leading-relaxed"><span className="font-bold">Method: </span>{rally.method}</p>}
               </li>
-            ))}
+            })}
           </ul>
         )
       ) : filtered.length === 0 ? (
@@ -837,11 +890,11 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 </p>
                 <div>
                   <p className="text-xs font-bold">Fandom:</p>
-                  <TagList tags={entry.fandoms} label="Fandoms" maxRows={3} />
+                    <TagList tags={entry.fandoms} label="Fandoms" maxRows={2} />
                 </div>
                 <div className="mt-auto">
                   <p className="text-xs font-bold">Merch:</p>
-                  <TagList tags={entry.merchTypes} label="Merch types" maxRows={3} outlined />
+                  <TagList tags={entry.merchTypes} label="Merch types" maxRows={2} outlined />
                 </div>
                 <p className={cn('inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold', entry.stampRally ? 'border-emerald-800 bg-emerald-700 text-white' : 'border-border bg-muted text-foreground')}>
                   <span aria-hidden="true">{entry.stampRally ? '✦' : '♡'}</span>Stamp Rally · {entry.stampRally ? 'Yes' : 'No'}
@@ -868,7 +921,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
           </button>
           {pageNumbers.map((number, index) => (
             <span key={number} className="contents">
-              {index > 0 && pageNumbers[index - 1] < number - 1 && <span className="px-1 text-muted-foreground" aria-hidden="true">…</span>}
+              {index > 0 && pageNumbers[index - 1] < number - 1 && <PageJump pageCount={pageCount} onSelect={goToPage} />}
               <button
                 type="button"
                 onClick={() => goToPage(number)}

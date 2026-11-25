@@ -29,6 +29,11 @@ export function FanCafeSubmissionForm() {
           </FormField>
         </div>
         <div className="min-w-0 w-full overflow-hidden">
+          <FormField id="fc-registration-deadline" label="Registration deadline">
+            <input id="fc-registration-deadline" name="registrationDeadline" type="date" className={`${inputClass} box-border block w-full min-w-0 max-w-full appearance-auto`} style={{ width: '100%', minWidth: 0, maxWidth: '100%' }} />
+          </FormField>
+        </div>
+        <div className="min-w-0 w-full overflow-hidden">
           <FormField id="fc-start-time" label="Start time">
             <input id="fc-start-time" name="startTime" type="time" className={`${inputClass} box-border block w-full min-w-0 max-w-full`} style={{ width: '100%', minWidth: 0, maxWidth: '100%' }} />
           </FormField>
