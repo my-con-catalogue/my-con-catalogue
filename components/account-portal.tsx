@@ -6,6 +6,7 @@ import { Eye, EyeOff, LogOut, Users } from 'lucide-react'
 import {
   createRecoveryCodeForCurrentUser,
   createUsernameAccount,
+  changeUsernameForCurrentUser,
   getAccountOverview,
   loginUsernameAccount,
   logoutUsernameAccount,
@@ -29,6 +30,7 @@ export function AccountPortal({ initialMode = 'login' }: { initialMode?: 'login'
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const [syncedUsername, setSyncedUsername] = useState('')
+  const [usernameDraft, setUsernameDraft] = useState('')
 
   const refresh = useCallback(async () => {
     setLoadError('')
@@ -41,6 +43,10 @@ export function AccountPortal({ initialMode = 'login' }: { initialMode?: 'login'
     }
   }, [])
   useEffect(() => { void refresh() }, [refresh])
+
+  useEffect(() => {
+    if (overview?.signedIn) setUsernameDraft(overview.username)
+  }, [overview?.signedIn, overview?.username])
 
   useEffect(() => {
     if (!overview) return
@@ -107,6 +113,21 @@ export function AccountPortal({ initialMode = 'login' }: { initialMode?: 'login'
     setBusy(false)
   }
 
+  const submitUsernameChange = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!overview?.signedIn) return
+    setBusy(true)
+    setMessage('')
+    try {
+      const result = await changeUsernameForCurrentUser(usernameDraft)
+      setMessage(result.message)
+      if (result.ok) await refresh()
+    } catch {
+      setMessage('We could not change your username right now. Please try again later.')
+    }
+    setBusy(false)
+  }
+
   const recoveryCodeNotice = recoveryCode ? <aside className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-foreground">
     <p className="font-bold">Save this recovery code now</p>
     <p className="mt-1 text-sm leading-relaxed">It is shown only once. If you forget your password, this code lets you reset it without email. After a reset, you’ll receive a replacement code.</p>
@@ -168,6 +189,16 @@ export function AccountPortal({ initialMode = 'login' }: { initialMode?: 'login'
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
+      <section className="rounded-2xl border border-border bg-card p-5 sm:p-7">
+        <h2 className="text-xl font-extrabold">Change username</h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Usernames must be unique and not already taken by another person. You can change your username only once every 24 hours.</p>
+        <form onSubmit={submitUsernameChange} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <label className="flex-1 text-sm font-semibold">New username
+            <input value={usernameDraft} onChange={(event) => setUsernameDraft(event.target.value)} autoComplete="username" minLength={3} maxLength={24} pattern="[A-Za-z0-9_]{3,24}" required className="mt-1.5 h-11 w-full rounded-lg border border-input bg-background px-3 font-normal outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+          </label>
+          <button type="submit" disabled={busy || usernameDraft.trim().toLowerCase() === overview.username.toLowerCase()} className="rounded-full bg-foreground px-5 py-2.5 font-semibold text-background disabled:opacity-50">Update username</button>
+        </form>
+      </section>
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-7">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div><p className="text-sm text-muted-foreground">Signed in as</p><h2 className="text-2xl font-extrabold">@{overview.username}</h2><p className="mt-1 text-sm text-muted-foreground">Your saved catalogues sync to this account. Bookmarks already on this browser are merged automatically.</p></div>
