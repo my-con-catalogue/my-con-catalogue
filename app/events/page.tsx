@@ -46,7 +46,7 @@ export default async function EventsPage({ searchParams }: Props) {
         description="Browse all listed events or choose a year to narrow the list."
       >
         <p role="note" className="mt-5 rounded-xl border border-primary/30 bg-accent/40 px-5 py-4 text-sm leading-relaxed text-foreground">
-          <strong>Archive coverage:</strong> MYConCatalogue began in mid-October 2026. Due to limited manpower and time, we can&apos;t archive earlier 2026 events or events from before 2026. Please don&apos;t submit catalogues for those periods. If an event from our archive period is missing, <Link href="/contact#suggestion-form" className="font-semibold text-primary underline underline-offset-4">send us a suggestion</Link>.
+          <strong>Archive coverage:</strong> MYConCatalogue began in mid-October 2026. Due to limited manpower and time, <strong>earlier 2026 events and events from before 2026 aren&apos;t included in the archive</strong>. Please don&apos;t submit catalogues for those periods. If an event from our archive period is missing, <Link href="/contact#suggestion-form" className="font-semibold text-primary underline underline-offset-4">send us a suggestion</Link>.
         </p>
         {years.length > 0 && (
           <nav aria-label="Filter events by year" className="mt-6">
