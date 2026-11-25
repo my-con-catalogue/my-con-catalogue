@@ -17,6 +17,7 @@ export const previewFanCafes: FanCafeRecord[] = [
     startTime: '12:00 PM',
     endTime: '5:00 PM',
     description: null,
+    registrationDeadline: null,
     createdAt: new Date(0),
   },
   {
@@ -33,6 +34,7 @@ export const previewFanCafes: FanCafeRecord[] = [
     startTime: '11:00 AM',
     endTime: '5:00 PM',
     description: null,
+    registrationDeadline: null,
     createdAt: new Date(0),
   },
   {
@@ -49,6 +51,7 @@ export const previewFanCafes: FanCafeRecord[] = [
     startTime: '11:00 AM',
     endTime: '4:00 PM',
     description: null,
+    registrationDeadline: null,
     createdAt: new Date(0),
   },
   {
@@ -65,6 +68,7 @@ export const previewFanCafes: FanCafeRecord[] = [
     startTime: '12:00 PM',
     endTime: '6:00 PM',
     description: null,
+    registrationDeadline: null,
     createdAt: new Date(0),
   },
 ]

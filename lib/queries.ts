@@ -161,16 +161,19 @@ export async function getEventStampRallies(eventId: number) {
   return db
     .select({
       id: stampRallies.id,
+      eventSlug: events.slug,
       eventId: stampRallies.eventId,
       title: stampRallies.title,
       description: stampRallies.description,
       socialPostUrl: stampRallies.socialPostUrl,
       fandom: stampRallies.fandom,
       prizes: stampRallies.prizes,
+      method: stampRallies.method,
       imageUrl: stampRallies.imageUrl,
       participants: stampRallies.participants,
     })
     .from(stampRallies)
+    .innerJoin(events, eq(stampRallies.eventId, events.id))
     .where(eq(stampRallies.eventId, eventId))
     .orderBy(asc(stampRallies.title))
 }
