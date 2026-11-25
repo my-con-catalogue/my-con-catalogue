@@ -19,6 +19,7 @@ export function SharedListsPortal() {
   const [loadError, setLoadError] = useState('')
   const [groupName, setGroupName] = useState('')
   const [renameDrafts, setRenameDrafts] = useState<Record<string, string>>({})
+  const [editingGroupId, setEditingGroupId] = useState('')
   const [eventSlug, setEventSlug] = useState('')
   const [inviteCode, setInviteCode] = useState('')
   const [copiedGroup, setCopiedGroup] = useState('')
@@ -72,6 +73,7 @@ export function SharedListsPortal() {
       setMessage(result.message)
       if (result.ok) {
         setRenameDrafts((current) => ({ ...current, [groupId]: nextName }))
+        setEditingGroupId('')
         await refresh()
       }
     } catch { setMessage('Could not rename the list. Please try again.') }
@@ -129,8 +131,8 @@ export function SharedListsPortal() {
       <h3 className="font-extrabold">Your shared lists</h3>
       {overview.groups.length === 0 ? <p className="mt-3 rounded-lg border border-dashed border-border p-5 text-sm text-muted-foreground">You haven’t joined a shared list yet.</p> : <ul className="mt-3 flex flex-col gap-3">{overview.groups.map((group) => <li key={group.id} className="rounded-xl border border-border bg-background p-4">
         <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1"><Link href={`/account/groups/${group.id}`} className="font-bold text-primary underline underline-offset-2">{group.name}</Link><p className="mt-1 text-sm text-muted-foreground">{group.eventName} · {group.year} · {group.role}</p>
-          {group.role === 'owner' && <form onSubmit={(event) => void submitRename(event, group.id, group.name)} className="mt-3 flex flex-wrap gap-2"><label className="sr-only" htmlFor={`rename-group-${group.id}`}>Rename {group.name}</label><input id={`rename-group-${group.id}`} value={renameDrafts[group.id] ?? group.name} onChange={(event) => setRenameDrafts((current) => ({ ...current, [group.id]: event.target.value }))} maxLength={60} required className="h-9 min-w-0 flex-1 rounded-md border border-input bg-card px-3 text-sm" /><button type="submit" disabled={busy || !(renameDrafts[group.id] ?? group.name).trim() || (renameDrafts[group.id] ?? group.name).trim() === group.name} className="rounded-full border border-input px-3 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50">Rename list</button></form>}
-        </div><button type="button" disabled={busy} onClick={() => void groupAction(group.id, group.role === 'owner')} className="text-sm font-semibold text-rose-700 underline disabled:opacity-60">{group.role === 'owner' ? 'Delete list' : 'Leave list'}</button></div>
+        </div><div className="flex items-center gap-3">{group.role === 'owner' && <button type="button" disabled={busy} onClick={() => setEditingGroupId((current) => current === group.id ? '' : group.id)} className="text-sm font-semibold text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground disabled:opacity-60">{editingGroupId === group.id ? 'Cancel rename' : 'Rename'}</button>}<button type="button" disabled={busy} onClick={() => void groupAction(group.id, group.role === 'owner')} className="text-sm font-semibold text-rose-700 underline disabled:opacity-60">{group.role === 'owner' ? 'Delete list' : 'Leave list'}</button></div></div>
+        {group.role === 'owner' && editingGroupId === group.id && <form onSubmit={(event) => void submitRename(event, group.id, group.name)} className="mt-3 flex flex-wrap gap-2"><label className="sr-only" htmlFor={`rename-group-${group.id}`}>New name for {group.name}</label><input id={`rename-group-${group.id}`} value={renameDrafts[group.id] ?? group.name} onChange={(event) => setRenameDrafts((current) => ({ ...current, [group.id]: event.target.value }))} maxLength={60} required className="h-9 min-w-0 flex-1 rounded-md border border-input bg-card px-3 text-sm" /><button type="submit" disabled={busy || !(renameDrafts[group.id] ?? group.name).trim() || (renameDrafts[group.id] ?? group.name).trim() === group.name} className="rounded-full border border-input px-3 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50">Save name</button></form>}
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm"><span>Invite code:</span><code className="rounded bg-muted px-2 py-1 font-bold tracking-widest">{group.inviteCode}</code><button type="button" onClick={() => void copyCode(group.id, group.inviteCode)} className="inline-flex items-center gap-1 rounded border border-input px-2 py-1 text-xs font-semibold"><Copy className="size-3.5" />{copiedGroup === group.id ? <><Check className="size-3.5" />Copied</> : 'Copy'}</button></div>
       </li>)}</ul>}
     </section>
