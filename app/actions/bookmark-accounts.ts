@@ -318,6 +318,88 @@ export async function loginUsernameAccount(usernameRaw: string, password: string
   }
 }
 
+export async function changeUsernameForCurrentUser(usernameRaw: string): Promise<AccountActionResult> {
+  const username = usernameInput(usernameRaw)
+  if (!/^[a-z0-9_]{3,24}$/.test(username)) return { ok: false, message: 'Use a username of 3–24 letters, numbers, or underscores.' }
+
+  const user = await currentUser()
+  if (!user) return { ok: false, message: 'Sign in to change your username.' }
+
+  let client: Awaited<ReturnType<typeof pool.connect>> | null = null
+  let oldUsername = ''
+  let authUpdated = false
+  try {
+    client = await pool.connect()
+    await client.query('begin')
+    const current = await client.query<{ username: string; username_key: string; cooldown_active: boolean }>(
+      `select username, username_key,
+              username_changed_at is not null and username_changed_at > now() - interval '24 hours' as cooldown_active
+       from public.mcc_usernames where user_id = $1::uuid for update`,
+      [user.id],
+    )
+    if (!current.rowCount) {
+      await client.query('rollback')
+      return { ok: false, message: 'Your username record could not be found. Please contact support.' }
+    }
+
+    oldUsername = current.rows[0].username
+    if (username === current.rows[0].username_key) {
+      await client.query('rollback')
+      return { ok: false, message: 'That is already your username.' }
+    }
+    if (current.rows[0].cooldown_active) {
+      await client.query('rollback')
+      return { ok: false, message: 'Usernames can only be changed once every 24 hours. Please try again later.' }
+    }
+
+    await client.query(
+      'update public.mcc_usernames set username = $1, username_key = $2, username_changed_at = now() where user_id = $3::uuid',
+      [username, username, user.id],
+    )
+
+    const response = await authFetch(`admin/users/${user.id}`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${config().serviceKey}` },
+      body: JSON.stringify({
+        email: accountEmail(username),
+        email_confirm: true,
+        user_metadata: { ...user.user_metadata, username },
+      }),
+    }, true)
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '')
+      await client.query('rollback')
+      if (response.status === 409 || /already registered|already exists|email_exists|duplicate/i.test(detail)) {
+        return { ok: false, message: 'That username is already taken. Please choose another one.' }
+      }
+      return { ok: false, message: 'We could not change your username right now. Please try again later.' }
+    }
+
+    authUpdated = true
+    await client.query('commit')
+    return { ok: true, message: 'Your username has been changed. You can change it again after 24 hours.' }
+  } catch (error) {
+    try { await client?.query('rollback') } catch { /* Transaction may already be closed. */ }
+    if (authUpdated && oldUsername) {
+      try {
+        await authFetch(`admin/users/${user.id}`, {
+          method: 'PUT',
+          headers: { authorization: `Bearer ${config().serviceKey}` },
+          body: JSON.stringify({
+            email: accountEmail(oldUsername),
+            email_confirm: true,
+            user_metadata: { ...user.user_metadata, username: oldUsername },
+          }),
+        }, true)
+      } catch { /* Keep the database error private; support can reconcile account identity if needed. */ }
+    }
+    if ((error as { code?: string })?.code === '23505') return { ok: false, message: 'That username is already taken. Please choose another one.' }
+    return { ok: false, message: 'We could not change your username right now. Please try again later.' }
+  } finally {
+    client?.release()
+  }
+}
+
 export async function logoutUsernameAccount(): Promise<void> {
   const jar = await cookies()
   const accessToken = jar.get(ACCESS_COOKIE)?.value
@@ -517,6 +599,21 @@ export async function createBookmarkGroup(nameRaw: string, eventSlug: string): P
     await client.query('rollback')
     return { ok: false, message: 'Could not create the shared list. Please try again.' }
   } finally { client.release() }
+}
+
+export async function renameBookmarkGroup(groupId: string, nameRaw: string): Promise<AccountActionResult> {
+  if (!/^[0-9a-f-]{36}$/i.test(groupId)) return { ok: false, message: 'That shared list could not be found.' }
+  const user = await currentUser()
+  if (!user) return { ok: false, message: 'Sign in to rename a shared list.' }
+  const name = nameRaw.trim()
+  if (!name || name.length > 60) return { ok: false, message: 'Enter a list name between 1 and 60 characters.' }
+  const result = await pool.query(
+    'update public.mcc_bookmark_groups set name = $1 where id = $2::uuid and owner_user_id = $3::uuid returning id',
+    [name, groupId, user.id],
+  )
+  return result.rowCount
+    ? { ok: true, message: 'Shared list name updated.' }
+    : { ok: false, message: 'Only the owner can rename this shared list.' }
 }
 
 const MAX_BOOKMARK_GROUP_MEMBERS = 20
