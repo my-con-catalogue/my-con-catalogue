@@ -167,7 +167,8 @@ create table if not exists stamp_rallies (
 create table if not exists fan_cafes (
   id serial primary key,
   name text not null,
-  fandom text,
+  fandom text[] not null default '{}',
+  types text[] not null default '{}',
   location text,
   start_date date,
   end_date date,
@@ -184,6 +185,7 @@ alter table fan_cafes add column if not exists instagram_post_url text;
 alter table fan_cafes add column if not exists social_post_url text;
 alter table fan_cafes add column if not exists start_time text;
 alter table fan_cafes add column if not exists end_time text;
+alter table fan_cafes add column if not exists types text[] not null default '{}';
 
 create index if not exists fan_cafes_start_date_idx on fan_cafes(start_date desc);
 
@@ -191,9 +193,9 @@ create table if not exists interest_checks (
   id serial primary key,
   title text not null,
   social_post_url text,
-  type text not null,
+  type text[] not null default '{}',
   event_name text not null,
-  fandom text,
+  fandom text[] not null default '{}',
   status text,
   year integer not null,
   start_date date not null default ((now() at time zone 'Asia/Kuala_Lumpur')::date),
@@ -201,7 +203,7 @@ create table if not exists interest_checks (
   created_at timestamptz not null default now()
 );
 
-alter table interest_checks add column if not exists fandom text;
+alter table interest_checks add column if not exists fandom text[] not null default '{}';
 alter table interest_checks add column if not exists status text;
 
 create index if not exists interest_checks_year_cutoff_idx on interest_checks(year, cutoff_date);
@@ -229,20 +231,20 @@ grant select, insert, update, delete on public.artist_submissions to service_rol
 grant select, insert, update, delete on public.stamp_rally_submissions to service_role;
 grant select, insert, update, delete on public.fan_cafe_submissions to service_role;
 
-insert into fan_cafes (name, fandom, location, start_date, instagram_post_url, start_time, end_time)
-select 'Alien Stage CSE: The Grand Birthday Banquet', 'Alien Stage', 'Doutor Coffee, LaLaport BBCC', '2026-11-22', 'https://www.instagram.com/p/DdgiZpEJsSo/', '11:00 AM', '5:00 PM'
+insert into fan_cafes (name, fandom, types, location, start_date, instagram_post_url, start_time, end_time)
+select 'Alien Stage CSE: The Grand Birthday Banquet', array['Alien Stage'], array['Birthday Event', 'Cupsleeve Event (CSE)'], 'Doutor Coffee, LaLaport BBCC', '2026-11-22', 'https://www.instagram.com/p/DdgiZpEJsSo/', '11:00 AM', '5:00 PM'
 where not exists (select 1 from fan_cafes where instagram_post_url = 'https://www.instagram.com/p/DdgiZpEJsSo/');
 
-insert into fan_cafes (name, fandom, location, start_date, instagram_post_url, start_time, end_time)
-select 'Twisted Wonderland CSE: A Nightmare Before Christmas', 'Twisted Wonderland', 'Spillstone Coffee, Jalan Pudu', '2026-10-31', 'https://www.instagram.com/p/DbfJPaIxT_1/', '12:00 PM', '5:00 PM'
+insert into fan_cafes (name, fandom, types, location, start_date, instagram_post_url, start_time, end_time)
+select 'Twisted Wonderland CSE: A Nightmare Before Christmas', array['Twisted Wonderland'], array['Cupsleeve Event (CSE)'], 'Spillstone Coffee, Jalan Pudu', '2026-10-31', 'https://www.instagram.com/p/DbfJPaIxT_1/', '12:00 PM', '5:00 PM'
 where not exists (select 1 from fan_cafes where instagram_post_url = 'https://www.instagram.com/p/DbfJPaIxT_1/');
 
-insert into fan_cafes (name, fandom, location, start_date, instagram_post_url, start_time, end_time)
-select 'Batman: The Wayne Family''s Galaween', 'Batman', 'MM Cafe, LaLaport BBCC', '2026-10-17', 'https://www.instagram.com/p/DdtwtsfzAdZ/', '11:00 AM', '4:00 PM'
+insert into fan_cafes (name, fandom, types, location, start_date, instagram_post_url, start_time, end_time)
+select 'Batman: The Wayne Family''s Galaween', array['Batman'], array['Birthday Event'], 'MM Cafe, LaLaport BBCC', '2026-10-17', 'https://www.instagram.com/p/DdtwtsfzAdZ/', '11:00 AM', '4:00 PM'
 where not exists (select 1 from fan_cafes where instagram_post_url = 'https://www.instagram.com/p/DdtwtsfzAdZ/');
 
-insert into fan_cafes (name, fandom, location, start_date, instagram_post_url, start_time, end_time)
-select 'IDOLiSH7: HAPPY iN THE CUP!!', 'IDOLiSH7', 'MM Cafe, LaLaport BBCC', '2026-10-18', 'https://www.instagram.com/p/Dc8QsUdgYFX/', '12:00 PM', '6:00 PM'
+insert into fan_cafes (name, fandom, types, location, start_date, instagram_post_url, start_time, end_time)
+select 'IDOLiSH7: HAPPY iN THE CUP!!', array['IDOLiSH7'], array['Cupsleeve Event (CSE)'], 'MM Cafe, LaLaport BBCC', '2026-10-18', 'https://www.instagram.com/p/Dc8QsUdgYFX/', '12:00 PM', '6:00 PM'
 where not exists (select 1 from fan_cafes where instagram_post_url = 'https://www.instagram.com/p/Dc8QsUdgYFX/');
 
 create table if not exists suggestions (
