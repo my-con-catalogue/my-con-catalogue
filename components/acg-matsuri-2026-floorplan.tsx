@@ -73,8 +73,8 @@ function findCatalogue(booth: number, entries: readonly CatalogueEntry[]) {
 
 export function AcgMatsuri2026Floorplan({ entries }: { entries: readonly CatalogueEntry[] }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-[#d8f0f5] shadow-sm">
-      <div className="relative aspect-[875/733] w-full">
+    <div className="overflow-visible rounded-2xl border border-border bg-[#d8f0f5] shadow-sm">
+      <div data-floorplan-canvas className="relative aspect-[875/733] w-full">
         <Image
           src="/events/acg-matsuri-2026-floorplan.png"
           alt="ACG Matsuri 2026 Level 2 Artist Alley floor plan with booths A1 to A57"

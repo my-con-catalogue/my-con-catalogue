@@ -49,7 +49,7 @@ export function supportsSocialPostEmbed(postUrl: string) {
   return Boolean(getPostEmbed(postUrl))
 }
 
-export function SocialPostEmbed({ postUrl, title }: { postUrl: string; title: string }) {
+export function SocialPostEmbed({ postUrl, title, compact = false }: { postUrl: string; title: string; compact?: boolean }) {
   const embed = getPostEmbed(postUrl)
   const originalUrl = safeHttpUrl(embed?.canonicalUrl ?? postUrl)
   return (
@@ -59,7 +59,7 @@ export function SocialPostEmbed({ postUrl, title }: { postUrl: string; title: st
           src={embed.embedUrl}
           title={title}
           loading="lazy"
-          className={`${embed.height} w-full`}
+          className={`${compact ? 'h-[360px]' : embed.height} w-full`}
           referrerPolicy="strict-origin-when-cross-origin"
           allow="encrypted-media; clipboard-write; web-share"
         />
