@@ -23,7 +23,9 @@ export function CatalogueCover({ entry, compact = false }: { entry: CatalogueEnt
   return <section aria-label={`${entry.artistName} catalogue cover`} className="overflow-hidden bg-card">
     {image ? <div className={`relative ${frame} w-full bg-muted`}>
       <Image src={source!.href!} alt={`${entry.artistName} catalogue cover`} fill unoptimized className="object-contain" />
-    </div> : source && supportsSocialPostEmbed(source.value) ? <div className={`relative ${frame} w-full overflow-hidden`}><SocialPostEmbed postUrl={source.value} title={`${entry.artistName} catalogue cover preview`} compact /></div>
+    </div> : source && supportsSocialPostEmbed(source.value) ? compact
+      ? <div className={`relative ${frame} w-full overflow-hidden`}><SocialPostEmbed postUrl={source.value} title={`${entry.artistName} catalogue cover preview`} compact /></div>
+      : <SocialPostEmbed postUrl={source.value} title={`${entry.artistName} catalogue cover preview`} />
       : pdf ? <div className={`relative ${frame} w-full`}><iframe src={source!.href!} title={`${entry.artistName} catalogue cover preview`} className="absolute inset-0 size-full bg-white" /></div>
         : <div className={`flex ${frame} w-full items-center justify-center bg-muted px-5 text-center text-sm text-muted-foreground`}>Preview not available</div>}
   </section>

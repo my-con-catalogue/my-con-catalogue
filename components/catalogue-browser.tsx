@@ -840,9 +840,6 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 </div>
               </div>
               <CataloguePreview entry={entry} hasCatalogueMaterial={hasCatalogueMaterial} onNavigate={rememberCatalogueListPosition} />
-              <div className="overflow-hidden rounded-lg border border-border bg-muted">
-                <CatalogueCover entry={entry} compact />
-              </div>
               {isBookmarked && <details className="border-b border-border bg-amber-50/80 text-foreground">
                 <summary className="group flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
                   <span className={cn('size-3.5 shrink-0 rounded-full border', BOOKMARK_COLORS.find((color) => color.value === bookmarkLabel.color)?.swatch)} aria-hidden="true" />
@@ -892,6 +889,9 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                     ? `Catalogue available${entry.instagramPosts.length > 0 ? ` · ${entry.instagramPosts.length} Instagram post${entry.instagramPosts.length === 1 ? '' : 's'}` : ''}`
                     : 'Catalogue unavailable'}
                 </p>
+                <div className="overflow-hidden rounded-lg border border-border bg-muted">
+                  <CatalogueCover entry={entry} compact />
+                </div>
                 <div>
                   <p className="text-xs font-bold">Fandom:</p>
                     <TagList tags={entry.fandoms} label="Fandoms" maxRows={2} />
