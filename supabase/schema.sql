@@ -24,6 +24,7 @@ alter table events add column if not exists entry_status text not null default '
 insert into events (slug, name, year, display_order, is_upcoming, start_date, end_date, location, instagram, logo_url, entry_status) values
   ('anime-fest-2026', 'Anime Fest! 2026 / 3', 2026, 1, true, '2026-10-17', '2026-10-18', 'Lalaport Bukit Bintang City Centre', 'comic_fiesta', '/events/anime-fest.png', 'Free entry'),
   ('comic-fiesta-2026', 'Comic Fiesta 2026', 2026, 2, true, '2026-12-19', '2026-12-20', 'Kuala Lumpur Convention Centre', 'comic_fiesta', '/events/comic-fiesta.png', 'Ticketed'),
+  ('acg-mart-2026-3', 'ACG Mart 2026 / 3.0', 2026, 7, true, '2026-11-27', '2026-11-29', 'Lalaport Bukit Bintang City Centre, Level 2 (ACG Base)', 'jcosclub', '/events/acg-mart-2026-3-logo.png', 'Free entry'),
   ('otakyun-2026', 'Otakyun 2026', 2026, 3, true, null, null, null, null, '/events/otakyun.png', 'TBA'),
   ('yume-acg-2026', 'Yume ACG Fest 2026', 2026, 5, true, null, null, null, null, '/events/yume-acg-fest.png', 'TBA'),
   ('anime-fest-2027', 'Anime Fest! (2027)', 2027, 1, true, null, null, null, 'comic_fiesta', '/events/anime-fest.png', 'TBA'),
@@ -46,6 +47,8 @@ on conflict (slug) do update set
   instagram = coalesce(excluded.instagram, events.instagram),
   logo_url = coalesce(excluded.logo_url, events.logo_url),
   entry_status = excluded.entry_status;
+
+update events set description = '12:00 PM–12:00 AM.' where slug = 'acg-mart-2026-3';
 
 create table if not exists artists (
   id serial primary key,
@@ -151,6 +154,11 @@ select 'yume-acg-2026', 'A' || lpad(number::text, 2, '0'), number
 from generate_series(1, 28) as booth(number)
 on conflict (event_slug, booth_number) do nothing;
 
+insert into event_booths (event_slug, booth_number, display_order)
+select 'acg-mart-2026-3', 'R' || lpad(number::text, 2, '0'), number
+from generate_series(1, 21) as booth(number)
+on conflict (event_slug, booth_number) do nothing;
+
 create table if not exists stamp_rallies (
   id serial primary key,
   event_id integer not null references events(id) on delete cascade,
@@ -215,6 +223,7 @@ create table if not exists interest_check_submissions (
   id serial primary key,
   interest_check_name text not null,
   post_link text not null,
+  social_media text,
   type text not null,
   other_type text,
   fandom text not null,
@@ -223,6 +232,7 @@ create table if not exists interest_check_submissions (
   status text not null default 'pending',
   created_at timestamptz not null default now()
 );
+alter table interest_check_submissions add column if not exists social_media text;
 
 -- Explicit Data API grants for every table created by this schema script.
 grant select on public.events to anon;
