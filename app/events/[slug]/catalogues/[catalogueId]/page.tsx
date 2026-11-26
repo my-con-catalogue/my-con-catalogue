@@ -10,6 +10,7 @@ import { InstagramPostEmbed } from '@/components/instagram-post-embed'
 import { SocialPostEmbed, supportsSocialPostEmbed } from '@/components/social-post-embed'
 import { CatalogueViewTracker } from '@/components/catalogue-view-tracker'
 import { CatalogueBookmarkPanel } from '@/components/catalogue-bookmark-panel'
+import { CatalogueCover } from '@/components/catalogue-cover'
 
 function displayTag(tag: string) {
   return tag.toLocaleLowerCase().replace(/\b\p{L}/gu, (letter) => letter.toLocaleUpperCase())
@@ -119,6 +120,12 @@ export default async function CatalogueDetailPage({ params }: Props) {
     </>
   )}
 </p>
+      <section aria-labelledby="catalogue-cover-heading" className="mt-8">
+        <h2 id="catalogue-cover-heading" className="mb-4 text-2xl font-extrabold">Catalogue cover</h2>
+        <div className="mx-auto max-w-2xl">
+          <CatalogueCover entry={catalogue} />
+        </div>
+      </section>
       <section aria-labelledby="catalogue-posts-heading" className="mt-8">
         <h2 id="catalogue-posts-heading" className="mb-5 text-2xl font-extrabold">Catalogue material</h2>
         {catalogue.instagramPosts.length > 0 ? (
