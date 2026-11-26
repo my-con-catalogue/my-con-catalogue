@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { artistSubmissions, fanCafeSubmissions, stampRallySubmissions, suggestions } from '@/lib/db/schema'
+import { artistSubmissions, fanCafeSubmissions, interestCheckSubmissions, stampRallySubmissions, suggestions } from '@/lib/db/schema'
 
 export type FormState = { status: 'idle' | 'success' | 'error'; message: string }
 
@@ -28,6 +28,48 @@ export async function submitSuggestion(_prev: FormState, formData: FormData): Pr
     return { status: 'success', message: 'Thanks! Your suggestion has been sent.' }
   } catch {
     return { status: 'error', message: 'Something went wrong. Please try again.' }
+  }
+}
+
+export async function submitInterestCheck(_prev: FormState, formData: FormData): Promise<FormState> {
+  const interestCheckName = field(formData, 'interestCheckName', 200)
+  const postLink = field(formData, 'postLink', 500)
+  const type = field(formData, 'type', 50)
+  const otherType = field(formData, 'otherType', 100)
+  const fandom = field(formData, 'fandom', 300)
+  const eventName = field(formData, 'eventName', 200)
+  const cutoffDate = field(formData, 'cutoffDate', 10)
+  const allowedTypes = ['Merch Check', 'Stamp Rally', 'Fan Gathering', 'Cupsleeve Event (CSE)', 'Birthday Event', 'Other']
+  if (!interestCheckName || !postLink || !type || !fandom) {
+    return { status: 'error', message: 'Interest check name, post link, type, and fandom are required.' }
+  }
+  if (!allowedTypes.includes(type)) return { status: 'error', message: 'Choose a valid interest-check type.' }
+  if (type === 'Other' && !otherType) return { status: 'error', message: 'Enter the other interest-check category.' }
+  try {
+    const url = new URL(postLink)
+    if (!['http:', 'https:'].includes(url.protocol)) throw new Error()
+  } catch {
+    return { status: 'error', message: 'The post link must be a valid http(s) URL.' }
+  }
+  if (cutoffDate) {
+    const parsedDate = new Date(`${cutoffDate}T00:00:00Z`)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(cutoffDate) || Number.isNaN(parsedDate.valueOf()) || parsedDate.toISOString().slice(0, 10) !== cutoffDate) {
+      return { status: 'error', message: 'Enter a valid cutoff date.' }
+    }
+  }
+  try {
+    await db.insert(interestCheckSubmissions).values({
+      interestCheckName,
+      postLink,
+      type,
+      otherType: type === 'Other' ? otherType : null,
+      fandom,
+      eventName: eventName || null,
+      cutoffDate: cutoffDate || null,
+    })
+    return { status: 'success', message: 'Thanks! Your interest check submission is in the review queue.' }
+  } catch {
+    return { status: 'error', message: 'We could not save your submission. Please try again later.' }
   }
 }
 
