@@ -117,6 +117,7 @@ export const interestCheckSubmissions = pgTable('interest_check_submissions', {
   id: serial('id').primaryKey(),
   interestCheckName: text('interest_check_name').notNull(),
   postLink: text('post_link').notNull(),
+  socialMedia: text('social_media'),
   type: text('type').notNull(),
   otherType: text('other_type'),
   fandom: text('fandom').notNull(),
