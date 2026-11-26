@@ -72,8 +72,8 @@ export function CataloguePreview({ entry, hasCatalogueMaterial, onNavigate }: { 
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) cancelPreview()
       }}
     >
-      <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} onClick={onNavigate} className="flex h-full items-center justify-center gap-1 border-b border-border bg-muted px-4 py-3 text-center text-base font-semibold tracking-wide text-primary transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" aria-label={`Click to view ${entry.artistName}'s catalogue${desktopHover ? '; hover or focus for a preview' : ''}`}>
-        {desktopHover ? '› Click to view / hover for preview ‹' : '› Click to view ‹'}
+      <Link href={`/events/${entry.eventSlug}/catalogues/${entry.id}`} onClick={onNavigate} className="flex h-full items-center justify-center gap-1 border-b border-border bg-muted px-4 py-3 text-center text-base font-semibold tracking-wide text-primary transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" aria-label={`View ${entry.artistName}'s full catalogue${desktopHover ? '; hover or focus for a preview' : ''}`}>
+        › View full catalogue here ‹
       </Link>
       {active && <div className="absolute left-1/2 top-full z-50 w-[min(88vw,34rem)] -translate-x-1/2">
         <section aria-label={`${entry.artistName} catalogue preview`} className="max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-card p-4 text-left shadow-2xl sm:p-5">

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 're
 import Link from 'next/link'
 import { Minus, Plus, RotateCcw, X } from 'lucide-react'
 import { CatalogueCover } from '@/components/catalogue-cover'
+import { ArtistSocialLinks } from '@/components/artist-social-links'
+import { TagList } from '@/components/catalogue-browser'
 import type { CatalogueEntry } from '@/lib/queries'
 
 export function FloorplanViewer({ entries, children }: { entries: readonly CatalogueEntry[]; children: ReactNode }) {
@@ -54,7 +56,25 @@ export function FloorplanViewer({ entries, children }: { entries: readonly Catal
           <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Booth {selected.booth}</p><h2 id="floorplan-catalogue-title" className="mt-1 truncate text-xl font-extrabold">{selected.artistName}</h2></div>
           <button type="button" aria-label="Close catalogue preview" onClick={() => setSelected(null)} className="shrink-0 rounded-full border border-input p-2 hover:bg-muted"><X className="size-4" /></button>
         </header>
-        <div className="overflow-y-auto p-4 sm:p-5"><CatalogueCover entry={selected} /></div>
+        <div className="overflow-y-auto p-4 sm:p-5">
+          <CatalogueCover entry={selected} />
+          <div className="mt-4 space-y-4">
+            <ArtistSocialLinks name={selected.artistName} instagrams={selected.artistInstagrams} links={selected.artistSocialLinks} className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-1.5" />
+            <p className="text-sm font-semibold text-muted-foreground">
+              {selected.instagramPosts.length || selected.catalogueFileUrls.length || selected.catalogueLinks.length
+                ? `Catalogue available${selected.instagramPosts.length ? ` · ${selected.instagramPosts.length} Instagram post${selected.instagramPosts.length === 1 ? '' : 's'}` : ''}`
+                : 'Catalogue unavailable'}
+            </p>
+            <div>
+              <p className="text-sm font-bold">Fandom:</p>
+              <TagList tags={selected.fandoms} label="Fandoms" maxRows={2} />
+            </div>
+            <div>
+              <p className="text-sm font-bold">Merch:</p>
+              <TagList tags={selected.merchTypes} label="Merch types" maxRows={2} outlined />
+            </div>
+          </div>
+        </div>
         <footer className="flex justify-end border-t border-border p-4">
           <Link href={`/events/${selected.eventSlug}/catalogues/${selected.id}`} className="rounded-full bg-foreground px-5 py-2.5 text-sm font-semibold text-background hover:opacity-90">Open full catalogue</Link>
         </footer>

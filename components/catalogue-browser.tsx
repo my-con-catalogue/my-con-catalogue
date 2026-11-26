@@ -165,7 +165,7 @@ function FilterDropdown({
   )
 }
 
-function TagList({ tags, label, maxRows = 3, outlined = false }: { tags: readonly string[]; label: string; maxRows?: number; outlined?: boolean }) {
+export function TagList({ tags, label, maxRows = 3, outlined = false }: { tags: readonly string[]; label: string; maxRows?: number; outlined?: boolean }) {
   const listRef = useRef<HTMLUListElement>(null)
   const [visibleCount, setVisibleCount] = useState(tags.length)
   const [expanded, setExpanded] = useState(false)
@@ -840,6 +840,9 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 </div>
               </div>
               <CataloguePreview entry={entry} hasCatalogueMaterial={hasCatalogueMaterial} onNavigate={rememberCatalogueListPosition} />
+              <div className="overflow-hidden rounded-lg border border-border bg-muted">
+                <CatalogueCover entry={entry} compact />
+              </div>
               {isBookmarked && <details className="border-b border-border bg-amber-50/80 text-foreground">
                 <summary className="group flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
                   <span className={cn('size-3.5 shrink-0 rounded-full border', BOOKMARK_COLORS.find((color) => color.value === bookmarkLabel.color)?.swatch)} aria-hidden="true" />
@@ -892,9 +895,6 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 <div>
                   <p className="text-xs font-bold">Fandom:</p>
                     <TagList tags={entry.fandoms} label="Fandoms" maxRows={2} />
-                </div>
-                <div className="overflow-hidden rounded-lg border border-border bg-muted">
-                  <CatalogueCover entry={entry} compact />
                 </div>
                 <div className="mt-auto">
                   <p className="text-xs font-bold">Merch:</p>
