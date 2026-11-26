@@ -16,6 +16,7 @@ import { InstagramIcon } from '@/components/social-icons'
 import { formatDateRange, instagramUrl } from '@/lib/format'
 import { getEventBoothNumbers, getEventBySlug, getEventCatalogues, getEventStampRallies } from '@/lib/queries'
 import { FloorplanDisclosure } from '@/components/floorplan-disclosure'
+import { FloorplanViewer } from '@/components/floorplan-viewer'
 
 export const revalidate = 3600
 
@@ -143,38 +144,38 @@ export default async function EventPage({ params }: Props) {
       </section>
 
       {event.slug === 'anime-fest-2026' && (
-        <FloorplanDisclosure id="interactive-map" title="Anime Fest! 2026 floor plan" description="Select a highlighted booth to open its catalogue. More booths become clickable as catalogue entries are added.">
-          <AnimeFestFloorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
+        <FloorplanDisclosure id="interactive-map" title="Anime Fest! 2026 floor plan" description="Select a highlighted booth to preview its catalogue. Use the zoom controls to explore the map.">
+          <FloorplanViewer entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')}><AnimeFestFloorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} /></FloorplanViewer>
         </FloorplanDisclosure>
       )}
 
       {event.slug === 'otakyun-2026' && (
-        <FloorplanDisclosure id="interactive-map" title="Otakyun 2026 floor plan" description="CR booths open their catalogue when one is listed. EX (Exhibitor) and CO (Community) booths are outside this catalogue and shown in gray.">
-          <OtakyunFloorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
+        <FloorplanDisclosure id="interactive-map" title="Otakyun 2026 floor plan" description="Select a listed CR booth to preview its catalogue. Use the zoom controls to explore the map. EX and CO booths are outside this catalogue and shown in gray.">
+          <FloorplanViewer entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')}><OtakyunFloorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} /></FloorplanViewer>
         </FloorplanDisclosure>
       )}
 
       {event.slug === 'vax-2026' && (
-        <FloorplanDisclosure id="interactive-map" title="VAX 2026 floor plan" description="Select a highlighted yellow booth to open its catalogue. Purple C booths are Cosplayer booths and are shown in gray.">
-          <Vax2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
+        <FloorplanDisclosure id="interactive-map" title="VAX 2026 floor plan" description="Select a highlighted yellow booth to preview its catalogue. Use the zoom controls to explore the map. Purple C booths are Cosplayer booths and are shown in gray.">
+          <FloorplanViewer entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')}><Vax2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} /></FloorplanViewer>
         </FloorplanDisclosure>
       )}
 
       {event.slug === 'yume-acg-2026' && (
-        <FloorplanDisclosure id="interactive-map" title="Yume ACG Fest 2026 floor plan" description="Select a blue Artist Alley booth to open its catalogue.">
-          <YumeAcg2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
+        <FloorplanDisclosure id="interactive-map" title="Yume ACG Fest 2026 floor plan" description="Select a blue Artist Alley booth to preview its catalogue. Use the zoom controls to explore the map.">
+          <FloorplanViewer entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')}><YumeAcg2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} /></FloorplanViewer>
         </FloorplanDisclosure>
       )}
 
       {event.slug === 'acg-matsuri-2026' && (
-        <FloorplanDisclosure id="interactive-map" title="ACG Matsuri 2026 floor plan" description="Select a booth to open its catalogue when one has been added.">
-          <AcgMatsuri2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
+        <FloorplanDisclosure id="interactive-map" title="ACG Matsuri 2026 floor plan" description="Select a listed booth to preview its catalogue. Use the zoom controls to explore the map.">
+          <FloorplanViewer entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')}><AcgMatsuri2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} /></FloorplanViewer>
         </FloorplanDisclosure>
       )}
 
       {event.slug === 'mahoumeki-2026' && (
-        <FloorplanDisclosure id="interactive-map" title="Mahoumeki 2026 Artist Alley floor plan" description="Select an Artist Alley booth to open its catalogue when one is listed. The student council booth 16, sponsor booths 17 and 18, and gaming studio booths 19 and 20 are gray and are not linked to catalogues.">
-          <Mahoumeki2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
+        <FloorplanDisclosure id="interactive-map" title="Mahoumeki 2026 Artist Alley floor plan" description="Select a listed Artist Alley booth to preview its catalogue. Use the zoom controls to explore the map. The student council booth 16, sponsor booths 17 and 18, and gaming studio booths 19 and 20 are gray and are not linked to catalogues.">
+          <FloorplanViewer entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')}><Mahoumeki2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} /></FloorplanViewer>
         </FloorplanDisclosure>
       )}
 
