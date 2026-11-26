@@ -25,9 +25,11 @@ export function FloorplanViewer({ entries, children }: { entries: readonly Catal
 
   const handleMapClick = (event: MouseEvent<HTMLDivElement>) => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-    const anchor = (event.target as Element).closest<HTMLAnchorElement>('[data-floorplan-canvas] a[href*="/catalogues/"]')
-    if (!anchor) return
-    const path = new URL(anchor.href, window.location.href).pathname
+    const anchor = (event.target as Element).closest('a[href*="/catalogues/"]')
+    if (!anchor || !anchor.closest('[data-floorplan-canvas]')) return
+    const href = anchor.getAttribute('href')
+    if (!href) return
+    const path = new URL(href, window.location.href).pathname
     const match = path.match(/^\/events\/([^/]+)\/catalogues\/(\d+)\/?$/)
     if (!match) return
     const entry = entries.find((item) => item.eventSlug === match[1] && item.id === Number(match[2]))

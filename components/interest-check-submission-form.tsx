@@ -39,6 +39,9 @@ export function InterestCheckSubmissionForm() {
       <FormField id="ic-cutoff" label="Cutoff date">
         <input id="ic-cutoff" name="cutoffDate" type="date" className={inputClass} />
       </FormField>
+      <FormField id="ic-social-media" label="Social media" required>
+        <input id="ic-social-media" name="socialMedia" type="text" required maxLength={300} placeholder="e.g. Instagram @username or profile link" className={inputClass} />
+      </FormField>
     </div>
     <FormField id="ic-post-link" label="Post link" required>
       <input id="ic-post-link" name="postLink" type="url" required maxLength={500} placeholder="https://" className={inputClass} />

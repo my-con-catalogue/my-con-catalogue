@@ -6,6 +6,7 @@ import { Bookmark, Check, ChevronDown, Search, X } from 'lucide-react'
 import { ArtistSocialLinks } from '@/components/artist-social-links'
 import { SocialPostEmbed } from '@/components/social-post-embed'
 import { CataloguePreview } from '@/components/catalogue-preview'
+import { CatalogueCover } from '@/components/catalogue-cover'
 import { BookmarkEditor, BOOKMARK_COLORS, DEFAULT_BOOKMARK_LABEL, isBookmarkLabel, type BookmarkLabel, type BookmarkColor } from '@/components/bookmark-editor'
 import { getArtistSocialAccounts } from '@/lib/artist-socials'
 import type { CatalogueEntry, CatalogueType } from '@/lib/queries'
@@ -891,6 +892,9 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                 <div>
                   <p className="text-xs font-bold">Fandom:</p>
                     <TagList tags={entry.fandoms} label="Fandoms" maxRows={2} />
+                </div>
+                <div className="overflow-hidden rounded-lg border border-border bg-muted">
+                  <CatalogueCover entry={entry} compact />
                 </div>
                 <div className="mt-auto">
                   <p className="text-xs font-bold">Merch:</p>

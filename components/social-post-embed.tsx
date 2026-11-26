@@ -1,3 +1,7 @@
+'use client'
+
+import { useState } from 'react'
+
 function getPostEmbed(postUrl: string) {
   try {
     const url = new URL(postUrl)
@@ -52,9 +56,10 @@ export function supportsSocialPostEmbed(postUrl: string) {
 export function SocialPostEmbed({ postUrl, title, compact = false }: { postUrl: string; title: string; compact?: boolean }) {
   const embed = getPostEmbed(postUrl)
   const originalUrl = safeHttpUrl(embed?.canonicalUrl ?? postUrl)
+  const [failed, setFailed] = useState(false)
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-white">
-      {embed ? (
+      {embed && !failed ? (
         <iframe
           src={embed.embedUrl}
           title={title}
@@ -62,9 +67,10 @@ export function SocialPostEmbed({ postUrl, title, compact = false }: { postUrl: 
           className={`${compact ? 'h-[360px]' : embed.height} w-full`}
           referrerPolicy="strict-origin-when-cross-origin"
           allow="encrypted-media; clipboard-write; web-share"
+          onError={() => setFailed(true)}
         />
       ) : (
-        <p className="p-5 text-sm text-muted-foreground">This social post link could not be embedded. You can still open the original link below.</p>
+        <p className="p-5 text-sm text-muted-foreground">Preview not available. You can still open the original link below.</p>
       )}
       <p className="border-t border-border px-4 py-3 text-center text-sm">
         {originalUrl ? <a href={originalUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-4">
