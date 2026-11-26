@@ -113,6 +113,19 @@ export const interestChecks = pgTable('interest_checks', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+export const interestCheckSubmissions = pgTable('interest_check_submissions', {
+  id: serial('id').primaryKey(),
+  interestCheckName: text('interest_check_name').notNull(),
+  postLink: text('post_link').notNull(),
+  type: text('type').notNull(),
+  otherType: text('other_type'),
+  fandom: text('fandom').notNull(),
+  eventName: text('event_name'),
+  cutoffDate: date('cutoff_date'),
+  status: text('status').notNull().default('pending'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export const suggestions = pgTable('suggestions', {
   id: serial('id').primaryKey(),
   name: text('name'),
