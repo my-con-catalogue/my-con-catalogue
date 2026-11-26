@@ -211,6 +211,19 @@ alter table interest_checks add column if not exists status text;
 
 create index if not exists interest_checks_year_cutoff_idx on interest_checks(year, cutoff_date);
 
+create table if not exists interest_check_submissions (
+  id serial primary key,
+  interest_check_name text not null,
+  post_link text not null,
+  type text not null,
+  other_type text,
+  fandom text not null,
+  event_name text,
+  cutoff_date date,
+  status text not null default 'pending',
+  created_at timestamptz not null default now()
+);
+
 -- Explicit Data API grants for every table created by this schema script.
 grant select on public.events to anon;
 grant select, insert, update, delete on public.events to authenticated, service_role;
@@ -228,6 +241,7 @@ grant select on public.fan_cafes to anon;
 grant select, insert, update, delete on public.fan_cafes to authenticated, service_role;
 grant select on public.interest_checks to anon;
 grant select, insert, update, delete on public.interest_checks to authenticated, service_role;
+grant select, insert, update, delete on public.interest_check_submissions to service_role;
 -- Form submissions may contain contact details. Keep them private in the Data API.
 grant select, insert, update, delete on public.suggestions to service_role;
 grant select, insert, update, delete on public.artist_submissions to service_role;
