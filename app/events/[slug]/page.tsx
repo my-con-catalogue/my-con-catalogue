@@ -10,6 +10,7 @@ import { Vax2026Floorplan } from '@/components/vax-2026-floorplan'
 import { YumeAcg2026Floorplan } from '@/components/yume-acg-2026-floorplan'
 import { AcgMatsuri2026Floorplan } from '@/components/acg-matsuri-2026-floorplan'
 import { Mahoumeki2026Floorplan } from '@/components/mahoumeki-2026-floorplan'
+import { AcgMart2026Floorplan } from '@/components/acg-mart-2026-3-floorplan'
 import { EventEntryBadge } from '@/components/event-entry-badge'
 import { EventStatusBadge } from '@/components/event-status-badge'
 import { InstagramIcon } from '@/components/social-icons'
@@ -135,6 +136,11 @@ export default async function EventPage({ params }: Props) {
                 Interactive map
               </a>
             )}
+            {event.slug === 'acg-mart-2026-3' && (
+              <a href="#interactive-map" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
+                Interactive map
+              </a>
+            )}
             <a href="#catalogue" className="rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background">
               Catalogue ({catalogues.length})
             </a>
@@ -175,6 +181,12 @@ export default async function EventPage({ params }: Props) {
       {event.slug === 'mahoumeki-2026' && (
         <FloorplanDisclosure id="interactive-map" title="Mahoumeki 2026 Artist Alley floor plan" description="Select an Artist Alley booth to open its catalogue when one is listed. The student council booth 16, sponsor booths 17 and 18, and gaming studio booths 19 and 20 are gray and are not linked to catalogues.">
           <Mahoumeki2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
+        </FloorplanDisclosure>
+      )}
+
+      {event.slug === 'acg-mart-2026-3' && (
+        <FloorplanDisclosure id="interactive-map" title="ACG Mart 2026 / 3.0 floor plan" description="Select an R01–R21 booth to open its catalogue when one is listed. Booth names and positions follow the supplied Level 2 ACG Base floor plan.">
+          <AcgMart2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} />
         </FloorplanDisclosure>
       )}
 
