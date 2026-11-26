@@ -24,19 +24,25 @@ begin
 end $$;
 
 insert into public.events (
-  slug, name, year, display_order, is_upcoming, location, entry_status, logo_url
+  slug, name, year, display_order, is_upcoming, start_date, end_date,
+  location, instagram, entry_status, description, logo_url
 )
 values (
-  'acg-mart-2026-3', 'ACG Mart 2026 / 3.0', 2026, 7, true,
-  'ACG Base, Level 2', 'TBA', '/events/acg-mart-2026-3-logo.png'
+  'acg-mart-2026-3', 'ACG Mart 2026 / 3.0', 2026, 7, true, '2026-11-27', '2026-11-29',
+  'Lalaport Bukit Bintang City Centre, Level 2 (ACG Base)', 'jcosclub', 'Free entry', '12:00 PM–12:00 AM.',
+  '/events/acg-mart-2026-3-logo.png'
 )
 on conflict (slug) do update set
   name = excluded.name,
   year = excluded.year,
   display_order = excluded.display_order,
   is_upcoming = excluded.is_upcoming,
+  start_date = excluded.start_date,
+  end_date = excluded.end_date,
   location = coalesce(excluded.location, events.location),
+  instagram = coalesce(excluded.instagram, events.instagram),
   entry_status = excluded.entry_status,
+  description = coalesce(excluded.description, events.description),
   logo_url = excluded.logo_url;
 
 insert into public.event_booths (event_slug, booth_number, display_order)
