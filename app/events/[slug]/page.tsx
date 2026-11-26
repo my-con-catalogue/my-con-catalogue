@@ -10,6 +10,7 @@ import { Vax2026Floorplan } from '@/components/vax-2026-floorplan'
 import { YumeAcg2026Floorplan } from '@/components/yume-acg-2026-floorplan'
 import { AcgMatsuri2026Floorplan } from '@/components/acg-matsuri-2026-floorplan'
 import { Mahoumeki2026Floorplan } from '@/components/mahoumeki-2026-floorplan'
+import { AcgMart2026Floorplan } from '@/components/acg-mart-2026-3-floorplan'
 import { EventEntryBadge } from '@/components/event-entry-badge'
 import { EventStatusBadge } from '@/components/event-status-badge'
 import { InstagramIcon } from '@/components/social-icons'
@@ -131,6 +132,11 @@ export default async function EventPage({ params }: Props) {
                 Interactive map
               </a>
             )}
+            {event.slug === 'acg-mart-2026-3' && (
+              <a href="#interactive-map" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
+                Interactive map
+              </a>
+            )}
             {event.slug === 'mahoumeki-2026' && (
               <a href="#interactive-map" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
                 Interactive map
@@ -170,6 +176,12 @@ export default async function EventPage({ params }: Props) {
       {event.slug === 'acg-matsuri-2026' && (
         <FloorplanDisclosure id="interactive-map" title="ACG Matsuri 2026 floor plan" description="Select a listed booth to preview its catalogue. Use the zoom controls to explore the map.">
           <FloorplanViewer entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')}><AcgMatsuri2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} /></FloorplanViewer>
+        </FloorplanDisclosure>
+      )}
+
+      {event.slug === 'acg-mart-2026-3' && (
+        <FloorplanDisclosure id="interactive-map" title="ACG Mart 2026 / 3.0 floor plan" description="Select a highlighted booth to preview its catalogue. Use the zoom controls to explore the map.">
+          <FloorplanViewer entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')}><AcgMart2026Floorplan entries={catalogues.filter((entry) => entry.catalogueType === 'booth_catalogue')} /></FloorplanViewer>
         </FloorplanDisclosure>
       )}
 
