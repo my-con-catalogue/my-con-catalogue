@@ -25,7 +25,7 @@ insert into events (slug, name, year, display_order, is_upcoming, start_date, en
   ('anime-fest-2026', 'Anime Fest! 2026 / 3', 2026, 1, true, '2026-10-17', '2026-10-18', 'Lalaport Bukit Bintang City Centre', 'comic_fiesta', '/events/anime-fest.png', 'Free entry'),
   ('comic-fiesta-2026', 'Comic Fiesta 2026', 2026, 2, true, '2026-12-19', '2026-12-20', 'Kuala Lumpur Convention Centre', 'comic_fiesta', '/events/comic-fiesta.png', 'Ticketed'),
   ('otakyun-2026', 'Otakyun 2026', 2026, 3, true, null, null, null, null, '/events/otakyun.png', 'TBA'),
-  ('acg-mart-2026-3', 'ACG Mart 2026 / 3.0', 2026, 7, true, null, null, 'ACG Base, Level 2', null, '/events/acg-mart-2026-3-logo.png', 'TBA'),
+  ('acg-mart-2026-3', 'ACG Mart 2026 / 3.0', 2026, 7, true, '2026-11-27', '2026-11-29', 'Lalaport Bukit Bintang City Centre, Level 2 (ACG Base)', 'jcosclub', '/events/acg-mart-2026-3-logo.png', 'Free entry'),
   ('yume-acg-2026', 'Yume ACG Fest 2026', 2026, 5, true, null, null, null, null, '/events/yume-acg-fest.png', 'TBA'),
   ('anime-fest-2027', 'Anime Fest! (2027)', 2027, 1, true, null, null, null, 'comic_fiesta', '/events/anime-fest.png', 'TBA'),
   ('anime-fest-plus-2027', 'Anime Fest! Plus (2027)', 2027, 2, true, null, null, null, 'comic_fiesta', '/events/anime-fest-plus.png', 'TBA'),
