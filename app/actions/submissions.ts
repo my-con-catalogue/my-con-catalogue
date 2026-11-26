@@ -34,14 +34,15 @@ export async function submitSuggestion(_prev: FormState, formData: FormData): Pr
 export async function submitInterestCheck(_prev: FormState, formData: FormData): Promise<FormState> {
   const interestCheckName = field(formData, 'interestCheckName', 200)
   const postLink = field(formData, 'postLink', 500)
+  const socialMedia = field(formData, 'socialMedia', 300)
   const type = field(formData, 'type', 50)
   const otherType = field(formData, 'otherType', 100)
   const fandom = field(formData, 'fandom', 300)
   const eventName = field(formData, 'eventName', 200)
   const cutoffDate = field(formData, 'cutoffDate', 10)
   const allowedTypes = ['Merch Check', 'Stamp Rally', 'Fan Gathering', 'Cupsleeve Event (CSE)', 'Birthday Event', 'Other']
-  if (!interestCheckName || !postLink || !type || !fandom) {
-    return { status: 'error', message: 'Interest check name, post link, type, and fandom are required.' }
+  if (!interestCheckName || !postLink || !socialMedia || !type || !fandom) {
+    return { status: 'error', message: 'Interest check name, social media, post link, type, and fandom are required.' }
   }
   if (!allowedTypes.includes(type)) return { status: 'error', message: 'Choose a valid interest-check type.' }
   if (type === 'Other' && !otherType) return { status: 'error', message: 'Enter the other interest-check category.' }
@@ -61,6 +62,7 @@ export async function submitInterestCheck(_prev: FormState, formData: FormData):
     await db.insert(interestCheckSubmissions).values({
       interestCheckName,
       postLink,
+      socialMedia,
       type,
       otherType: type === 'Other' ? otherType : null,
       fandom,
