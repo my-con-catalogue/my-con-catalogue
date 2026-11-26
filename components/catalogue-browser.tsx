@@ -884,14 +884,14 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
                     </div>
                   )
                 })()}
+                <div className="overflow-hidden rounded-lg border border-border bg-muted">
+                  <CatalogueCover entry={entry} compact />
+                </div>
                 <p className={cn('text-xs font-semibold', hasCatalogueMaterial ? 'text-muted-foreground' : 'text-rose-700')}>
                   {hasCatalogueMaterial
                     ? `Catalogue available${entry.instagramPosts.length > 0 ? ` · ${entry.instagramPosts.length} Instagram post${entry.instagramPosts.length === 1 ? '' : 's'}` : ''}`
                     : 'Catalogue unavailable'}
                 </p>
-                <div className="overflow-hidden rounded-lg border border-border bg-muted">
-                  <CatalogueCover entry={entry} compact />
-                </div>
                 <div>
                   <p className="text-xs font-bold">Fandom:</p>
                     <TagList tags={entry.fandoms} label="Fandoms" maxRows={2} />
