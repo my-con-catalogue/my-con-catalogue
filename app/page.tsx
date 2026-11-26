@@ -167,6 +167,22 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section aria-labelledby="about-mycc" className="mx-auto max-w-6xl px-4 py-14">
+        <div className="rounded-2xl border-2 border-foreground bg-card p-6 shadow-[6px_6px_0_0_var(--color-foreground)] md:p-9">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">A little about us</p>
+          <h2 id="about-mycc" className="mt-2 text-3xl font-extrabold tracking-tight">A community archive, made for easier browsing</h2>
+          <p className="mt-4 max-w-4xl leading-relaxed text-muted-foreground">
+            MYConCatalogue is an independent, community-run archive of Malaysian convention catalogues, Stamp Rallies, and fan events. It began as one attendee&apos;s personal collection before Anime Fest! 2026 / 3, and is growing with community submissions. This is a work in progress, so some details may be missing or need updating.
+          </p>
+          <p className="mt-3 max-w-4xl leading-relaxed text-muted-foreground">
+            We link back to artists&apos; and organisers&apos; original pages wherever possible. Please support their work and check official channels for the latest event information.
+          </p>
+          <Link href="/contact#suggestion-form" className="mt-5 inline-flex items-center gap-2 font-semibold text-primary underline underline-offset-4">
+            Send a correction or submission <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-6xl px-4 pt-16">
         <div className="flex flex-col items-start gap-6 rounded-2xl bg-primary p-8 text-primary-foreground md:flex-row md:items-center md:justify-between md:p-12">
           <div>
