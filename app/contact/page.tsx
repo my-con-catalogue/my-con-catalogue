@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/page-header'
 import { SuggestionForm } from '@/components/suggestion-form'
 import { StampRallySubmissionForm } from '@/components/stamp-rally-submission-form'
 import { FanCafeSubmissionForm } from '@/components/fan-cafe-submission-form'
+import { InterestCheckSubmissionForm } from '@/components/interest-check-submission-form'
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -30,6 +31,9 @@ export default function ContactPage() {
           </a>
           <a href="#fan-cafe-form" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
             Fan event
+          </a>
+          <a href="#interest-check-form" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
+            Interest check
           </a>
         </nav>
       </PageHeader>
@@ -66,6 +70,11 @@ export default function ContactPage() {
           <div className="mt-6">
             <FanCafeSubmissionForm />
           </div>
+        </section>
+        <section id="interest-check-form" aria-labelledby="interest-check-heading" className="w-full scroll-mt-24 rounded-2xl border-2 border-foreground bg-card p-6 shadow-[6px_6px_0_0_var(--color-foreground)] md:p-8">
+          <h2 id="interest-check-heading" className="text-2xl font-extrabold">Submit an interest check</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Send an interest check for review. It must relate to the Malaysia ACG scene.</p>
+          <div className="mt-6"><InterestCheckSubmissionForm /></div>
         </section>
       </div>
     </>
