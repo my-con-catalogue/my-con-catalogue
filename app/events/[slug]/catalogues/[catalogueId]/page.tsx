@@ -55,7 +55,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
   const artistSocialAccounts = getArtistSocialAccounts(catalogue.artistInstagrams, catalogue.artistSocialLinks)
   const catalogueSources = [...catalogue.instagramPosts, ...catalogue.catalogueFileUrls, ...catalogue.catalogueLinks]
   const coverSource = catalogueSources.find((source) => externalLink(source))
-  const withoutCoverSource = (sources: string[]) => {
+  const withoutCoverSource = (sources: readonly string[]) => {
     const index = coverSource ? sources.indexOf(coverSource) : -1
     return index < 0 ? sources : [...sources.slice(0, index), ...sources.slice(index + 1)]
   }
