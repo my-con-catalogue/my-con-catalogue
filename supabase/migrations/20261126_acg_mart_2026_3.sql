@@ -1,5 +1,5 @@
 -- Add ACG Mart 2026 / 3.0 and its R01–R21 booth index.
--- Event date and entry details were not provided yet, so these remain TBA.
+-- Event details: 27–29 November 2026, 12:00 PM–12:00 AM, free entry at Lalaport Bukit Bintang City Centre. Instagram: @jcosclub.
 
 -- Keep serial sequences ahead of manually imported IDs before inserting rows.
 do $$
