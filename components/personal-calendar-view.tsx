@@ -12,6 +12,12 @@ const categoryLabels: Record<PersonalCalendarEntry['category'], string> = {
   interest_check: 'Interest check',
   pickup_cutoff: 'Pick-up cutoff',
 }
+const categoryColors: Record<PersonalCalendarEntry['category'], string> = {
+  event: 'border-sky-300 bg-sky-100 text-sky-900',
+  fan_event: 'border-violet-300 bg-violet-100 text-violet-900',
+  interest_check: 'border-rose-300 bg-rose-100 text-rose-900',
+  pickup_cutoff: 'border-amber-300 bg-amber-100 text-amber-950',
+}
 const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -104,7 +110,7 @@ export function PersonalCalendarView() {
         <div className="min-w-0">
           {href ? <Link href={href} className="font-bold underline decoration-transparent underline-offset-4 hover:text-primary hover:decoration-current">{entry.title}</Link> : <p className="font-bold">{entry.title}</p>}
           <p className="mt-0.5 text-sm text-muted-foreground">{showDate ? displayDate(entry.date) + ' · ' : ''}{entry.detail || categoryLabels[entry.category]}</p>
-          <span className="mt-2 inline-flex rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground">{categoryLabels[entry.category]}</span>
+          <span className={'mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ' + categoryColors[entry.category]}>{categoryLabels[entry.category]}</span>
           {href && <Link href={href} className="ml-2 text-xs font-semibold text-primary underline underline-offset-2">Open page</Link>}
         </div>
       </div>
@@ -163,12 +169,16 @@ export function PersonalCalendarView() {
               const inMonth = date.getUTCMonth() === visibleMonth.getUTCMonth()
                 return <button key={key} type="button" onClick={() => setSelectedDate(key)} aria-label={displayDate(key, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + (dayEntries.length ? ', ' + dayEntries.length + ' reminders' : '')} className={'flex min-h-20 flex-col items-stretch justify-start border-b border-r border-border p-1 text-left transition-colors hover:bg-accent/50 sm:min-h-28 sm:p-2 ' + (inMonth ? 'bg-card' : 'bg-muted/40 text-muted-foreground') + (key === today ? ' ring-2 ring-inset ring-primary' : '')}>
                 <span className="flex w-full items-center justify-between text-xs font-bold sm:text-sm">{date.getUTCDate()}{dayEntries.length > 0 && <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] text-accent-foreground sm:px-2 sm:text-xs">{dayEntries.length}</span>}</span>
-                <span className="mt-1 hidden w-full flex-col gap-1 sm:flex">{dayEntries.slice(0, 2).map((entry) => <span key={entry.id} className="block line-clamp-2 rounded bg-accent/80 px-1.5 py-1 text-[11px] font-medium text-accent-foreground">{entry.title}</span>)}{dayEntries.length > 2 && <span className="px-1 text-[10px] font-semibold text-muted-foreground">+{dayEntries.length - 2} more</span>}</span>
-                {dayEntries.length > 0 && <span className="mt-2 flex gap-1 sm:hidden">{dayEntries.slice(0, 3).map((entry) => <span key={entry.id} className="size-1.5 rounded-full bg-primary" />)}</span>}
+                <span className="mt-1 hidden w-full flex-col gap-1 sm:flex">{dayEntries.slice(0, 2).map((entry) => <span key={entry.id} className={'block line-clamp-2 rounded border px-1.5 py-1 text-[11px] font-medium ' + categoryColors[entry.category]}>{entry.title}</span>)}{dayEntries.length > 2 && <span className="px-1 text-[10px] font-semibold text-muted-foreground">+{dayEntries.length - 2} more</span>}</span>
+                {dayEntries.length > 0 && <span className="mt-2 flex gap-1 sm:hidden">{dayEntries.slice(0, 3).map((entry) => <span key={entry.id} className={'size-1.5 rounded-full ' + categoryColors[entry.category].split(' ').find((className) => className.startsWith('bg-'))} />)}</span>}
               </button>
             })}
           </div>
           <p className="mt-3 text-xs text-muted-foreground">Select a date to view its reminders. Dates with a count have saved items.</p>
+          <div aria-label="Reminder color key" className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-4 text-xs font-semibold text-muted-foreground">
+            <span>Reminder colors:</span>
+            {(Object.keys(categoryLabels) as PersonalCalendarEntry['category'][]).map((category) => <span key={category} className="inline-flex items-center gap-2"><span className={'size-3 rounded-full border ' + categoryColors[category]} aria-hidden="true" />{categoryLabels[category]}</span>)}
+          </div>
         </> : monthEntries.length === 0 ? <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">No reminders saved for {monthLabel}.</p>
           : <div className="space-y-6">{groupedMonthEntries.map(({ date, entries: dayEntries }) => <section key={date} aria-label={displayDate(date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}>
             <h3 className="mb-3 border-b border-border pb-2 text-lg font-extrabold">{displayDate(date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</h3>
