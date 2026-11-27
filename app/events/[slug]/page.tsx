@@ -78,7 +78,7 @@ export default async function EventPage({ params }: Props) {
             <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{event.description}</p>
           )}
           <dl className="mt-6 flex flex-wrap gap-3 text-sm">
-            <div className="flex w-full items-center justify-between gap-3 rounded-full border border-border bg-card px-4 py-2">
+            <div className="inline-flex items-center justify-between gap-3 rounded-full border border-border bg-card px-4 py-2">
               <dt className="sr-only">Entry</dt>
               <dd><EventEntryBadge status={event.entryStatus} /></dd>
             </div>
