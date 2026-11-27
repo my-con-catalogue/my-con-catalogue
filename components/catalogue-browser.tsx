@@ -261,7 +261,7 @@ function PageJump({ pageCount, onSelect }: { pageCount: number; onSelect: (page:
   </details>
 }
 
-export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = [] }: { entries: readonly CatalogueEntry[]; boothNumbers?: readonly string[]; stampRallies?: readonly StampRallyEntry[] }) {
+export function CatalogueBrowser({ entries, eventName, boothNumbers = [], stampRallies = [] }: { entries: readonly CatalogueEntry[]; eventName?: string; boothNumbers?: readonly string[]; stampRallies?: readonly StampRallyEntry[] }) {
   const [catalogueType, setCatalogueType] = useState<CatalogueType | 'stamp_rally'>('booth_catalogue')
   const [query, setQuery] = useState('')
   const [fandoms, setFandoms] = useState<Set<string>>(new Set())
@@ -828,7 +828,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
             const pickupCalendarEntries = pickupCutoffDates.map((cutoff, index) => ({
               sourceKey: 'pickup-cutoff:' + entry.eventSlug + ':' + entry.id + ':' + index + ':' + cutoff.date,
               category: 'pickup_cutoff' as const,
-              title: entry.eventName + ' · ' + entry.artistName + ' · Booth ' + entry.booth,
+              title: (eventName || entry.eventSlug) + ' · ' + entry.artistName + ' · Booth ' + entry.booth,
               detail: cutoff.note ? 'Order cutoff (' + cutoff.note + ')' : 'Order cutoff',
               date: cutoff.date,
             }))
