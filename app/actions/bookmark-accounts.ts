@@ -796,6 +796,15 @@ export async function removePersonalCalendarEntry(id: number) {
   return { ok: true as const }
 }
 
+export async function removePersonalCalendarEntriesBySourceKeys(sourceKeys: string[]) {
+  const user = await currentUser()
+  if (!user) return { ok: false as const, needsLogin: true as const }
+  const keys = Array.isArray(sourceKeys) ? sourceKeys.filter((key) => typeof key === 'string' && key.length > 0 && key.length <= 180).slice(0, 30) : []
+  if (!keys.length) return { ok: false as const, message: 'No valid reminders were provided.' }
+  await pool.query('delete from public.mcc_user_calendar_items where user_id = $1::uuid and source_key = any($2::text[])', [user.id, keys])
+  return { ok: true as const }
+}
+
 export async function getPersonalCalendarEntries() {
   const user = await currentUser()
   if (!user) return { signedIn: false as const, entries: [] as PersonalCalendarEntry[] }
