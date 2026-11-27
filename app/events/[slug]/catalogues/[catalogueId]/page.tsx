@@ -139,14 +139,12 @@ export default async function CatalogueDetailPage({ params }: Props) {
     </>
   )}
 </p>
-      <section aria-labelledby="catalogue-cover-heading" className="mt-8">
-        <h2 id="catalogue-cover-heading" className="mb-4 text-2xl font-extrabold">Catalogue cover</h2>
+      <section aria-label="Catalogue preview" className="mt-8">
         <div className="mx-auto max-w-2xl">
           <CatalogueCover entry={catalogue} />
         </div>
       </section>
-      <section aria-labelledby="catalogue-posts-heading" className="mt-8">
-        <h2 id="catalogue-posts-heading" className="mb-5 text-2xl font-extrabold">Catalogue material</h2>
+      <section aria-label="Additional catalogue posts and files" className="mt-6">
         {remainingInstagramPosts.length > 0 ? (
           <div className="mx-auto flex max-w-2xl flex-col gap-8">
             {remainingInstagramPosts.slice(0, 10).map((postUrl, index) => (
