@@ -55,7 +55,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
   const pickupCalendarEntries = catalogue.catalogueType === 'pickup_only' ? parsePickupCutoffDates(catalogue.orderCutoff).map((cutoff, index) => ({
     sourceKey: 'pickup-cutoff:' + event.slug + ':' + catalogue.id + ':' + index + ':' + cutoff.date,
     category: 'pickup_cutoff' as const,
-    title: catalogue.artistName + ' · Booth ' + catalogue.booth,
+    title: event.name + ' · ' + catalogue.artistName + ' · Booth ' + catalogue.booth,
     detail: cutoff.note ? 'Order cutoff (' + cutoff.note + ')' : 'Order cutoff',
     date: cutoff.date,
   })) : []
