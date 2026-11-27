@@ -8,6 +8,7 @@ import { TagFilterDropdown } from '@/components/tag-filter-controls'
 import { formatDateRange, instagramUrl } from '@/lib/format'
 import { getEventStatus } from '@/lib/event-status'
 import { hasSelectedTag, normalizedTag, uniqueSortedTags } from '@/lib/tag-utils'
+import { CalendarReminderButton } from '@/components/calendar-reminder-button'
 
 export type FanEventListing = {
   id: number
@@ -76,6 +77,11 @@ export function FanEventBrowser({ cafes, initialYear }: { cafes: FanEventListing
                   const status = getEventStatus(cafe.startDate, cafe.endDate)
                   const style = status === 'ongoing' ? 'bg-emerald-700 text-white' : status === 'upcoming' ? 'bg-sky-100 text-sky-900' : 'bg-muted text-muted-foreground'
                   const time = cafe.startTime && cafe.endTime ? `${formatTime(cafe.startTime)} – ${formatTime(cafe.endTime)}` : cafe.startTime ? formatTime(cafe.startTime) : cafe.endTime ? formatTime(cafe.endTime) : 'TBA'
+                  const calendarEntries = [
+                    cafe.startDate ? { sourceKey: 'fan-event:' + cafe.id + ':start', category: 'fan_event' as const, title: cafe.name, detail: cafe.endDate && cafe.endDate !== cafe.startDate ? 'First day' : 'Event date', date: cafe.startDate } : null,
+                    cafe.endDate && cafe.endDate !== cafe.startDate ? { sourceKey: 'fan-event:' + cafe.id + ':end', category: 'fan_event' as const, title: cafe.name, detail: 'Last day', date: cafe.endDate } : null,
+                    cafe.registrationDeadline ? { sourceKey: 'fan-event:' + cafe.id + ':registration-deadline', category: 'fan_event' as const, title: cafe.name, detail: 'Registration deadline', date: cafe.registrationDeadline } : null,
+                  ].filter((entry): entry is NonNullable<typeof entry> => entry !== null)
                   return <li key={cafe.id} className="flex flex-col rounded-xl border border-border bg-card p-5">
                     <div className="flex flex-wrap items-start justify-between gap-3"><h3 className="text-xl font-bold leading-tight">{cafe.name}</h3><span className={`inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${style}`}>{cafe.startDate ? status : 'Date TBA'}</span></div>
                     {(cafe.socialPostUrl || cafe.instagramPostUrl) && <div className="mt-4"><SocialPostEmbed postUrl={cafe.socialPostUrl || cafe.instagramPostUrl!} title={`${cafe.name} social media post`} /></div>}
@@ -89,6 +95,7 @@ export function FanEventBrowser({ cafes, initialYear }: { cafes: FanEventListing
                       <div className="flex items-start gap-2"><Clock3 className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time</dt><dd className="mt-0.5">{time}</dd></div></div>
                       <div className="flex items-start gap-2"><MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Location</dt><dd className="mt-0.5">{cafe.location ?? 'TBA'}</dd></div></div>
                     </dl>
+                    <div className="mt-4"><CalendarReminderButton entries={calendarEntries} compact /></div>
                   </li>
                 })}
               </ul>

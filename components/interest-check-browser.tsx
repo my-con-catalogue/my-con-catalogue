@@ -6,6 +6,7 @@ import { SocialPostEmbed } from '@/components/social-post-embed'
 import { TagFilterDropdown } from '@/components/tag-filter-controls'
 import { formatDateRange } from '@/lib/format'
 import { hasSelectedTag, normalizedTag, uniqueSortedTags } from '@/lib/tag-utils'
+import { CalendarReminderButton } from '@/components/calendar-reminder-button'
 
 export type InterestCheckListing = {
   id: number
@@ -77,6 +78,7 @@ export function InterestCheckBrowser({ items, initialYear }: { items: InterestCh
                         <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Event</dt><dd className="mt-1">{item.eventName}</dd></div>
                         <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cutoff date</dt><dd className="mt-0.5">{item.cutoffDate ? formatDateRange(item.cutoffDate, item.cutoffDate) : 'No cutoff date'}</dd></div></div>
                       </dl>
+                      {item.cutoffDate && <div className="mt-4"><CalendarReminderButton entries={[{ sourceKey: 'interest-check:' + item.id + ':cutoff', category: 'interest_check', title: item.title, detail: 'Closing date', date: item.cutoffDate }]} compact /></div>}
                     </li>
                   })}
                 </ul>

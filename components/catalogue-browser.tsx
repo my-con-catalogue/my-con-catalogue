@@ -13,6 +13,8 @@ import type { CatalogueEntry, CatalogueType } from '@/lib/queries'
 import { cn } from '@/lib/utils'
 import { normalizedTag, uniqueSortedTags } from '@/lib/tag-utils'
 import { getCloudBookmarks, removeCloudBookmark, saveCloudBookmark, syncCloudBookmarks } from '@/app/actions/bookmark-accounts'
+import { CalendarReminderButton } from '@/components/calendar-reminder-button'
+import { parsePickupCutoffDates } from '@/lib/pickup-cutoff-dates'
 
 function displayTag(tag: string) {
   return tag.toLocaleLowerCase().replace(/\b\p{L}/gu, (letter) => letter.toLocaleUpperCase())
@@ -822,6 +824,14 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
             const isBookmarked = bookmarks.has(entryKey)
             const bookmarkLabel = bookmarkLabels[entryKey] ?? DEFAULT_BOOKMARK_LABEL
             const isViewed = viewedCatalogues.has(entryKey)
+            const pickupCutoffDates = entry.catalogueType === 'pickup_only' ? parsePickupCutoffDates(entry.orderCutoff) : []
+            const pickupCalendarEntries = pickupCutoffDates.map((cutoff, index) => ({
+              sourceKey: 'pickup-cutoff:' + entry.eventSlug + ':' + entry.id + ':' + index + ':' + cutoff.date,
+              category: 'pickup_cutoff' as const,
+              title: entry.artistName + ' · Booth ' + entry.booth,
+              detail: cutoff.note ? 'Order cutoff (' + cutoff.note + ')' : 'Order cutoff',
+              date: cutoff.date,
+            }))
             return (
             <li key={entry.id} className="relative z-0 flex flex-col rounded-xl border border-border bg-card hover:z-10">
               <div className="flex items-center justify-between rounded-t-xl bg-foreground px-4 py-3 text-background">
@@ -854,6 +864,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
               {entry.catalogueType === 'pickup_only' && (entry.pickupNote?.trim() || entry.orderCutoff?.trim()) && (
                 <div className="border-b border-border bg-accent/60 px-4 py-3 text-sm leading-relaxed text-foreground">
                   {entry.orderCutoff?.trim() && <p><span className="font-bold">Order cutoff: </span>{entry.orderCutoff}</p>}
+                  {pickupCalendarEntries.length > 0 && <div className="mt-2"><CalendarReminderButton entries={pickupCalendarEntries} compact /></div>}
                   {entry.pickupNote?.trim() && <p><span className="font-bold">Pick-up note: </span>{entry.pickupNote}</p>}
                 </div>
               )}

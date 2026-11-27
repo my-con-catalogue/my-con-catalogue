@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Eye, EyeOff, LogOut, Users } from 'lucide-react'
+import { Bell, Eye, EyeOff, LogOut, Users } from 'lucide-react'
 import {
   createRecoveryCodeForCurrentUser,
   createUsernameAccount,
@@ -198,6 +198,12 @@ export function AccountPortal({ initialMode = 'login' }: { initialMode?: 'login'
           </label>
           <button type="submit" disabled={busy || usernameDraft.trim().toLowerCase() === overview.username.toLowerCase()} className="rounded-full bg-foreground px-5 py-2.5 font-semibold text-background disabled:opacity-50">Update username</button>
         </form>
+      </section>
+      <section className="rounded-2xl border border-border bg-card p-5 sm:p-7">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div><div className="flex items-center gap-2"><Bell className="size-5 text-primary" /><h2 className="text-xl font-extrabold">Personal calendar</h2></div><p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">Keep saved dates and pick-up cutoffs together in your account.</p></div>
+          <Link href="/account/calendar" className="inline-flex shrink-0 items-center rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background">Open personal calendar <span className="ml-2" aria-hidden="true">↗</span></Link>
+        </div>
       </section>
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-7">
         <div className="flex flex-wrap items-center justify-between gap-4">

@@ -6,8 +6,13 @@ import { EventEntryBadge } from '@/components/event-entry-badge'
 import { EventStatusBadge } from '@/components/event-status-badge'
 import { formatDateRange } from '@/lib/format'
 import type { EventWithCount } from '@/lib/queries'
+import { CalendarReminderButton } from '@/components/calendar-reminder-button'
 
 export function EventCard({ event }: { event: EventWithCount }) {
+  const calendarEntries = [
+    event.startDate ? { sourceKey: 'event:' + event.slug + ':start', category: 'event' as const, title: event.name, detail: event.endDate && event.endDate !== event.startDate ? 'First day' : 'Event date', date: event.startDate } : null,
+    event.endDate && event.endDate !== event.startDate ? { sourceKey: 'event:' + event.slug + ':end', category: 'event' as const, title: event.name, detail: 'Last day', date: event.endDate } : null,
+  ].filter((entry): entry is NonNullable<typeof entry> => entry !== null)
   return (
     <article className="group relative flex h-full flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground hover:shadow-[4px_4px_0_0_var(--color-foreground)]">
       <div className="mb-4 flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-dashed border-border bg-secondary/40 p-4">
@@ -55,11 +60,12 @@ export function EventCard({ event }: { event: EventWithCount }) {
           </dd>
         </div>
       </dl>
-      <p className="mt-auto pt-5">
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5">
+        {calendarEntries.length > 0 && <CalendarReminderButton entries={calendarEntries} compact />}
         <span className="inline-flex rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
           {event.catalogueCount} {event.catalogueCount === 1 ? 'catalogue' : 'catalogues'}
         </span>
-      </p>
+      </div>
     </article>
   )
 }
