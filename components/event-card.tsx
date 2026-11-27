@@ -33,22 +33,22 @@ export function EventCard({ event }: { event: EventWithCount }) {
         <ArrowUpRight className="size-5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" aria-hidden="true" />
       </div>
       <div className="mt-3"><EventStatusBadge startDate={event.startDate} endDate={event.endDate} /></div>
-      <dl className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
+      <dl className="mt-5 flex flex-col gap-3 border-t border-border pt-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <dt className="sr-only">Entry</dt>
           <dd><EventEntryBadge status={event.entryStatus} /></dd>
         </div>
-        <div className="flex items-start gap-2">
-          <CalendarDays className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          <div className="min-w-0 flex-1"><dt className="text-xs font-semibold uppercase tracking-wider">Date</dt><dd className="mt-1 flex items-center justify-between gap-2">{formatDateRange(event.startDate, event.endDate)}{calendarEntries.length > 0 && <CalendarReminderButton entries={calendarEntries} iconOnly />}</dd></div>
+        <div className="flex w-full items-center gap-2">
+          <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
+          <div className="flex min-w-0 flex-1 items-center justify-between gap-3"><div><dt className="text-xs font-semibold uppercase tracking-wider">Date</dt><dd className="mt-0.5">{formatDateRange(event.startDate, event.endDate)}</dd></div>{calendarEntries.length > 0 && <CalendarReminderButton entries={calendarEntries} iconOnly />}</div>
         </div>
         <div className="flex items-start gap-2">
           <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          <div><dt className="text-xs font-semibold uppercase tracking-wider">Location</dt><dd className="mt-1">{event.location ?? 'Location TBA'}</dd></div>
+          <div><dt className="text-xs font-semibold uppercase tracking-wider">Location</dt><dd className="mt-0.5">{event.location ?? 'Location TBA'}</dd></div>
         </div>
         <div className="flex items-start gap-2">
           <InstagramIcon className="mt-0.5 size-4 shrink-0" />
-          <div><dt className="text-xs font-semibold uppercase tracking-wider">Social media</dt><dd className="mt-1">
+          <div><dt className="text-xs font-semibold uppercase tracking-wider">Social media</dt><dd className="mt-0.5">
             {event.instagram ? (
               <a href={`https://www.instagram.com/${event.instagram.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer" className="relative z-10 font-medium text-foreground underline-offset-2 hover:underline">
                 @{event.instagram.replace(/^@/, '')}
