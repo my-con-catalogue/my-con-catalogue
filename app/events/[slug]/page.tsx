@@ -18,6 +18,7 @@ import { formatDateRange, instagramUrl } from '@/lib/format'
 import { getEventBoothNumbers, getEventBySlug, getEventCatalogues, getEventStampRallies } from '@/lib/queries'
 import { FloorplanDisclosure } from '@/components/floorplan-disclosure'
 import { FloorplanViewer } from '@/components/floorplan-viewer'
+import { CalendarReminderButton } from '@/components/calendar-reminder-button'
 
 export const revalidate = 3600
 
@@ -106,6 +107,12 @@ export default async function EventPage({ params }: Props) {
               </dd>
             </div>
           </dl>
+          {(event.startDate || event.endDate) && <div className="mt-4">
+            <CalendarReminderButton entries={[
+              ...(event.startDate ? [{ sourceKey: 'event:' + event.slug + ':start', category: 'event' as const, title: event.name, detail: event.endDate && event.endDate !== event.startDate ? 'First day' : 'Event date', date: event.startDate }] : []),
+              ...(event.endDate && event.endDate !== event.startDate ? [{ sourceKey: 'event:' + event.slug + ':end', category: 'event' as const, title: event.name, detail: 'Last day', date: event.endDate }] : []),
+            ]} />
+          </div>}
           <nav aria-label="Event sections" className="mt-8 flex flex-wrap gap-2">
             {event.slug === 'anime-fest-2026' && (
               <a href="#interactive-map" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
