@@ -4,7 +4,6 @@ import { InstagramIcon } from '@/components/social-icons'
 import { Mail, Globe2 } from 'lucide-react'
 
 const footerLinks = [
-  { href: '/about', label: 'About' },
   { href: '/events', label: 'Events' },
   { href: '/account', label: 'Account and shared lists' },
   { href: '/fan-events', label: 'Fan Events' },

@@ -89,8 +89,8 @@ function findCatalogue(booth: number, entries: readonly CatalogueEntry[]) {
 
 export function OtakyunFloorplan({ entries }: { entries: readonly CatalogueEntry[] }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-[#202e70] shadow-sm">
-      <div className="relative aspect-[772/497] w-full">
+    <div className="overflow-visible rounded-2xl border border-border bg-[#202e70] shadow-sm">
+      <div data-floorplan-canvas className="relative aspect-[772/497] w-full">
         <Image
           src="/events/otakyun-2026-floorplan.jpg"
           alt="Otakyun 2026 floor plan with CR, EX, and CO booth areas"

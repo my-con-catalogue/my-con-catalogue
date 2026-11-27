@@ -44,8 +44,8 @@ function findCatalogue(booth: string, entries: readonly CatalogueEntry[]) {
 
 export function YumeAcg2026Floorplan({ entries }: { entries: readonly CatalogueEntry[] }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-      <div className="relative aspect-[927/451] w-full">
+    <div className="overflow-visible rounded-2xl border border-border bg-white shadow-sm">
+      <div data-floorplan-canvas className="relative aspect-[927/451] w-full">
         <Image
           src="/events/yume-acg-2026-floorplan.png"
           alt="Yume ACG Fest 2026 floor plan with Artist Alley booths A01 to A28"

@@ -6,8 +6,13 @@ import { EventEntryBadge } from '@/components/event-entry-badge'
 import { EventStatusBadge } from '@/components/event-status-badge'
 import { formatDateRange } from '@/lib/format'
 import type { EventWithCount } from '@/lib/queries'
+import { CalendarReminderButton } from '@/components/calendar-reminder-button'
 
 export function EventCard({ event }: { event: EventWithCount }) {
+  const calendarEntries = [
+    event.startDate ? { sourceKey: 'event:' + event.slug + ':start', category: 'event' as const, title: event.name, detail: event.endDate && event.endDate !== event.startDate ? 'First day' : 'Event date', date: event.startDate } : null,
+    event.endDate && event.endDate !== event.startDate ? { sourceKey: 'event:' + event.slug + ':end', category: 'event' as const, title: event.name, detail: 'Last day', date: event.endDate } : null,
+  ].filter((entry): entry is NonNullable<typeof entry> => entry !== null)
   return (
     <article className="group relative flex h-full flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground hover:shadow-[4px_4px_0_0_var(--color-foreground)]">
       <div className="mb-4 flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-dashed border-border bg-secondary/40 p-4">
@@ -28,38 +33,35 @@ export function EventCard({ event }: { event: EventWithCount }) {
         <ArrowUpRight className="size-5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" aria-hidden="true" />
       </div>
       <div className="mt-3"><EventStatusBadge startDate={event.startDate} endDate={event.endDate} /></div>
-      <dl className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
+      <dl className="mt-5 flex flex-col gap-3 border-t border-border pt-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <dt className="sr-only">Entry</dt>
           <dd><EventEntryBadge status={event.entryStatus} /></dd>
         </div>
-        <div className="flex items-center gap-2">
-          <dt className="sr-only">Date</dt>
+        <div className="flex w-full items-center gap-2">
           <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
-          <dd>{formatDateRange(event.startDate, event.endDate)}</dd>
+          <div className="flex min-w-0 flex-1 items-center justify-between gap-3"><div><dt className="text-xs font-semibold uppercase tracking-wider">Date</dt><dd className="mt-0.5">{formatDateRange(event.startDate, event.endDate)}</dd></div>{calendarEntries.length > 0 && <CalendarReminderButton entries={calendarEntries} iconOnly />}</div>
         </div>
-        <div className="flex items-center gap-2">
-          <dt className="sr-only">Location</dt>
-          <MapPin className="size-4 shrink-0" aria-hidden="true" />
-          <dd>{event.location ?? 'Location TBA'}</dd>
+        <div className="flex items-start gap-2">
+          <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <div><dt className="text-xs font-semibold uppercase tracking-wider">Location</dt><dd className="mt-0.5">{event.location ?? 'Location TBA'}</dd></div>
         </div>
-        <div className="flex items-center gap-2">
-          <dt className="sr-only">Social media account</dt>
-          <InstagramIcon className="size-4 shrink-0" />
-          <dd>
+        <div className="flex items-start gap-2">
+          <InstagramIcon className="mt-0.5 size-4 shrink-0" />
+          <div><dt className="text-xs font-semibold uppercase tracking-wider">Social media</dt><dd className="mt-0.5">
             {event.instagram ? (
               <a href={`https://www.instagram.com/${event.instagram.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer" className="relative z-10 font-medium text-foreground underline-offset-2 hover:underline">
                 @{event.instagram.replace(/^@/, '')}
               </a>
             ) : 'Social account TBA'}
-          </dd>
+          </dd></div>
         </div>
       </dl>
-      <p className="mt-auto pt-5">
+      <div className="mt-auto flex flex-wrap items-center justify-start gap-3 pt-5">
         <span className="inline-flex rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
           {event.catalogueCount} {event.catalogueCount === 1 ? 'catalogue' : 'catalogues'}
         </span>
-      </p>
+      </div>
     </article>
   )
 }

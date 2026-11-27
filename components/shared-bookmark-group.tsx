@@ -22,7 +22,7 @@ function SharedFilter({ label, options, selected, onToggle }: { label: string; o
   </details>
 }
 
-function TagList({ title, values, merch = false, maxRows = 3 }: { title: string; values: string[]; merch?: boolean; maxRows?: number }) {
+function TagList({ title, values, merch = false, maxRows = 2 }: { title: string; values: string[]; merch?: boolean; maxRows?: number }) {
   const listRef = useRef<HTMLUListElement>(null)
   const [visibleCount, setVisibleCount] = useState(values.length)
   const [expanded, setExpanded] = useState(false)
@@ -83,6 +83,7 @@ export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
   const [rally, setRally] = useState<Set<string>>(new Set())
   const [bookmarkColors, setBookmarkColors] = useState<Set<string>>(new Set())
   const [usernames, setUsernames] = useState<Set<string>>(new Set())
+  const [catalogueType, setCatalogueType] = useState<'all' | 'booth_catalogue' | 'pickup_only' | 'stamp_rally'>('all')
   const [notice, setNotice] = useState('')
 
   const refresh = async () => setResult(await getSharedBookmarkGroup(groupId))
@@ -102,11 +103,12 @@ export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
     const q = query.trim().toLowerCase()
     return result.bookmarks.filter((item) =>
       (!q || item.artistName.toLowerCase().includes(q) || item.booth.toLowerCase().includes(q) || item.annotations.some((annotation) => annotation.username.toLowerCase().includes(q))) &&
+      (catalogueType === 'all' || item.catalogueType === catalogueType) &&
       (!fandoms.size || item.fandoms.some((tag) => fandoms.has(tag))) && (!merchTypes.size || item.merchTypes.some((tag) => merchTypes.has(tag))) &&
       (!rally.size || rally.has(item.stampRally ? 'Yes' : 'No')) && (!bookmarkColors.size || item.annotations.some((annotation) => bookmarkColors.has(annotation.labelColor))) &&
       (!usernames.size || item.annotations.some((annotation) => usernames.has(annotation.username))),
     )
-  }, [result, query, fandoms, merchTypes, rally, bookmarkColors, usernames])
+  }, [result, query, catalogueType, fandoms, merchTypes, rally, bookmarkColors, usernames])
 
   if (!result) return <p className="rounded-xl border border-border bg-card p-6 text-muted-foreground">Loading shared list…</p>
   if (!result.ok) return <div className="rounded-xl border border-border bg-card p-6"><p>{result.message}</p><Link href="/account/shared-lists" className="mt-3 inline-block font-semibold text-primary underline">Go to shared lists</Link></div>
@@ -136,6 +138,9 @@ export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
       <p className="mt-2 text-sm text-muted-foreground">You can edit or remove only your own bookmark.</p>
     </header>
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+      <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Filter saved catalogue type">
+        {([['all', 'All'], ['booth_catalogue', 'Booth Catalogue'], ['pickup_only', 'PO & Pick-Up'], ['stamp_rally', 'Stamp Rally']] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={catalogueType === value} onClick={() => setCatalogueType(value)} className={`rounded-full border px-3 py-2 text-sm font-semibold ${catalogueType === value ? 'border-foreground bg-foreground text-background' : 'border-input bg-background hover:bg-muted'}`}>{label}</button>)}
+      </div>
       <div className="flex flex-wrap gap-2">
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search artist, booth, member…" className="h-10 min-w-48 flex-1 rounded-lg border border-input bg-background px-3 text-sm" />
         <SharedFilter label="Fandom" options={fandomOptions.map((value) => ({ value, label: value }))} selected={fandoms} onToggle={toggleOption(setFandoms)} />
@@ -144,17 +149,18 @@ export function SharedBookmarkGroup({ groupId }: { groupId: string }) {
         <SharedFilter label="Bookmark color" options={BOOKMARK_COLORS.map((choice) => ({ value: choice.value, label: choice.label, swatch: choice.swatch }))} selected={bookmarkColors} onToggle={toggleOption(setBookmarkColors)} />
         <SharedFilter label="Username" options={usernameOptions.map((value) => ({ value, label: `@${value}` }))} selected={usernames} onToggle={toggleOption(setUsernames)} />
       </div>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-sm"><p>Showing <strong>{filtered.length}</strong> of {result.bookmarks.length} saved booths</p><button type="button" onClick={() => void refresh()} className="font-semibold text-primary underline">Refresh shared list</button></div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-sm"><p>Showing <strong>{filtered.length}</strong> of {result.bookmarks.length} saved catalogues</p><button type="button" onClick={() => void refresh()} className="font-semibold text-primary underline">Refresh shared list</button></div>
       {notice && <p aria-live="polite" className="mt-3 text-sm font-semibold text-primary">{notice}</p>}
     </section>
     {filtered.length === 0 ? <p className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">No shared bookmarks match these filters yet.</p> : <ul className="grid gap-4">{filtered.map((item) => <li key={item.key} className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(16rem,0.72fr)]">
         <article className="flex min-w-0 flex-col border-b border-border lg:border-b-0 lg:border-r">
-          <div className="flex items-center justify-between gap-3 rounded-t-xl bg-foreground px-4 py-3 text-background"><span className="text-xs font-bold uppercase tracking-wider">Booth number</span><span className="max-w-[65%] truncate rounded-md bg-accent px-3 py-1 font-heading text-lg font-extrabold text-accent-foreground" title={item.booth}>{item.booth}</span></div>
-          <Link href={`/events/${group.eventSlug}/catalogues/${item.catalogueId}`} className="border-b border-border bg-muted px-4 py-3 text-center text-sm font-semibold text-primary transition-colors hover:bg-muted/80">› Check catalogue material here ‹</Link>
+          <div className="flex items-center justify-between gap-3 rounded-t-xl bg-foreground px-4 py-3 text-background"><span className="text-xs font-bold uppercase tracking-wider">{item.catalogueType === 'stamp_rally' ? 'Stamp Rally' : 'Booth number'}</span><span className="max-w-[65%] truncate rounded-md bg-accent px-3 py-1 font-heading text-lg font-extrabold text-accent-foreground" title={item.booth}>{item.booth}</span></div>
+          {item.catalogueType !== 'stamp_rally' && <Link href={`/events/${group.eventSlug}/catalogues/${item.catalogueId}`} className="border-b border-border bg-muted px-4 py-3 text-center text-sm font-semibold text-primary transition-colors hover:bg-muted/80">› Check catalogue material here ‹</Link>}
           <div className="flex flex-1 flex-col gap-4 p-4">
-            <h2 className="text-xl font-extrabold"><Link href={`/events/${group.eventSlug}/catalogues/${item.catalogueId}`} className="hover:text-primary">{item.artistName}</Link></h2>
+            <h2 className="text-xl font-extrabold">{item.catalogueType === 'stamp_rally' ? item.artistName : <Link href={`/events/${group.eventSlug}/catalogues/${item.catalogueId}`} className="hover:text-primary">{item.artistName}</Link>}</h2>
             <div className="grid gap-3 sm:grid-cols-2"><TagList title="Fandom" values={item.fandoms} /><TagList title="Merch" values={item.merchTypes} merch /></div>
+            {item.catalogueType === 'stamp_rally' && <div className="flex flex-col gap-2 text-sm">{item.rallyDescription && <p className="whitespace-pre-line break-words"><strong>Description: </strong>{item.rallyDescription}</p>}{item.rallyPrizes && <p className="whitespace-pre-line break-words"><strong>Prizes: </strong>{item.rallyPrizes}</p>}{item.rallyMethod && <p className="whitespace-pre-line break-words"><strong>Method: </strong>{item.rallyMethod}</p>}{item.rallyParticipants.length > 0 && <p className="break-words"><strong>Participating booths: </strong>{item.rallyParticipants.join(', ')}</p>}</div>}
             <p className={`mt-auto w-fit rounded-full border px-3 py-1 text-xs font-bold ${item.stampRally ? 'border-emerald-800 bg-emerald-700 text-white' : 'border-border bg-muted'}`}>Stamp Rally · {item.stampRally ? 'Yes' : 'No'}</p>
           </div>
         </article>

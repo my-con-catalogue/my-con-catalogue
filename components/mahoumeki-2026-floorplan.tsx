@@ -70,8 +70,8 @@ function findCatalogue(booth: number, entries: readonly CatalogueEntry[]) {
 
 export function Mahoumeki2026Floorplan({ entries }: { entries: readonly CatalogueEntry[] }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-      <div className="relative aspect-[946/579] w-full">
+    <div className="overflow-visible rounded-2xl border border-border bg-white shadow-sm">
+      <div data-floorplan-canvas className="relative aspect-[946/579] w-full">
         <Image
           src="/events/mahoumeki-2026-floorplan.jpg"
           alt="Mahoumeki 2026 floor plan showing the Mahou-no-Ichiba Artist Alley booths 01 to 20"

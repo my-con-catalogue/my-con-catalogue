@@ -83,8 +83,8 @@ function findEntry(spot: BoothSpot, entries: readonly CatalogueEntry[]) {
 
 export function AnimeFestFloorplan({ entries }: { entries: readonly CatalogueEntry[] }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-[#0b1324] shadow-sm">
-        <div className="relative aspect-[1688/802] w-full">
+    <div className="overflow-visible rounded-2xl border border-border bg-[#0b1324] shadow-sm">
+        <div data-floorplan-canvas className="relative aspect-[1688/802] w-full">
         <Image
           src="/events/anime-fest-2026-floorplan.png"
           alt="Anime Fest! 2026 floor plan showing Level 1 and Level 2 booth numbers"

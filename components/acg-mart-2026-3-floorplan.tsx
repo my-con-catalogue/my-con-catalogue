@@ -76,7 +76,7 @@ function findCatalogue(booth: string, entries: readonly CatalogueEntry[]) {
 export function AcgMart2026Floorplan({ entries }: { entries: readonly CatalogueEntry[] }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-      <div className="relative aspect-[1188/1124] w-full">
+      <div data-floorplan-canvas className="relative aspect-[1188/1124] w-full">
         <Image
           src="/events/acg-mart-2026-3-floorplan.png"
           alt="ACG Mart 2026 / 3.0 Level 2 ACG Base floor plan showing booths R01 to R21 and their listed vendors"

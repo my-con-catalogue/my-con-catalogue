@@ -86,8 +86,8 @@ function findCatalogue(spot: BoothSpot, entries: readonly CatalogueEntry[]) {
 
 export function Vax2026Floorplan({ entries }: { entries: readonly CatalogueEntry[] }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-[#10072c] shadow-sm">
-      <div className="relative aspect-[2160/1350] w-full">
+    <div className="overflow-visible rounded-2xl border border-border bg-[#10072c] shadow-sm">
+      <div data-floorplan-canvas className="relative aspect-[2160/1350] w-full">
         <Image
           src="/events/vax-2026-floorplan.png"
           alt="VAX 2026 floor plan showing Standard Artist Alley and Rahmah table booths"
