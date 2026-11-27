@@ -89,7 +89,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
       )}
       {catalogue.catalogueType === 'pickup_only' && (catalogue.orderCutoff?.trim() || catalogue.pickupNote?.trim()) && (
         <div className="mt-6 rounded-xl border border-primary/30 bg-accent/60 p-4 text-sm leading-relaxed text-foreground">
-          {catalogue.orderCutoff?.trim() && <p className="flex items-center justify-between gap-2"><span><span className="font-bold">Order cutoff: </span>{catalogue.orderCutoff}</span>{pickupCalendarEntries.length > 0 && <CalendarReminderButton entries={pickupCalendarEntries} iconOnly />}</p>}
+          {catalogue.orderCutoff?.trim() && <p className="flex items-center justify-between gap-2"><span className="min-w-0 flex-1"><span className="font-bold">Order cutoff: </span>{catalogue.orderCutoff}</span>{pickupCalendarEntries.length > 0 && <CalendarReminderButton entries={pickupCalendarEntries} iconOnly />}</p>}
           {catalogue.pickupNote?.trim() && <p><span className="font-bold">Pick-up note: </span>{catalogue.pickupNote}</p>}
         </div>
       )}
