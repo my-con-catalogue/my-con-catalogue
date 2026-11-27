@@ -208,7 +208,7 @@ export default async function EventPage({ params }: Props) {
           Notice a missing booth number or catalogue? <Link href="/contact#artist-form" className="font-semibold text-primary underline underline-offset-2">Submit the catalogue here</Link>.
         </p>
         <div className="mt-6">
-          <CatalogueBrowser entries={catalogues} boothNumbers={boothNumbers} stampRallies={stampRallies} />
+          <CatalogueBrowser entries={catalogues} eventName={event.name} boothNumbers={boothNumbers} stampRallies={stampRallies} />
         </div>
       </section>
 
