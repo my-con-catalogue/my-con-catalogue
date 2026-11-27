@@ -33,7 +33,7 @@ export function EventCard({ event }: { event: EventWithCount }) {
         <ArrowUpRight className="size-5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" aria-hidden="true" />
       </div>
       <div className="mt-3"><EventStatusBadge startDate={event.startDate} endDate={event.endDate} /></div>
-      <dl className="mt-5 flex flex-col gap-3 border-t border-border pt-4 text-sm text-muted-foreground">
+      <dl className="mt-5 flex flex-col gap-3 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <dt className="sr-only">Entry</dt>
           <dd><EventEntryBadge status={event.entryStatus} /></dd>
