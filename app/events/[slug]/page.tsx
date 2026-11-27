@@ -82,10 +82,10 @@ export default async function EventPage({ params }: Props) {
               <dt className="sr-only">Entry</dt>
               <dd><EventEntryBadge status={event.entryStatus} /></dd>
             </div>
-            <div className="flex w-full items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
               <dt className="sr-only">Date</dt>
               <CalendarDays className="size-4" aria-hidden="true" />
-              <dd className="flex flex-1 items-center justify-between gap-3">{formatDateRange(event.startDate, event.endDate)}{eventCalendarEntries.length > 0 && <CalendarReminderButton entries={eventCalendarEntries} iconOnly />}</dd>
+              <dd className="inline-flex items-center gap-3">{formatDateRange(event.startDate, event.endDate)}{eventCalendarEntries.length > 0 && <CalendarReminderButton entries={eventCalendarEntries} iconOnly />}</dd>
             </div>
             <div className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
               <dt className="sr-only">Location</dt>
