@@ -2,6 +2,7 @@
 
 import { cookies, headers } from 'next/headers'
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
+import type { PoolClient } from 'pg'
 import { pool } from '@/lib/db'
 import { getEventStatus } from '@/lib/event-status'
 
@@ -144,7 +145,7 @@ async function currentUser(): Promise<AuthUser | null> {
 }
 
 function validateBookmark(value: BookmarkValue) {
-  if (!value || typeof value.key !== 'string' || !/^[a-z0-9-]+:\d+$/i.test(value.key)) return false
+  if (!value || typeof value.key !== 'string' || !/^[a-z0-9-]+:(?:\d+|sr-\d+)$/i.test(value.key)) return false
   if (typeof value.labelName !== 'string' || value.labelName.length > 32) return false
   if (!VALID_COLORS.has(value.labelColor)) return false
   if (typeof value.memo !== 'string' || value.memo.length > 500) return false
@@ -158,9 +159,16 @@ async function upsertBookmarks(userId: string, values: BookmarkValue[]) {
     `insert into public.mcc_user_bookmarks (user_id, catalogue_key, label_name, label_color, memo)
      select $1::uuid, item.key, item.label_name, item.label_color, item.memo
      from jsonb_to_recordset($2::jsonb) as item(key text, label_name text, label_color text, memo text)
-     join public.catalogue_entries entry
-       on entry.event_slug = split_part(item.key, ':', 1)
-      and entry.id::text = split_part(item.key, ':', 2)
+     where exists (
+       select 1 from public.catalogue_entries entry
+       where entry.event_slug = split_part(item.key, ':', 1)
+         and entry.id::text = split_part(item.key, ':', 2)
+     ) or exists (
+       select 1 from public.stamp_rallies rally
+       join public.events event on event.id = rally.event_id
+       where event.slug = split_part(item.key, ':', 1)
+         and ('sr-' || rally.id::text) = split_part(item.key, ':', 2)
+     )
      on conflict (user_id, catalogue_key) do update set
        label_name = excluded.label_name,
        label_color = excluded.label_color,
@@ -318,6 +326,88 @@ export async function loginUsernameAccount(usernameRaw: string, password: string
   }
 }
 
+export async function changeUsernameForCurrentUser(usernameRaw: string): Promise<AccountActionResult> {
+  const username = usernameInput(usernameRaw)
+  if (!/^[a-z0-9_]{3,24}$/.test(username)) return { ok: false, message: 'Use a username of 3–24 letters, numbers, or underscores.' }
+
+  const user = await currentUser()
+  if (!user) return { ok: false, message: 'Sign in to change your username.' }
+
+  let client: PoolClient | null = null
+  let oldUsername = ''
+  let authUpdated = false
+  try {
+    client = await pool.connect()
+    await client.query('begin')
+    const current = await client.query<{ username: string; username_key: string; cooldown_active: boolean }>(
+      `select username, username_key,
+              username_changed_at is not null and username_changed_at > now() - interval '24 hours' as cooldown_active
+       from public.mcc_usernames where user_id = $1::uuid for update`,
+      [user.id],
+    )
+    if (!current.rowCount) {
+      await client.query('rollback')
+      return { ok: false, message: 'Your username record could not be found. Please contact support.' }
+    }
+
+    oldUsername = current.rows[0].username
+    if (username === current.rows[0].username_key) {
+      await client.query('rollback')
+      return { ok: false, message: 'That is already your username.' }
+    }
+    if (current.rows[0].cooldown_active) {
+      await client.query('rollback')
+      return { ok: false, message: 'Usernames can only be changed once every 24 hours. Please try again later.' }
+    }
+
+    await client.query(
+      'update public.mcc_usernames set username = $1, username_key = $2, username_changed_at = now() where user_id = $3::uuid',
+      [username, username, user.id],
+    )
+
+    const response = await authFetch(`admin/users/${user.id}`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${config().serviceKey}` },
+      body: JSON.stringify({
+        email: accountEmail(username),
+        email_confirm: true,
+        user_metadata: { ...user.user_metadata, username },
+      }),
+    }, true)
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '')
+      await client.query('rollback')
+      if (response.status === 409 || /already registered|already exists|email_exists|duplicate/i.test(detail)) {
+        return { ok: false, message: 'That username is already taken. Please choose another one.' }
+      }
+      return { ok: false, message: 'We could not change your username right now. Please try again later.' }
+    }
+
+    authUpdated = true
+    await client.query('commit')
+    return { ok: true, message: 'Your username has been changed. You can change it again after 24 hours.' }
+  } catch (error) {
+    try { await client?.query('rollback') } catch { /* Transaction may already be closed. */ }
+    if (authUpdated && oldUsername) {
+      try {
+        await authFetch(`admin/users/${user.id}`, {
+          method: 'PUT',
+          headers: { authorization: `Bearer ${config().serviceKey}` },
+          body: JSON.stringify({
+            email: accountEmail(oldUsername),
+            email_confirm: true,
+            user_metadata: { ...user.user_metadata, username: oldUsername },
+          }),
+        }, true)
+      } catch { /* Keep the database error private; support can reconcile account identity if needed. */ }
+    }
+    if ((error as { code?: string })?.code === '23505') return { ok: false, message: 'That username is already taken. Please choose another one.' }
+    return { ok: false, message: 'We could not change your username right now. Please try again later.' }
+  } finally {
+    client?.release()
+  }
+}
+
 export async function logoutUsernameAccount(): Promise<void> {
   const jar = await cookies()
   const accessToken = jar.get(ACCESS_COOKIE)?.value
@@ -449,7 +539,7 @@ export async function saveCloudBookmark(value: BookmarkValue): Promise<AccountAc
 }
 
 export async function removeCloudBookmark(key: string): Promise<void> {
-  if (!/^[a-z0-9-]+:\d+$/i.test(key)) return
+  if (!/^[a-z0-9-]+:(?:\d+|sr-\d+)$/i.test(key)) return
   const user = await currentUser()
   if (!user) return
   await pool.query('delete from public.mcc_user_bookmarks where user_id = $1::uuid and catalogue_key = $2', [user.id, key])
@@ -463,10 +553,12 @@ export async function updateOwnSharedBookmark(groupId: string, value: BookmarkVa
     `select 1 from public.mcc_bookmark_group_members m
      join public.mcc_bookmark_groups g on g.id = m.group_id
      join public.mcc_user_bookmarks b on b.user_id = m.user_id and b.catalogue_key = $3
-     join public.catalogue_entries c on c.event_slug = g.event_slug
-       and c.id::text = split_part($3, ':', 2)
      where m.group_id = $1::uuid and m.user_id = $2::uuid
-       and split_part($3, ':', 1) = g.event_slug`,
+       and split_part($3, ':', 1) = g.event_slug
+       and (
+         exists (select 1 from public.catalogue_entries c where c.event_slug = g.event_slug and c.id::text = split_part($3, ':', 2))
+         or exists (select 1 from public.stamp_rallies r join public.events e on e.id = r.event_id where e.slug = g.event_slug and ('sr-' || r.id::text) = split_part($3, ':', 2))
+       )`,
     [groupId, user.id, value.key],
   )
   if (!result.rowCount) return { ok: false, message: 'You can only edit your own bookmark in this shared list.' }
@@ -479,14 +571,18 @@ export async function updateOwnSharedBookmark(groupId: string, value: BookmarkVa
 }
 
 export async function removeOwnSharedBookmark(groupId: string, key: string): Promise<AccountActionResult> {
-  if (!/^[0-9a-f-]{36}$/i.test(groupId) || !/^[a-z0-9-]+:\d+$/i.test(key)) return { ok: false, message: 'Bookmark details are invalid.' }
+  if (!/^[0-9a-f-]{36}$/i.test(groupId) || !/^[a-z0-9-]+:(?:\d+|sr-\d+)$/i.test(key)) return { ok: false, message: 'Bookmark details are invalid.' }
   const user = await currentUser()
   if (!user) return { ok: false, message: 'Sign in to edit your bookmark.' }
   const result = await pool.query(
     `delete from public.mcc_user_bookmarks b using public.mcc_bookmark_group_members m, public.mcc_bookmark_groups g
      where b.user_id = $2::uuid and b.catalogue_key = $3
        and m.group_id = $1::uuid and m.user_id = b.user_id and g.id = m.group_id
-       and split_part($3, ':', 1) = g.event_slug`,
+       and split_part($3, ':', 1) = g.event_slug
+       and (
+         exists (select 1 from public.catalogue_entries c where c.event_slug = g.event_slug and c.id::text = split_part($3, ':', 2))
+         or exists (select 1 from public.stamp_rallies r join public.events e on e.id = r.event_id where e.slug = g.event_slug and ('sr-' || r.id::text) = split_part($3, ':', 2))
+       )`,
     [groupId, user.id, key],
   )
   return result.rowCount ? { ok: true, message: 'Your bookmark was removed from the shared list.' } : { ok: false, message: 'Could not remove your bookmark.' }
@@ -517,6 +613,21 @@ export async function createBookmarkGroup(nameRaw: string, eventSlug: string): P
     await client.query('rollback')
     return { ok: false, message: 'Could not create the shared list. Please try again.' }
   } finally { client.release() }
+}
+
+export async function renameBookmarkGroup(groupId: string, nameRaw: string): Promise<AccountActionResult> {
+  if (!/^[0-9a-f-]{36}$/i.test(groupId)) return { ok: false, message: 'That shared list could not be found.' }
+  const user = await currentUser()
+  if (!user) return { ok: false, message: 'Sign in to rename a shared list.' }
+  const name = nameRaw.trim()
+  if (!name || name.length > 60) return { ok: false, message: 'Enter a list name between 1 and 60 characters.' }
+  const result = await pool.query(
+    'update public.mcc_bookmark_groups set name = $1 where id = $2::uuid and owner_user_id = $3::uuid returning id',
+    [name, groupId, user.id],
+  )
+  return result.rowCount
+    ? { ok: true, message: 'Shared list name updated.' }
+    : { ok: false, message: 'Only the owner can rename this shared list.' }
 }
 
 const MAX_BOOKMARK_GROUP_MEMBERS = 20
@@ -582,31 +693,40 @@ export async function getSharedBookmarkGroup(groupId: string) {
   const result = await pool.query<{
     group_id: string; group_name: string; event_slug: string; event_name: string; year: number; invite_code: string; owner_user_id: string;
     member_user_id: string; username: string; role: string; catalogue_key: string | null; label_name: string | null; label_color: BookmarkValue['labelColor'] | null; memo: string | null;
-    catalogue_id: number | null; booth_number: string | null; artist_name: string | null; fandom_tags: string[] | null; merch_tags: string[] | null; stamp_rally: boolean | null;
+    catalogue_id: number | null; catalogue_type: string | null; booth_number: string | null; artist_name: string | null; fandom_tags: string[] | null; merch_tags: string[] | null; stamp_rally: boolean | null;
+    rally_description: string | null; rally_prizes: string | null; rally_method: string | null; rally_participants: string[] | null;
   }>(
     `select g.id as group_id, g.name as group_name, g.event_slug, e.name as event_name, e.year, g.invite_code, g.owner_user_id,
             m.user_id as member_user_id, u.username, m.role,
             b.catalogue_key, b.label_name, b.label_color, b.memo,
-            c.id as catalogue_id, c.booth_number, c.artist_name, c.fandom_tags, c.merch_tags, c.stamp_rally
+            coalesce(c.id, r.id) as catalogue_id,
+            case when r.id is not null then 'stamp_rally' else c.catalogue_type end as catalogue_type,
+            coalesce(c.booth_number, 'Stamp Rally') as booth_number,
+            coalesce(c.artist_name, r.title) as artist_name,
+            coalesce(c.fandom_tags, r.fandom, '{}'::text[]) as fandom_tags,
+            coalesce(c.merch_tags, '{}'::text[]) as merch_tags,
+            coalesce(c.stamp_rally, false) as stamp_rally,
+            r.description as rally_description, r.prizes as rally_prizes, r.method as rally_method, r.participants as rally_participants
      from public.mcc_bookmark_groups g
      join public.events e on e.slug = g.event_slug
      join public.mcc_bookmark_group_members m on m.group_id = g.id
      join public.mcc_usernames u on u.user_id = m.user_id
      left join public.mcc_user_bookmarks b on b.user_id = m.user_id and b.catalogue_key like g.event_slug || ':%'
-     left join public.catalogue_entries c on c.event_slug = g.event_slug and c.id::text = split_part(b.catalogue_key, ':', 2)
+     left join public.catalogue_entries c on c.event_slug = g.event_slug and c.id::text = split_part(b.catalogue_key, ':', 2) and split_part(b.catalogue_key, ':', 2) !~ '^sr-'
+     left join public.stamp_rallies r on r.event_id = e.id and ('sr-' || r.id::text) = split_part(b.catalogue_key, ':', 2)
      where g.id = $1::uuid
      order by lower(u.username), lower(c.booth_number)`, [groupId])
   if (!result.rowCount) return { ok: false as const, message: 'This shared list is unavailable.' }
   const first = result.rows[0]
   const members = new Map<string, { username: string; role: string }>()
-  const bookmarkMap = new Map<string, { key: string; booth: string; artistName: string; fandoms: string[]; merchTypes: string[]; stampRally: boolean; catalogueId: number; annotations: Array<{ username: string; labelName: string; labelColor: BookmarkValue['labelColor']; memo: string; isViewer: boolean }> }>()
+  const bookmarkMap = new Map<string, { key: string; booth: string; artistName: string; fandoms: string[]; merchTypes: string[]; stampRally: boolean; catalogueId: number; catalogueType: string; rallyDescription: string | null; rallyPrizes: string | null; rallyMethod: string | null; rallyParticipants: string[]; annotations: Array<{ username: string; labelName: string; labelColor: BookmarkValue['labelColor']; memo: string; isViewer: boolean }> }>()
   for (const row of result.rows) {
     members.set(row.member_user_id, { username: row.username, role: row.role })
     if (row.catalogue_id === null || !row.catalogue_key || !row.booth_number || !row.artist_name) continue
     const boothKey = row.catalogue_key
     let item = bookmarkMap.get(boothKey)
     if (!item) {
-      item = { key: boothKey, booth: row.booth_number, artistName: row.artist_name, fandoms: row.fandom_tags ?? [], merchTypes: row.merch_tags ?? [], stampRally: Boolean(row.stamp_rally), catalogueId: row.catalogue_id, annotations: [] }
+      item = { key: boothKey, booth: row.booth_number, artistName: row.artist_name, fandoms: row.fandom_tags ?? [], merchTypes: row.merch_tags ?? [], stampRally: Boolean(row.stamp_rally), catalogueId: row.catalogue_id, catalogueType: row.catalogue_type ?? 'booth_catalogue', rallyDescription: row.rally_description, rallyPrizes: row.rally_prizes, rallyMethod: row.rally_method, rallyParticipants: row.rally_participants ?? [], annotations: [] }
       bookmarkMap.set(boothKey, item)
     }
     item.annotations.push({ username: row.username, labelName: row.label_name ?? '', labelColor: row.label_color ?? 'blue', memo: row.memo ?? '', isViewer: row.member_user_id === user.id })
@@ -616,5 +736,84 @@ export async function getSharedBookmarkGroup(groupId: string) {
     group: { id: first.group_id, name: first.group_name, eventSlug: first.event_slug, eventName: first.event_name, year: first.year, inviteCode: first.invite_code, isOwner: first.owner_user_id === user.id },
     members: [...members.values()],
     bookmarks: [...bookmarkMap.values()].sort((a, b) => a.booth.localeCompare(b.booth, undefined, { numeric: true, sensitivity: 'base' })),
+  }
+}
+
+export type PersonalCalendarEntry = {
+  id: number
+  sourceKey: string
+  category: 'event' | 'fan_event' | 'interest_check' | 'pickup_cutoff'
+  title: string
+  detail: string
+  date: string
+}
+
+export type PersonalCalendarInput = Omit<PersonalCalendarEntry, 'id'>
+
+const calendarCategories = new Set(['event', 'fan_event', 'interest_check', 'pickup_cutoff'])
+
+function validCalendarEntry(value: PersonalCalendarInput) {
+  if (!value || typeof value.sourceKey !== 'string' || value.sourceKey.length > 180) return false
+  if (typeof value.title !== 'string' || !value.title.trim() || value.title.length > 160) return false
+  if (typeof value.detail !== 'string' || value.detail.length > 240) return false
+  if (!calendarCategories.has(value.category)) return false
+  if (typeof value.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value.date)) return false
+  const parsed = new Date(value.date + 'T00:00:00.000Z')
+  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === value.date
+}
+
+function normalizeCalendarDate(value: unknown): string {
+  if (value instanceof Date) return Number.isNaN(value.valueOf()) ? '' : value.toISOString().slice(0, 10)
+  return typeof value === 'string' ? value.slice(0, 10) : ''
+}
+
+export async function savePersonalCalendarEntries(values: PersonalCalendarInput[]) {
+  const user = await currentUser()
+  if (!user) return { ok: false as const, needsLogin: true as const }
+  const entries = Array.isArray(values) ? values.filter(validCalendarEntry).slice(0, 30) : []
+  if (!entries.length) return { ok: false as const, message: 'No valid dates were provided.' }
+  await pool.query(
+    'insert into public.mcc_user_calendar_items (user_id, source_key, category, title, detail, item_date) ' +
+    'select $1::uuid, item.source_key, item.category, item.title, item.detail, item.item_date::date ' +
+    'from jsonb_to_recordset($2::jsonb) as item(source_key text, category text, title text, detail text, item_date text) ' +
+    'on conflict (user_id, source_key) do update set category = excluded.category, title = excluded.title, detail = excluded.detail, item_date = excluded.item_date',
+    [user.id, JSON.stringify(entries.map((entry) => ({
+      source_key: entry.sourceKey,
+      category: entry.category,
+      title: entry.title,
+      detail: entry.detail,
+      item_date: entry.date,
+    })))],
+  )
+  return { ok: true as const }
+}
+
+export async function removePersonalCalendarEntry(id: number) {
+  const user = await currentUser()
+  if (!user) return { ok: false as const, needsLogin: true as const }
+  if (!Number.isSafeInteger(id) || id < 1) return { ok: false as const, message: 'Invalid calendar entry.' }
+  await pool.query('delete from public.mcc_user_calendar_items where user_id = $1::uuid and id = $2', [user.id, id])
+  return { ok: true as const }
+}
+
+export async function removePersonalCalendarEntriesBySourceKeys(sourceKeys: string[]) {
+  const user = await currentUser()
+  if (!user) return { ok: false as const, needsLogin: true as const }
+  const keys = Array.isArray(sourceKeys) ? sourceKeys.filter((key) => typeof key === 'string' && key.length > 0 && key.length <= 180).slice(0, 30) : []
+  if (!keys.length) return { ok: false as const, message: 'No valid reminders were provided.' }
+  await pool.query('delete from public.mcc_user_calendar_items where user_id = $1::uuid and source_key = any($2::text[])', [user.id, keys])
+  return { ok: true as const }
+}
+
+export async function getPersonalCalendarEntries() {
+  const user = await currentUser()
+  if (!user) return { signedIn: false as const, entries: [] as PersonalCalendarEntry[] }
+  const result = await pool.query<{ id: number; source_key: string; category: PersonalCalendarEntry['category']; title: string; detail: string; item_date: unknown }>(
+    'select id, source_key, category, title, detail, item_date from public.mcc_user_calendar_items where user_id = $1::uuid order by item_date asc, title asc',
+    [user.id],
+  )
+  return {
+    signedIn: true as const,
+    entries: result.rows.map((row) => ({ id: Number(row.id), sourceKey: row.source_key, category: row.category, title: row.title, detail: row.detail, date: normalizeCalendarDate(row.item_date) })),
   }
 }

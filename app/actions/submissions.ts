@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { artistSubmissions, fanCafeSubmissions, stampRallySubmissions, suggestions } from '@/lib/db/schema'
+import { artistSubmissions, fanCafeSubmissions, interestCheckSubmissions, stampRallySubmissions, suggestions } from '@/lib/db/schema'
 
 export type FormState = { status: 'idle' | 'success' | 'error'; message: string }
 
@@ -31,6 +31,50 @@ export async function submitSuggestion(_prev: FormState, formData: FormData): Pr
   }
 }
 
+export async function submitInterestCheck(_prev: FormState, formData: FormData): Promise<FormState> {
+  const interestCheckName = field(formData, 'interestCheckName', 200)
+  const postLink = field(formData, 'postLink', 500)
+  const socialMedia = field(formData, 'socialMedia', 300)
+  const type = field(formData, 'type', 50)
+  const otherType = field(formData, 'otherType', 100)
+  const fandom = field(formData, 'fandom', 300)
+  const eventName = field(formData, 'eventName', 200)
+  const cutoffDate = field(formData, 'cutoffDate', 10)
+  const allowedTypes = ['Merch Check', 'Stamp Rally', 'Fan Gathering', 'Cupsleeve Event (CSE)', 'Birthday Event', 'Other']
+  if (!interestCheckName || !postLink || !socialMedia || !type || !fandom) {
+    return { status: 'error', message: 'Interest check name, social media, post link, type, and fandom are required.' }
+  }
+  if (!allowedTypes.includes(type)) return { status: 'error', message: 'Choose a valid interest-check type.' }
+  if (type === 'Other' && !otherType) return { status: 'error', message: 'Enter the other interest-check category.' }
+  try {
+    const url = new URL(postLink)
+    if (!['http:', 'https:'].includes(url.protocol)) throw new Error()
+  } catch {
+    return { status: 'error', message: 'The post link must be a valid http(s) URL.' }
+  }
+  if (cutoffDate) {
+    const parsedDate = new Date(`${cutoffDate}T00:00:00Z`)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(cutoffDate) || Number.isNaN(parsedDate.valueOf()) || parsedDate.toISOString().slice(0, 10) !== cutoffDate) {
+      return { status: 'error', message: 'Enter a valid cutoff date.' }
+    }
+  }
+  try {
+    await db.insert(interestCheckSubmissions).values({
+      interestCheckName,
+      postLink,
+      socialMedia,
+      type,
+      otherType: type === 'Other' ? otherType : null,
+      fandom,
+      eventName: eventName || null,
+      cutoffDate: cutoffDate || null,
+    })
+    return { status: 'success', message: 'Thanks! Your interest check submission is in the review queue.' }
+  } catch {
+    return { status: 'error', message: 'We could not save your submission. Please try again later.' }
+  }
+}
+
 export async function submitArtistCatalogue(_prev: FormState, formData: FormData): Promise<FormState> {
   const submissionType = field(formData, 'submissionType', 20)
   const artistName = field(formData, 'artistName', 100)
@@ -47,8 +91,8 @@ export async function submitArtistCatalogue(_prev: FormState, formData: FormData
   if (!['new', 'update', 'pickup-only'].includes(submissionType)) {
     return { status: 'error', message: 'Please choose whether this is a booth catalogue, pick-up catalogue, or update.' }
   }
-  if (!artistName || !eventName || !booth) {
-    return { status: 'error', message: 'Artist name, event, and booth number are required. Social media handle is optional.' }
+  if (!artistName || !socialMediaHandle || !eventName || !booth) {
+    return { status: 'error', message: 'Artist name, social media handle, event, and booth number are required.' }
   }
   if (catalogueFile) {
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
@@ -156,6 +200,7 @@ export async function submitFanCafe(_prev: FormState, formData: FormData): Promi
   const location = field(formData, 'location', 200)
   const startDate = field(formData, 'startDate', 10)
   const endDate = field(formData, 'endDate', 10)
+  const registrationDeadline = field(formData, 'registrationDeadline', 10)
   const startTime = field(formData, 'startTime', 5)
   const endTime = field(formData, 'endTime', 5)
   const socialPlatform = field(formData, 'socialPlatform', 30)
@@ -171,7 +216,7 @@ export async function submitFanCafe(_prev: FormState, formData: FormData): Promi
   if (!name || !location || !startDate || !socialPlatform || !socialAccount || !fandom) {
     return { status: 'error', message: 'Please fill in all required fields.' }
   }
-  if (!validDate(startDate) || (endDate && !validDate(endDate))) {
+  if (!validDate(startDate) || (endDate && !validDate(endDate)) || (registrationDeadline && !validDate(registrationDeadline))) {
     return { status: 'error', message: 'Please enter a valid event date.' }
   }
   if (endDate && endDate < startDate) {
@@ -190,6 +235,7 @@ export async function submitFanCafe(_prev: FormState, formData: FormData): Promi
       location,
       startDate,
       endDate: endDate || null,
+      registrationDeadline: registrationDeadline || null,
       startTime: startTime || null,
       endTime: endTime || null,
       socialPlatform,
@@ -208,13 +254,15 @@ export async function submitStampRally(_prev: FormState, formData: FormData): Pr
   const socialMediaHandles = field(formData, 'socialMediaHandles', 500)
   const eventName = field(formData, 'eventName', 150)
   const fandom = field(formData, 'fandom', 200)
+  const prizes = field(formData, 'prizes', 1000)
+  const method = field(formData, 'method', 1000)
   const postLink = field(formData, 'postLink', 500)
   const notes = field(formData, 'notes', 2000)
   const uploadedValue = formData.get('stampRallyFile')
   const stampRallyFile = uploadedValue instanceof File && uploadedValue.size > 0 ? uploadedValue : null
 
-  if (!artistNames || !socialMediaHandles || !eventName || !fandom) {
-    return { status: 'error', message: 'Artist names, social media handles, event, and fandom are required.' }
+  if (!artistNames || !socialMediaHandles || !eventName || !fandom || !prizes || !method) {
+    return { status: 'error', message: 'Artist names, social media handles, event, fandom, prizes, and method are required.' }
   }
   if (postLink) {
     try {
@@ -249,6 +297,8 @@ export async function submitStampRally(_prev: FormState, formData: FormData): Pr
       socialMediaHandles,
       eventName,
       fandom,
+      prizes,
+      method,
       postLink: postLink || null,
       uploadFilePath,
       notes: notes || null,
