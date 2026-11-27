@@ -738,3 +738,73 @@ export async function getSharedBookmarkGroup(groupId: string) {
     bookmarks: [...bookmarkMap.values()].sort((a, b) => a.booth.localeCompare(b.booth, undefined, { numeric: true, sensitivity: 'base' })),
   }
 }
+
+export type PersonalCalendarEntry = {
+  id: number
+  sourceKey: string
+  category: 'event' | 'fan_event' | 'interest_check' | 'pickup_cutoff'
+  title: string
+  detail: string
+  date: string
+}
+
+export type PersonalCalendarInput = Omit<PersonalCalendarEntry, 'id'>
+
+const calendarCategories = new Set(['event', 'fan_event', 'interest_check', 'pickup_cutoff'])
+
+function validCalendarEntry(value: PersonalCalendarInput) {
+  if (!value || typeof value.sourceKey !== 'string' || value.sourceKey.length > 180) return false
+  if (typeof value.title !== 'string' || !value.title.trim() || value.title.length > 160) return false
+  if (typeof value.detail !== 'string' || value.detail.length > 240) return false
+  if (!calendarCategories.has(value.category)) return false
+  if (typeof value.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value.date)) return false
+  const parsed = new Date(value.date + 'T00:00:00.000Z')
+  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === value.date
+}
+
+function normalizeCalendarDate(value: unknown): string {
+  if (value instanceof Date) return Number.isNaN(value.valueOf()) ? '' : value.toISOString().slice(0, 10)
+  return typeof value === 'string' ? value.slice(0, 10) : ''
+}
+
+export async function savePersonalCalendarEntries(values: PersonalCalendarInput[]) {
+  const user = await currentUser()
+  if (!user) return { ok: false as const, needsLogin: true as const }
+  const entries = Array.isArray(values) ? values.filter(validCalendarEntry).slice(0, 30) : []
+  if (!entries.length) return { ok: false as const, message: 'No valid dates were provided.' }
+  await pool.query(
+    'insert into public.mcc_user_calendar_items (user_id, source_key, category, title, detail, item_date) ' +
+    'select $1::uuid, item.source_key, item.category, item.title, item.detail, item.item_date::date ' +
+    'from jsonb_to_recordset($2::jsonb) as item(source_key text, category text, title text, detail text, item_date text) ' +
+    'on conflict (user_id, source_key) do update set category = excluded.category, title = excluded.title, detail = excluded.detail, item_date = excluded.item_date',
+    [user.id, JSON.stringify(entries.map((entry) => ({
+      source_key: entry.sourceKey,
+      category: entry.category,
+      title: entry.title,
+      detail: entry.detail,
+      item_date: entry.date,
+    })))],
+  )
+  return { ok: true as const }
+}
+
+export async function removePersonalCalendarEntry(id: number) {
+  const user = await currentUser()
+  if (!user) return { ok: false as const, needsLogin: true as const }
+  if (!Number.isSafeInteger(id) || id < 1) return { ok: false as const, message: 'Invalid calendar entry.' }
+  await pool.query('delete from public.mcc_user_calendar_items where user_id = $1::uuid and id = $2', [user.id, id])
+  return { ok: true as const }
+}
+
+export async function getPersonalCalendarEntries() {
+  const user = await currentUser()
+  if (!user) return { signedIn: false as const, entries: [] as PersonalCalendarEntry[] }
+  const result = await pool.query<{ id: number; source_key: string; category: PersonalCalendarEntry['category']; title: string; detail: string; item_date: unknown }>(
+    'select id, source_key, category, title, detail, item_date from public.mcc_user_calendar_items where user_id = $1::uuid order by item_date asc, title asc',
+    [user.id],
+  )
+  return {
+    signedIn: true as const,
+    entries: result.rows.map((row) => ({ id: Number(row.id), sourceKey: row.source_key, category: row.category, title: row.title, detail: row.detail, date: normalizeCalendarDate(row.item_date) })),
+  }
+}
