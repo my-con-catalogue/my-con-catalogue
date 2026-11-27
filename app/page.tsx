@@ -123,7 +123,7 @@ export default async function HomePage() {
 
       <section aria-label="Archive coverage note" className="mx-auto max-w-6xl px-4 pt-8">
         <p className="rounded-xl border border-primary/30 bg-accent/40 px-5 py-4 text-sm leading-relaxed">
-          <strong>A little note:</strong> MYConCatalogue officially started in mid-October 2026, so some earlier 2026 events aren&apos;t in the archive. Thank you for understanding! If you have catalogues from a missing event, <Link href="/contact" className="font-semibold text-primary underline underline-offset-4">send us a suggestion</Link>.
+          <strong>A little note:</strong> MYConCatalogue began in mid-October 2026. Due to limited manpower and time, <strong>earlier 2026 events and events from before 2026 aren&apos;t included in the archive</strong>. Thank you for understanding. If an event from our archive period is missing, <Link href="/contact#suggestion-form" className="font-semibold text-primary underline underline-offset-4">send us a suggestion</Link>.
         </p>
       </section>
 
@@ -164,6 +164,35 @@ export default async function HomePage() {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      <section aria-labelledby="about-mycc" className="mx-auto max-w-6xl px-4 py-14">
+        <div className="rounded-2xl border-2 border-foreground bg-card p-6 shadow-[6px_6px_0_0_var(--color-foreground)] md:p-9">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">A little about us</p>
+          <h2 id="about-mycc" className="mt-2 text-3xl font-extrabold tracking-tight">A community archive, made for easier browsing</h2>
+          <div className="mt-4 max-w-4xl space-y-4 leading-relaxed text-muted-foreground">
+            <p>
+              MYConCatalogue started after my first ACG convention experience at AMG in 2026. I found it a little difficult to search through the many catalogues and locate the specific artists and booths I wanted to visit. That got me thinking — wouldn&apos;t it be nice if everyone could browse these catalogues in one convenient place?
+            </p>
+            <p>
+              And so, MYCC was created as an independent, community-run archive dedicated to Malaysian convention catalogues, Artist Alleys, Stamp Rallies, Fan Events, and Interest Checks.
+            </p>
+            <p>
+              Beyond simply organising information, I hope to make more Artist Alley catalogues accessible to everyone, so we can discover new artists, share our interests, and enjoy the convention experience together! This is also why I introduced shared bookmark lists — making it easier and more fun for friends and fellow convention-goers to plan their visits together.
+            </p>
+            <p>
+              MYCC is still a work in progress, and community contributions and suggestions are always welcome. Wherever possible, I link back to original posts and pages from artists and organisers. Please continue supporting their work and refer to official channels for the latest event information.
+            </p>
+            <p>Thank you for being part of this little project!</p>
+          </div>
+          <p className="mt-5 text-foreground">
+            <strong>Fois D. Ciel</strong><br />
+            <em className="text-muted-foreground">Owner &amp; Creator of MYConCatalogue</em>
+          </p>
+          <Link href="/contact#suggestion-form" className="mt-5 inline-flex items-center gap-2 font-semibold text-primary underline underline-offset-4">
+            Send a correction or submission <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
         </div>
       </section>
 
