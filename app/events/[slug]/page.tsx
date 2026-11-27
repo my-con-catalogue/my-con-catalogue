@@ -52,6 +52,10 @@ export default async function EventPage({ params }: Props) {
     getEventBoothNumbers(event.slug),
     getEventStampRallies(event.id),
   ])
+  const eventCalendarEntries = [
+    ...(event.startDate ? [{ sourceKey: 'event:' + event.slug + ':start', category: 'event' as const, title: event.name, detail: event.endDate && event.endDate !== event.startDate ? 'First day' : 'Event date', date: event.startDate }] : []),
+    ...(event.endDate && event.endDate !== event.startDate ? [{ sourceKey: 'event:' + event.slug + ':end', category: 'event' as const, title: event.name, detail: 'Last day', date: event.endDate }] : []),
+  ]
 
   return (
     <>
@@ -81,7 +85,7 @@ export default async function EventPage({ params }: Props) {
             <div className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
               <dt className="sr-only">Date</dt>
               <CalendarDays className="size-4" aria-hidden="true" />
-              <dd>{formatDateRange(event.startDate, event.endDate)}</dd>
+              <dd className="flex items-center gap-2">{formatDateRange(event.startDate, event.endDate)}{eventCalendarEntries.length > 0 && <CalendarReminderButton entries={eventCalendarEntries} iconOnly />}</dd>
             </div>
             <div className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
               <dt className="sr-only">Location</dt>
@@ -107,12 +111,6 @@ export default async function EventPage({ params }: Props) {
               </dd>
             </div>
           </dl>
-          {(event.startDate || event.endDate) && <div className="mt-4">
-            <CalendarReminderButton entries={[
-              ...(event.startDate ? [{ sourceKey: 'event:' + event.slug + ':start', category: 'event' as const, title: event.name, detail: event.endDate && event.endDate !== event.startDate ? 'First day' : 'Event date', date: event.startDate }] : []),
-              ...(event.endDate && event.endDate !== event.startDate ? [{ sourceKey: 'event:' + event.slug + ':end', category: 'event' as const, title: event.name, detail: 'Last day', date: event.endDate }] : []),
-            ]} />
-          </div>}
           <nav aria-label="Event sections" className="mt-8 flex flex-wrap gap-2">
             {event.slug === 'anime-fest-2026' && (
               <a href="#interactive-map" className="rounded-full border border-foreground bg-card px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background">
