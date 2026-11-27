@@ -26,6 +26,16 @@ export function rememberSavedCalendarEntries(entries: PersonalCalendarInput[]) {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event(UPDATE_EVENT))
 }
 
+export function forgetSavedCalendarEntries(entries: PersonalCalendarInput[]) {
+  if (!cachedKeys) {
+    invalidateSavedCalendarEntries()
+    return
+  }
+  for (const entry of entries) cachedKeys.delete(entry.sourceKey)
+  cacheExpiresAt = Date.now() + 30_000
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(UPDATE_EVENT))
+}
+
 export function invalidateSavedCalendarEntries() {
   cachedKeys = null
   cacheExpiresAt = 0
