@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Bell, BellRing } from 'lucide-react'
-import { savePersonalCalendarEntries, type PersonalCalendarInput } from '@/app/actions/bookmark-accounts'
-import { getSavedCalendarSourceKeys, personalCalendarUpdatedEvent, rememberSavedCalendarEntries } from '@/lib/personal-calendar-client-cache'
+import { removePersonalCalendarEntriesBySourceKeys, savePersonalCalendarEntries, type PersonalCalendarInput } from '@/app/actions/bookmark-accounts'
+import { forgetSavedCalendarEntries, getSavedCalendarSourceKeys, personalCalendarUpdatedEvent, rememberSavedCalendarEntries } from '@/lib/personal-calendar-client-cache'
 
 export function CalendarReminderButton({ entries, compact = false, iconOnly = false }: { entries: PersonalCalendarInput[]; compact?: boolean; iconOnly?: boolean }) {
   const [saved, setSaved] = useState(false)
@@ -31,10 +31,17 @@ export function CalendarReminderButton({ entries, compact = false, iconOnly = fa
     setBusy(true)
     setMessage('')
     try {
-      const result = await savePersonalCalendarEntries(entries)
-      if ('needsLogin' in result && result.needsLogin) setShowLoginPrompt(true)
-      else if (result.ok) { setSaved(true); rememberSavedCalendarEntries(entries) }
-      else if ('message' in result) setMessage(result.message)
+      if (saved) {
+        const result = await removePersonalCalendarEntriesBySourceKeys(entries.map((entry) => entry.sourceKey))
+        if ('needsLogin' in result && result.needsLogin) setShowLoginPrompt(true)
+        else if (result.ok) { setSaved(false); forgetSavedCalendarEntries(entries) }
+        else if ('message' in result) setMessage(result.message)
+      } else {
+        const result = await savePersonalCalendarEntries(entries)
+        if ('needsLogin' in result && result.needsLogin) setShowLoginPrompt(true)
+        else if (result.ok) { setSaved(true); rememberSavedCalendarEntries(entries) }
+        else if ('message' in result) setMessage(result.message)
+      }
     } catch {
       setMessage('Could not update your calendar right now. Please try again.')
     }
@@ -44,9 +51,9 @@ export function CalendarReminderButton({ entries, compact = false, iconOnly = fa
   if (!entries.length) return null
 
   return <>
-    <button type="button" onClick={() => void handleClick()} disabled={busy || saved} aria-label={saved ? 'Dates added to personal calendar' : 'Add dates to personal calendar'} title={saved ? 'Added to personal calendar' : 'Add dates to personal calendar'} aria-pressed={saved} className={'inline-flex shrink-0 items-center justify-center rounded-full border transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-100 ' + (saved ? 'border-emerald-800 bg-emerald-700 text-white hover:bg-emerald-700 ' : 'border-border bg-background text-foreground hover:border-amber-300 hover:bg-accent hover:text-accent-foreground ') + (iconOnly ? 'size-9' : 'gap-2 font-semibold ' + (compact ? 'px-3 py-1.5 text-xs' : 'px-3.5 py-2 text-sm'))}>
+    <button type="button" onClick={() => void handleClick()} disabled={busy} aria-label={saved ? 'Remove dates from personal calendar' : 'Add dates to personal calendar'} title={saved ? 'Remove dates from personal calendar' : 'Add dates to personal calendar'} aria-pressed={saved} className={'inline-flex shrink-0 items-center justify-center rounded-full border transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-100 ' + (saved ? 'border-emerald-800 bg-emerald-700 text-white hover:bg-emerald-700 ' : 'border-border bg-background text-foreground hover:border-amber-300 hover:bg-accent hover:text-accent-foreground ') + (iconOnly ? 'size-9' : 'gap-2 font-semibold ' + (compact ? 'px-3 py-1.5 text-xs' : 'px-3.5 py-2 text-sm'))}>
       {saved ? <BellRing className="size-4" aria-hidden="true" /> : <Bell className="size-4" aria-hidden="true" />}
-      {!iconOnly && (busy ? 'Saving…' : saved ? 'Added to calendar' : 'Add dates to calendar')}
+      {!iconOnly && (busy ? (saved ? 'Removing…' : 'Saving…') : saved ? 'Remove from calendar' : 'Add dates to calendar')}
     </button>
     {message && <p role="status" className="mt-2 text-xs text-destructive">{message}</p>}
     {showLoginPrompt && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowLoginPrompt(false) }}>
