@@ -11,6 +11,8 @@ import { SocialPostEmbed, supportsSocialPostEmbed } from '@/components/social-po
 import { CatalogueViewTracker } from '@/components/catalogue-view-tracker'
 import { CatalogueBookmarkPanel } from '@/components/catalogue-bookmark-panel'
 import { CatalogueCover } from '@/components/catalogue-cover'
+import { CalendarReminderButton } from '@/components/calendar-reminder-button'
+import { parsePickupCutoffDates } from '@/lib/pickup-cutoff-dates'
 
 function displayTag(tag: string) {
   return tag.toLocaleLowerCase().replace(/\b\p{L}/gu, (letter) => letter.toLocaleUpperCase())
@@ -50,6 +52,13 @@ export default async function CatalogueDetailPage({ params }: Props) {
   if (!data) notFound()
   const { event, catalogue } = data
   const artistSocialAccounts = getArtistSocialAccounts(catalogue.artistInstagrams, catalogue.artistSocialLinks)
+  const pickupCalendarEntries = catalogue.catalogueType === 'pickup_only' ? parsePickupCutoffDates(catalogue.orderCutoff).map((cutoff, index) => ({
+    sourceKey: 'pickup-cutoff:' + event.slug + ':' + catalogue.id + ':' + index + ':' + cutoff.date,
+    category: 'pickup_cutoff' as const,
+    title: catalogue.artistName + ' · Booth ' + catalogue.booth,
+    detail: cutoff.note ? 'Order cutoff (' + cutoff.note + ')' : 'Order cutoff',
+    date: cutoff.date,
+  })) : []
   const eventNameWithoutRepeatedYear = event.name.replace(new RegExp(`\\s*\\b${event.year}\\b\\s*`, 'g'), ' ').replace(/\s+/g, ' ').trim()
 
   return (
@@ -81,6 +90,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
       {catalogue.catalogueType === 'pickup_only' && (catalogue.orderCutoff?.trim() || catalogue.pickupNote?.trim()) && (
         <div className="mt-6 rounded-xl border border-primary/30 bg-accent/60 p-4 text-sm leading-relaxed text-foreground">
           {catalogue.orderCutoff?.trim() && <p><span className="font-bold">Order cutoff: </span>{catalogue.orderCutoff}</p>}
+          {pickupCalendarEntries.length > 0 && <div className="mt-2"><CalendarReminderButton entries={pickupCalendarEntries} compact /></div>}
           {catalogue.pickupNote?.trim() && <p><span className="font-bold">Pick-up note: </span>{catalogue.pickupNote}</p>}
         </div>
       )}
