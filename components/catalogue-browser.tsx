@@ -828,7 +828,7 @@ export function CatalogueBrowser({ entries, eventName, boothNumbers = [], stampR
             const pickupCalendarEntries = pickupCutoffDates.map((cutoff, index) => ({
               sourceKey: 'pickup-cutoff:' + entry.eventSlug + ':' + entry.id + ':' + index + ':' + cutoff.date,
               category: 'pickup_cutoff' as const,
-              title: (eventName || entry.eventSlug) + ' · ' + entry.artistName + ' · Booth ' + entry.booth,
+              title: entry.artistName + ' · Booth ' + entry.booth + ' · ' + (eventName || entry.eventSlug),
               detail: cutoff.note ? 'Order cutoff (' + cutoff.note + ')' : 'Order cutoff',
               date: cutoff.date,
             }))

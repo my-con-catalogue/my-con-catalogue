@@ -38,26 +38,23 @@ export function EventCard({ event }: { event: EventWithCount }) {
           <dt className="sr-only">Entry</dt>
           <dd><EventEntryBadge status={event.entryStatus} /></dd>
         </div>
-        <div className="flex items-center gap-2">
-          <dt className="sr-only">Date</dt>
-          <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
-          <dd className="flex min-w-0 flex-1 items-center justify-between gap-2">{formatDateRange(event.startDate, event.endDate)}{calendarEntries.length > 0 && <CalendarReminderButton entries={calendarEntries} iconOnly />}</dd>
+        <div className="flex items-start gap-2">
+          <CalendarDays className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <div className="min-w-0 flex-1"><dt className="text-xs font-semibold uppercase tracking-wider">Date</dt><dd className="mt-1 flex items-center justify-between gap-2">{formatDateRange(event.startDate, event.endDate)}{calendarEntries.length > 0 && <CalendarReminderButton entries={calendarEntries} iconOnly />}</dd></div>
         </div>
-        <div className="flex items-center gap-2">
-          <dt className="sr-only">Location</dt>
-          <MapPin className="size-4 shrink-0" aria-hidden="true" />
-          <dd>{event.location ?? 'Location TBA'}</dd>
+        <div className="flex items-start gap-2">
+          <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <div><dt className="text-xs font-semibold uppercase tracking-wider">Location</dt><dd className="mt-1">{event.location ?? 'Location TBA'}</dd></div>
         </div>
-        <div className="flex items-center gap-2">
-          <dt className="sr-only">Social media account</dt>
-          <InstagramIcon className="size-4 shrink-0" />
-          <dd>
+        <div className="flex items-start gap-2">
+          <InstagramIcon className="mt-0.5 size-4 shrink-0" />
+          <div><dt className="text-xs font-semibold uppercase tracking-wider">Social media</dt><dd className="mt-1">
             {event.instagram ? (
               <a href={`https://www.instagram.com/${event.instagram.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer" className="relative z-10 font-medium text-foreground underline-offset-2 hover:underline">
                 @{event.instagram.replace(/^@/, '')}
               </a>
             ) : 'Social account TBA'}
-          </dd>
+          </dd></div>
         </div>
       </dl>
       <div className="mt-auto flex flex-wrap items-center justify-start gap-3 pt-5">
