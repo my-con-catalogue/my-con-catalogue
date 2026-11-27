@@ -40,6 +40,7 @@ export function PersonalCalendarView() {
   const [mode, setMode] = useState<'calendar' | 'list'>('calendar')
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+  const currentYear = Number(today.slice(0, 4))
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const now = new Date()
     const key = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)
@@ -71,6 +72,11 @@ export function PersonalCalendarView() {
   const cellCount = Math.ceil((leadingDays + monthLength) / 7) * 7
   const calendarDays = Array.from({ length: cellCount }, (_, index) => new Date(monthStart + (index - leadingDays) * DAY_MS))
   const monthLabel = new Intl.DateTimeFormat('en-MY', { timeZone: 'UTC', month: 'long', year: 'numeric' }).format(visibleMonth)
+  const monthNames = Array.from({ length: 12 }, (_, month) => new Intl.DateTimeFormat('en-MY', { timeZone: 'UTC', month: 'long' }).format(new Date(Date.UTC(2020, month, 1))))
+  const yearOptions = [...new Set([
+    ...Array.from({ length: 11 }, (_, index) => currentYear - 5 + index),
+    ...entries.map((entry) => Number(entry.date.slice(0, 4))),
+  ])].sort((a, b) => a - b)
   const monthPrefix = visibleMonth.toISOString().slice(0, 7)
   const monthEntries = entries.filter((entry) => entry.date.startsWith(monthPrefix))
   const selectedEntries = selectedDate ? entriesByDate.get(selectedDate) ?? [] : []
@@ -131,7 +137,18 @@ export function PersonalCalendarView() {
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-6" aria-label={mode === 'calendar' ? 'Monthly calendar' : 'Monthly list'}>
       <div className="mb-5 flex items-center justify-between gap-3">
         <button type="button" onClick={() => setVisibleMonth((current) => new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth() - 1, 1)))} aria-label="Previous month" className="flex size-10 items-center justify-center rounded-full border border-border hover:bg-muted"><ChevronLeft className="size-5" aria-hidden="true" /></button>
-        <div className="text-center"><h2 className="text-xl font-extrabold">{monthLabel}</h2><button type="button" onClick={() => setVisibleMonth(new Date(today.slice(0, 4) + '-' + today.slice(5, 7) + '-01T00:00:00.000Z'))} className="mt-1 text-xs font-semibold text-primary underline underline-offset-2">Go to this month</button></div>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <label className="sr-only" htmlFor="calendar-month">Choose month</label>
+          <select id="calendar-month" value={visibleMonth.getUTCMonth()} onChange={(event) => setVisibleMonth((current) => new Date(Date.UTC(current.getUTCFullYear(), Number(event.target.value), 1)))} className="rounded-lg border border-border bg-background px-3 py-2 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            {monthNames.map((month, index) => <option key={month} value={index}>{month}</option>)}
+          </select>
+          <label className="sr-only" htmlFor="calendar-year">Choose year</label>
+          <select id="calendar-year" value={visibleMonth.getUTCFullYear()} onChange={(event) => setVisibleMonth((current) => new Date(Date.UTC(Number(event.target.value), current.getUTCMonth(), 1)))} className="rounded-lg border border-border bg-background px-3 py-2 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            {yearOptions.map((year) => <option key={year} value={year}>{year}</option>)}
+          </select>
+          <button type="button" onClick={() => setVisibleMonth(new Date(today.slice(0, 4) + '-' + today.slice(5, 7) + '-01T00:00:00.000Z'))} className="basis-full text-xs font-semibold text-primary underline underline-offset-2">Go to this month</button>
+          <span className="sr-only">Showing {monthLabel}</span>
+        </div>
         <button type="button" onClick={() => setVisibleMonth((current) => new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + 1, 1)))} aria-label="Next month" className="flex size-10 items-center justify-center rounded-full border border-border hover:bg-muted"><ChevronRight className="size-5" aria-hidden="true" /></button>
       </div>
 

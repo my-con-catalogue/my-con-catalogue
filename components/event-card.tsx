@@ -41,7 +41,7 @@ export function EventCard({ event }: { event: EventWithCount }) {
         <div className="flex items-center gap-2">
           <dt className="sr-only">Date</dt>
           <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
-          <dd className="flex min-w-0 items-center gap-2">{formatDateRange(event.startDate, event.endDate)}{calendarEntries.length > 0 && <CalendarReminderButton entries={calendarEntries} iconOnly />}</dd>
+          <dd className="flex min-w-0 flex-1 items-center justify-between gap-2">{formatDateRange(event.startDate, event.endDate)}{calendarEntries.length > 0 && <CalendarReminderButton entries={calendarEntries} iconOnly />}</dd>
         </div>
         <div className="flex items-center gap-2">
           <dt className="sr-only">Location</dt>
