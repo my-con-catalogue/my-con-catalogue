@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { Bell, CalendarDays, ChevronLeft, ChevronRight, Trash2, X } from 'lucide-react'
 import { getPersonalCalendarEntries, removePersonalCalendarEntry, type PersonalCalendarEntry } from '@/app/actions/bookmark-accounts'
+import { invalidateSavedCalendarEntries } from '@/lib/personal-calendar-client-cache'
 
 const categoryLabels: Record<PersonalCalendarEntry['category'], string> = {
   event: 'Convention',
@@ -87,7 +88,7 @@ export function PersonalCalendarView() {
     setError('')
     try {
       const result = await removePersonalCalendarEntry(id)
-      if (result.ok) setEntries((current) => current.filter((entry) => entry.id !== id))
+      if (result.ok) { setEntries((current) => current.filter((entry) => entry.id !== id)); invalidateSavedCalendarEntries() }
       else setError('Could not remove that reminder. Please try again.')
     } catch {
       setError('Could not remove that reminder. Please try again.')

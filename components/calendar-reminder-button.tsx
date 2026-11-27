@@ -1,22 +1,39 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Bell, BellRing } from 'lucide-react'
 import { savePersonalCalendarEntries, type PersonalCalendarInput } from '@/app/actions/bookmark-accounts'
+import { getSavedCalendarSourceKeys, personalCalendarUpdatedEvent, rememberSavedCalendarEntries } from '@/lib/personal-calendar-client-cache'
 
 export function CalendarReminderButton({ entries, compact = false, iconOnly = false }: { entries: PersonalCalendarInput[]; compact?: boolean; iconOnly?: boolean }) {
   const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const [message, setMessage] = useState('')
+  const sourceKeys = entries.map((entry) => entry.sourceKey).join('|')
+  useEffect(() => {
+    let active = true
+    const syncSavedState = async () => {
+      try {
+        const keys = await getSavedCalendarSourceKeys()
+        if (active) setSaved(sourceKeys.split('|').every((key) => keys.has(key)))
+      } catch {
+        // Keep the reminder available if calendar status could not be checked.
+      }
+    }
+    void syncSavedState()
+    const handleCalendarUpdate = () => { void syncSavedState() }
+    window.addEventListener(personalCalendarUpdatedEvent, handleCalendarUpdate)
+    return () => { active = false; window.removeEventListener(personalCalendarUpdatedEvent, handleCalendarUpdate) }
+  }, [sourceKeys])
   async function handleClick() {
     setBusy(true)
     setMessage('')
     try {
       const result = await savePersonalCalendarEntries(entries)
       if ('needsLogin' in result && result.needsLogin) setShowLoginPrompt(true)
-      else if (result.ok) setSaved(true)
+      else if (result.ok) { setSaved(true); rememberSavedCalendarEntries(entries) }
       else if ('message' in result) setMessage(result.message)
     } catch {
       setMessage('Could not update your calendar right now. Please try again.')
