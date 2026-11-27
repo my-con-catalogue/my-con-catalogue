@@ -1,4 +1,4 @@
-import { boolean, date, integer, pgTable, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { boolean, date, integer, pgTable, serial, text, timestamp, uniqueIndex, uuid, bigserial } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
 export const events = pgTable('events', {
@@ -126,6 +126,17 @@ export const interestCheckSubmissions = pgTable('interest_check_submissions', {
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+export const userCalendarItems = pgTable('mcc_user_calendar_items', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: uuid('user_id').notNull(),
+  sourceKey: text('source_key').notNull(),
+  category: text('category').notNull(),
+  title: text('title').notNull(),
+  detail: text('detail').notNull().default(''),
+  itemDate: date('item_date').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [uniqueIndex('mcc_user_calendar_items_user_source_idx').on(table.userId, table.sourceKey)])
 
 export const suggestions = pgTable('suggestions', {
   id: serial('id').primaryKey(),
