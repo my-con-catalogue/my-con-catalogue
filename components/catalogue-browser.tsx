@@ -863,8 +863,7 @@ export function CatalogueBrowser({ entries, boothNumbers = [], stampRallies = []
               </details>}
               {entry.catalogueType === 'pickup_only' && (entry.pickupNote?.trim() || entry.orderCutoff?.trim()) && (
                 <div className="border-b border-border bg-accent/60 px-4 py-3 text-sm leading-relaxed text-foreground">
-                  {entry.orderCutoff?.trim() && <p><span className="font-bold">Order cutoff: </span>{entry.orderCutoff}</p>}
-                  {pickupCalendarEntries.length > 0 && <div className="mt-2"><CalendarReminderButton entries={pickupCalendarEntries} compact /></div>}
+                  {entry.orderCutoff?.trim() && <p className="flex items-center justify-between gap-2"><span><span className="font-bold">Order cutoff: </span>{entry.orderCutoff}</span>{pickupCalendarEntries.length > 0 && <CalendarReminderButton entries={pickupCalendarEntries} iconOnly />}</p>}
                   {entry.pickupNote?.trim() && <p><span className="font-bold">Pick-up note: </span>{entry.pickupNote}</p>}
                 </div>
               )}

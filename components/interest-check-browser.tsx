@@ -69,16 +69,15 @@ export function InterestCheckBrowser({ items, initialYear }: { items: InterestCh
                   {yearItems.map((item) => {
                     const past = Boolean(item.cutoffDate && item.cutoffDate < today) || ['past', 'closed'].includes(item.status?.trim().toLowerCase() ?? '')
                     const status = past ? 'Past' : item.status?.trim() || 'Ongoing'
-                    return <li key={item.id} className="flex flex-col rounded-xl border border-border bg-card p-5">
+                    return <li key={item.id} id={'interest-check-' + item.id} className="scroll-mt-24 flex flex-col rounded-xl border border-border bg-card p-5">
                       <div className="flex flex-wrap items-start justify-between gap-3"><h3 className="text-xl font-bold leading-tight">{item.title}</h3><span className={`inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${statusStyle(status)}`}>{status}</span></div>
                       {item.socialPostUrl && <div className="mt-4"><SocialPostEmbed postUrl={item.socialPostUrl} title={`${item.title} social media post`} /></div>}
                       <dl className="mt-5 flex flex-col gap-4 border-t border-border pt-4 text-sm">
                         {item.type.length > 0 && <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</dt><dd className="mt-1 flex flex-wrap gap-2">{item.type.map((tag) => <span key={normalizedTag(tag)} className="inline-flex rounded-full bg-accent px-3 py-1 font-semibold text-accent-foreground">{tag}</span>)}</dd></div>}
                         {item.fandom.length > 0 && <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fandom</dt><dd className="mt-1 flex flex-wrap gap-2">{item.fandom.map((tag) => <span key={normalizedTag(tag)} className="inline-flex rounded-full bg-accent px-3 py-1 font-semibold text-accent-foreground">{tag}</span>)}</dd></div>}
                         <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Event</dt><dd className="mt-1">{item.eventName}</dd></div>
-                        <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cutoff date</dt><dd className="mt-0.5">{item.cutoffDate ? formatDateRange(item.cutoffDate, item.cutoffDate) : 'No cutoff date'}</dd></div></div>
+                        <div className="flex items-start gap-2"><CalendarDays className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cutoff date</dt><dd className="mt-0.5 flex items-center gap-2">{item.cutoffDate ? formatDateRange(item.cutoffDate, item.cutoffDate) : 'No cutoff date'}{item.cutoffDate && <CalendarReminderButton entries={[{ sourceKey: 'interest-check:' + item.id + ':cutoff', category: 'interest_check', title: item.title, detail: 'Closing date', date: item.cutoffDate }]} iconOnly />}</dd></div></div>
                       </dl>
-                      {item.cutoffDate && <div className="mt-4"><CalendarReminderButton entries={[{ sourceKey: 'interest-check:' + item.id + ':cutoff', category: 'interest_check', title: item.title, detail: 'Closing date', date: item.cutoffDate }]} compact /></div>}
                     </li>
                   })}
                 </ul>

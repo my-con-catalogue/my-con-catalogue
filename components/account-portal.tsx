@@ -201,14 +201,14 @@ export function AccountPortal({ initialMode = 'login' }: { initialMode?: 'login'
       </section>
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-7">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div><div className="flex items-center gap-2"><Bell className="size-5 text-primary" /><h2 className="text-xl font-extrabold">Personal calendar</h2></div><p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">Keep saved dates and pick-up cutoffs together in your account.</p></div>
-          <Link href="/account/calendar" className="inline-flex shrink-0 items-center rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background">Open personal calendar <span className="ml-2" aria-hidden="true">↗</span></Link>
+          <div><p className="text-sm text-muted-foreground">Signed in as</p><h2 className="text-2xl font-extrabold">@{overview.username}</h2><p className="mt-1 text-sm text-muted-foreground">Your saved catalogues sync to this account. Bookmarks already on this browser are merged automatically.</p></div>
+          <button type="button" onClick={async () => { await logoutUsernameAccount(); setMessage('You are logged out.'); await refresh() }} className="inline-flex items-center gap-2 rounded-full border border-input px-4 py-2 text-sm font-semibold hover:bg-muted"><LogOut className="size-4" />Log out</button>
         </div>
       </section>
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-7">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div><p className="text-sm text-muted-foreground">Signed in as</p><h2 className="text-2xl font-extrabold">@{overview.username}</h2><p className="mt-1 text-sm text-muted-foreground">Your saved catalogues sync to this account. Bookmarks already on this browser are merged automatically.</p></div>
-          <button type="button" onClick={async () => { await logoutUsernameAccount(); setMessage('You are logged out.'); await refresh() }} className="inline-flex items-center gap-2 rounded-full border border-input px-4 py-2 text-sm font-semibold hover:bg-muted"><LogOut className="size-4" />Log out</button>
+          <div><div className="flex items-center gap-2"><Bell className="size-5 text-primary" /><h2 className="text-xl font-extrabold">Personal calendar</h2></div><p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">Keep saved dates and pick-up cutoffs together in your account.</p></div>
+          <Link href="/account/calendar" className="inline-flex shrink-0 items-center rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background">Open personal calendar <span className="ml-2" aria-hidden="true">↗</span></Link>
         </div>
       </section>
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-7">

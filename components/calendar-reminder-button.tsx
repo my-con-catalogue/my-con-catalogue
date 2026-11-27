@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Bell, BellRing } from 'lucide-react'
 import { savePersonalCalendarEntries, type PersonalCalendarInput } from '@/app/actions/bookmark-accounts'
 
-export function CalendarReminderButton({ entries, compact = false }: { entries: PersonalCalendarInput[]; compact?: boolean }) {
+export function CalendarReminderButton({ entries, compact = false, iconOnly = false }: { entries: PersonalCalendarInput[]; compact?: boolean; iconOnly?: boolean }) {
   const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
@@ -27,9 +27,9 @@ export function CalendarReminderButton({ entries, compact = false }: { entries: 
   if (!entries.length) return null
 
   return <>
-    <button type="button" onClick={() => void handleClick()} disabled={busy || saved} aria-pressed={saved} className={'inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card font-semibold transition-colors hover:bg-accent disabled:opacity-60 ' + (compact ? 'px-3 py-1.5 text-xs' : 'px-3.5 py-2 text-sm')}>
+    <button type="button" onClick={() => void handleClick()} disabled={busy || saved} aria-label={saved ? 'Dates added to personal calendar' : 'Add dates to personal calendar'} title={saved ? 'Added to personal calendar' : 'Add dates to personal calendar'} aria-pressed={saved} className={'inline-flex shrink-0 items-center justify-center rounded-full border border-amber-300 bg-accent text-accent-foreground transition-transform hover:scale-105 hover:bg-accent/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70 ' + (iconOnly ? 'size-9' : 'gap-2 font-semibold ' + (compact ? 'px-3 py-1.5 text-xs' : 'px-3.5 py-2 text-sm'))}>
       {saved ? <BellRing className="size-4" aria-hidden="true" /> : <Bell className="size-4" aria-hidden="true" />}
-      {busy ? 'Saving…' : saved ? 'Added to calendar' : 'Add dates to calendar'}
+      {!iconOnly && (busy ? 'Saving…' : saved ? 'Added to calendar' : 'Add dates to calendar')}
     </button>
     {message && <p role="status" className="mt-2 text-xs text-destructive">{message}</p>}
     {showLoginPrompt && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowLoginPrompt(false) }}>

@@ -41,7 +41,7 @@ export function EventCard({ event }: { event: EventWithCount }) {
         <div className="flex items-center gap-2">
           <dt className="sr-only">Date</dt>
           <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
-          <dd>{formatDateRange(event.startDate, event.endDate)}</dd>
+          <dd className="flex min-w-0 items-center gap-2">{formatDateRange(event.startDate, event.endDate)}{calendarEntries.length > 0 && <CalendarReminderButton entries={calendarEntries} iconOnly />}</dd>
         </div>
         <div className="flex items-center gap-2">
           <dt className="sr-only">Location</dt>
@@ -60,8 +60,7 @@ export function EventCard({ event }: { event: EventWithCount }) {
           </dd>
         </div>
       </dl>
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5">
-        {calendarEntries.length > 0 && <CalendarReminderButton entries={calendarEntries} compact />}
+      <div className="mt-auto flex flex-wrap items-center justify-start gap-3 pt-5">
         <span className="inline-flex rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
           {event.catalogueCount} {event.catalogueCount === 1 ? 'catalogue' : 'catalogues'}
         </span>

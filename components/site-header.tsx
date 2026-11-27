@@ -77,6 +77,7 @@ export function SiteHeader() {
               <Link href="/account?mode=login" onClick={(event) => { const menu = event.currentTarget.closest('details'); if (menu) menu.open = false }} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">Log in</Link>
               <Link href="/account?mode=create" onClick={(event) => { const menu = event.currentTarget.closest('details'); if (menu) menu.open = false }} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">Sign up</Link>
               <div className="my-1 border-t border-border" />
+              <Link href="/account/calendar" onClick={(event) => { const menu = event.currentTarget.closest('details'); if (menu) menu.open = false }} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">Personal calendar</Link>
               <Link href="/account/shared-lists" onClick={(event) => { const menu = event.currentTarget.closest('details'); if (menu) menu.open = false }} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">Shared lists</Link>
             </div>
           </details>
