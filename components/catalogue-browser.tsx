@@ -643,6 +643,7 @@ export function CatalogueBrowser({ entries, eventName, boothNumbers = [], stampR
             </button>
           ))}
         </div>
+        {catalogueType === 'pickup_only' && <p className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm leading-relaxed text-red-800"><strong>NOT THE FINAL BOOTH NUMBER</strong> — This is only a numbering system for pick-up catalogues on this website.</p>}
         {catalogueType !== 'stamp_rally' && <div className="relative">
           <label htmlFor="catalogue-search" className="sr-only">
             Search artists or booth numbers

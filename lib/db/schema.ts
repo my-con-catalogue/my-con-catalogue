@@ -1,4 +1,4 @@
-import { boolean, date, integer, pgTable, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { boolean, date, integer, pgTable, serial, text, timestamp, uniqueIndex, uuid, bigserial } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
 export const events = pgTable('events', {
@@ -76,6 +76,7 @@ export const stampRallies = pgTable('stamp_rallies', {
   socialPostUrl: text('social_post_url'),
   fandom: text('fandom').array().notNull().default([]),
   prizes: text('prizes'),
+  method: text('method'),
   imageUrl: text('image_url'),
   participants: text('participants').array().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -84,7 +85,8 @@ export const stampRallies = pgTable('stamp_rallies', {
 export const fanCafes = pgTable('fan_cafes', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
-  fandom: text('fandom'),
+  fandom: text('fandom').array().notNull().default([]),
+  types: text('types').array().notNull().default([]),
   location: text('location'),
   startDate: date('start_date'),
   endDate: date('end_date'),
@@ -94,6 +96,7 @@ export const fanCafes = pgTable('fan_cafes', {
   startTime: text('start_time'),
   endTime: text('end_time'),
   description: text('description'),
+  registrationDeadline: date('registration_deadline'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -101,14 +104,39 @@ export const interestChecks = pgTable('interest_checks', {
   id: serial('id').primaryKey(),
   title: text('title').notNull(),
   socialPostUrl: text('social_post_url'),
-  type: text('type').notNull(),
+  type: text('type').array().notNull().default([]),
   eventName: text('event_name').notNull(),
-  fandom: text('fandom'),
+  fandom: text('fandom').array().notNull().default([]),
   status: text('status'),
   year: integer('year').notNull(),
   cutoffDate: date('cutoff_date'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+export const interestCheckSubmissions = pgTable('interest_check_submissions', {
+  id: serial('id').primaryKey(),
+  interestCheckName: text('interest_check_name').notNull(),
+  postLink: text('post_link').notNull(),
+  socialMedia: text('social_media'),
+  type: text('type').notNull(),
+  otherType: text('other_type'),
+  fandom: text('fandom').notNull(),
+  eventName: text('event_name'),
+  cutoffDate: date('cutoff_date'),
+  status: text('status').notNull().default('pending'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const userCalendarItems = pgTable('mcc_user_calendar_items', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: uuid('user_id').notNull(),
+  sourceKey: text('source_key').notNull(),
+  category: text('category').notNull(),
+  title: text('title').notNull(),
+  detail: text('detail').notNull().default(''),
+  itemDate: date('item_date').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [uniqueIndex('mcc_user_calendar_items_user_source_idx').on(table.userId, table.sourceKey)])
 
 export const suggestions = pgTable('suggestions', {
   id: serial('id').primaryKey(),
@@ -144,6 +172,7 @@ export const fanCafeSubmissions = pgTable('fan_cafe_submissions', {
   location: text('location').notNull(),
   startDate: date('start_date').notNull(),
   endDate: date('end_date'),
+  registrationDeadline: date('registration_deadline'),
   startTime: text('start_time'),
   endTime: text('end_time'),
   socialPlatform: text('social_platform').notNull(),
@@ -160,6 +189,8 @@ export const stampRallySubmissions = pgTable('stamp_rally_submissions', {
   socialMediaHandles: text('social_media_handles').notNull(),
   eventName: text('event_name').notNull(),
   fandom: text('fandom').notNull(),
+  prizes: text('prizes').notNull(),
+  method: text('method').notNull(),
   postLink: text('post_link'),
   uploadFilePath: text('upload_file_path'),
   notes: text('notes'),

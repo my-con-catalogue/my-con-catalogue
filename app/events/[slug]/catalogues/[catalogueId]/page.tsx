@@ -7,8 +7,13 @@ import { getEventBySlug, getEventCatalogueById } from '@/lib/queries'
 import { getArtistSocialAccounts } from '@/lib/artist-socials'
 import { ArtistSocialLinks } from '@/components/artist-social-links'
 import { InstagramPostEmbed } from '@/components/instagram-post-embed'
+import { SocialPostEmbed } from '@/components/social-post-embed'
+import { supportsSocialPostEmbed } from '@/lib/social-post-embed-utils'
 import { CatalogueViewTracker } from '@/components/catalogue-view-tracker'
 import { CatalogueBookmarkPanel } from '@/components/catalogue-bookmark-panel'
+import { CatalogueCover } from '@/components/catalogue-cover'
+import { CalendarReminderButton } from '@/components/calendar-reminder-button'
+import { parsePickupCutoffDates } from '@/lib/pickup-cutoff-dates'
 
 function displayTag(tag: string) {
   return tag.toLocaleLowerCase().replace(/\b\p{L}/gu, (letter) => letter.toLocaleUpperCase())
@@ -48,6 +53,22 @@ export default async function CatalogueDetailPage({ params }: Props) {
   if (!data) notFound()
   const { event, catalogue } = data
   const artistSocialAccounts = getArtistSocialAccounts(catalogue.artistInstagrams, catalogue.artistSocialLinks)
+  const catalogueSources = [...catalogue.instagramPosts, ...catalogue.catalogueFileUrls, ...catalogue.catalogueLinks]
+  const coverSource = catalogueSources.find((source) => externalLink(source))
+  const withoutCoverSource = (sources: readonly string[]) => {
+    const index = coverSource ? sources.indexOf(coverSource) : -1
+    return index < 0 ? sources : [...sources.slice(0, index), ...sources.slice(index + 1)]
+  }
+  const remainingInstagramPosts = withoutCoverSource(catalogue.instagramPosts)
+  const remainingCatalogueFiles = withoutCoverSource(catalogue.catalogueFileUrls)
+  const remainingCatalogueLinks = withoutCoverSource(catalogue.catalogueLinks)
+  const pickupCalendarEntries = catalogue.catalogueType === 'pickup_only' ? parsePickupCutoffDates(catalogue.orderCutoff).map((cutoff, index) => ({
+    sourceKey: 'pickup-cutoff:' + event.slug + ':' + catalogue.id + ':' + index + ':' + cutoff.date,
+    category: 'pickup_cutoff' as const,
+    title: catalogue.artistName + ' · Booth ' + catalogue.booth + ' · ' + event.name,
+    detail: cutoff.note ? 'Order cutoff (' + cutoff.note + ')' : 'Order cutoff',
+    date: cutoff.date,
+  })) : []
   const eventNameWithoutRepeatedYear = event.name.replace(new RegExp(`\\s*\\b${event.year}\\b\\s*`, 'g'), ' ').replace(/\s+/g, ' ').trim()
 
   return (
@@ -78,7 +99,7 @@ export default async function CatalogueDetailPage({ params }: Props) {
       )}
       {catalogue.catalogueType === 'pickup_only' && (catalogue.orderCutoff?.trim() || catalogue.pickupNote?.trim()) && (
         <div className="mt-6 rounded-xl border border-primary/30 bg-accent/60 p-4 text-sm leading-relaxed text-foreground">
-          {catalogue.orderCutoff?.trim() && <p><span className="font-bold">Order cutoff: </span>{catalogue.orderCutoff}</p>}
+          {catalogue.orderCutoff?.trim() && <p className="flex items-center justify-between gap-2"><span className="min-w-0 flex-1"><span className="font-bold">Order cutoff: </span>{catalogue.orderCutoff}</span>{pickupCalendarEntries.length > 0 && <CalendarReminderButton entries={pickupCalendarEntries} iconOnly />}</p>}
           {catalogue.pickupNote?.trim() && <p><span className="font-bold">Pick-up note: </span>{catalogue.pickupNote}</p>}
         </div>
       )}
@@ -118,18 +139,22 @@ export default async function CatalogueDetailPage({ params }: Props) {
     </>
   )}
 </p>
-      <section aria-labelledby="catalogue-posts-heading" className="mt-8">
-        <h2 id="catalogue-posts-heading" className="mb-5 text-2xl font-extrabold">Catalogue material</h2>
-        {catalogue.instagramPosts.length > 0 ? (
+      <section aria-label="Catalogue preview" className="mt-8">
+        <div className="mx-auto max-w-2xl">
+          <CatalogueCover entry={catalogue} />
+        </div>
+      </section>
+      <section aria-label="Additional catalogue posts and files" className="mt-6">
+        {remainingInstagramPosts.length > 0 ? (
           <div className="mx-auto flex max-w-2xl flex-col gap-8">
-            {catalogue.instagramPosts.slice(0, 10).map((postUrl, index) => (
+            {remainingInstagramPosts.slice(0, 10).map((postUrl, index) => (
               <InstagramPostEmbed key={postUrl} postUrl={postUrl} title={`${catalogue.artistName} catalogue post ${index + 1}`} />
             ))}
           </div>
         ) : null}
-        {catalogue.catalogueFileUrls.length > 0 && (
+        {remainingCatalogueFiles.length > 0 && (
           <div className="mx-auto flex max-w-3xl flex-col gap-6">
-            {catalogue.catalogueFileUrls.map((fileUrl, index) => {
+            {remainingCatalogueFiles.map((fileUrl, index) => {
               const isImage = /\.(avif|gif|jpe?g|png|webp)(?:$|[?#])/i.test(fileUrl)
               const isPdf = /\.pdf(?:$|[?#])/i.test(fileUrl)
               return (
@@ -140,6 +165,8 @@ export default async function CatalogueDetailPage({ params }: Props) {
                     </a>
                   ) : isPdf ? (
                     <iframe src={fileUrl} title={`${catalogue.artistName} catalogue PDF ${index + 1}`} className="h-[80vh] w-full" />
+                  ) : supportsSocialPostEmbed(fileUrl) ? (
+                    <SocialPostEmbed postUrl={fileUrl} title={`${catalogue.artistName} catalogue file ${index + 1}`} />
                   ) : null}
                   <div className="border-t border-border p-3 text-right">
                     <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary underline underline-offset-4">Open catalogue file {index + 1}</a>
@@ -149,24 +176,26 @@ export default async function CatalogueDetailPage({ params }: Props) {
             })}
           </div>
         )}
-        {catalogue.catalogueLinks.length > 0 && (
-          <div className="mt-6 rounded-xl border border-border bg-card p-5">
+        {remainingCatalogueLinks.length > 0 && (
+          <div className="mx-auto mt-6 flex max-w-3xl flex-col gap-5">
             <h3 className="font-bold">Catalogue links</h3>
-            <ul className="mt-3 flex flex-wrap gap-2">
-              {catalogue.catalogueLinks.map((link, index) => {
+            <ul className="flex flex-col gap-5">
+              {remainingCatalogueLinks.map((link, index) => {
                 const url = externalLink(link)
                 return url ? (
-                  <li key={link}>
-                    <a href={url.href} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-primary underline underline-offset-2 hover:bg-accent">
-                      Open catalogue link {index + 1} · {url.hostname.replace(/^www\./, '')} ↗
-                    </a>
+                  <li key={link} className="min-w-0">
+                    {supportsSocialPostEmbed(url.href) ? <SocialPostEmbed postUrl={url.href} title={`${catalogue.artistName} catalogue link ${index + 1}`} /> : (
+                      <a href={url.href} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-primary underline underline-offset-2 hover:bg-accent">
+                        Open catalogue link {index + 1} · {url.hostname.replace(/^www\./, '')} ↗
+                      </a>
+                    )}
                   </li>
                 ) : null
               })}
             </ul>
           </div>
         )}
-        {catalogue.instagramPosts.length === 0 && catalogue.catalogueFileUrls.length === 0 && catalogue.catalogueLinks.length === 0 && (
+        {remainingInstagramPosts.length === 0 && remainingCatalogueFiles.length === 0 && remainingCatalogueLinks.length === 0 && (
           <p className="rounded-xl border border-dashed border-border bg-muted/40 p-8 text-center font-semibold text-muted-foreground">Catalogue unavailable for now. Please check back later.</p>
         )}
       </section>
